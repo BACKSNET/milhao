@@ -67,7 +67,8 @@ class Fonte:
         if self.sessao:
             self.sessao.headers["User-Agent"] = "Mozilla/5.0 (Milhao robo de dados)"
 
-    def baixar(self, url: str, nome: str | None = None, cache_dias: float = 0.5) -> bytes | None:
+    def baixar(self, url: str, nome: str | None = None, cache_dias: float = 0.5,
+               tentativas: int = 3, timeout: int = 120, silencioso: bool = False) -> bytes | None:
         nome = nome or url.rsplit("/", 1)[-1]
         if self.local:
             p = self.local / nome
@@ -76,9 +77,9 @@ class Fonte:
             p = self.cache / nome
             if p.exists() and (time.time() - p.stat().st_mtime) < cache_dias * 86400:
                 return p.read_bytes()
-        for tentativa in range(3):
+        for tentativa in range(tentativas):
             try:
-                r = self.sessao.get(url, timeout=120)
+                r = self.sessao.get(url, timeout=timeout)
                 if r.status_code == 404:
                     return None
                 r.raise_for_status()
@@ -86,8 +87,10 @@ class Fonte:
                     (self.cache / nome).write_bytes(r.content)
                 return r.content
             except Exception as e:  # noqa: BLE001
-                if tentativa == 2:
-                    aviso(f"falha ao baixar {url}: {e}")
+                if tentativa == tentativas - 1:
+                    if not silencioso:
+                        aviso(f"falha ao baixar {url}: {e}")
+                    return None
                 time.sleep(2 * (tentativa + 1))
         return None
 
@@ -276,14 +279,34 @@ def achar_lista(obj, chave):
 
 def carregar_proventos(fonte: Fonte, emissores: dict[str, str]) -> tuple[dict, dict]:
     """emissores: código de 4 letras -> 'acao' | 'fii'. Devolve proventos por ISIN e eventos por ISIN."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def url_de(cod, tipo):
+        if tipo == "fii":
+            return URL_PROV_FII.format(param=b64({"cnpj": "0", "identifierFund": cod, "typeFund": 7}))
+        return URL_PROV_CIA.format(param=b64({"issuingCompany": cod, "language": "pt-br"}))
+
+    def buscar(item):
+        cod, tipo = item
+        return cod, fonte.baixar(url_de(cod, tipo), nome=f"proventos_{cod}.json", cache_dias=1,
+                                 tentativas=2, timeout=20, silencioso=True)
+
+    itens = sorted(emissores.items())
+    # teste rápido: se a B3 não responder aos primeiros, não insiste no resto
+    amostra = [buscar(i) for i in itens[:6]]
+    if not fonte.local and not any(b for _, b in amostra):
+        aviso("consulta de proventos da B3 não respondeu; site sai sem dividendos hoje")
+        return {}, {}
+    with ThreadPoolExecutor(max_workers=1 if fonte.local else 8) as ex:
+        respostas = amostra + list(ex.map(buscar, itens[6:]))
+    falhas = sum(1 for _, b in respostas if not b)
+    if falhas:
+        aviso(f"proventos: {falhas} de {len(respostas)} emissores sem resposta da B3")
+    print(f"   proventos: {len(respostas) - falhas} emissores lidos", flush=True)
+
     dinheiro: dict[str, list] = defaultdict(list)
     eventos: dict[str, list] = defaultdict(list)
-    for i, (cod, tipo) in enumerate(sorted(emissores.items())):
-        if tipo == "fii":
-            url = URL_PROV_FII.format(param=b64({"cnpj": "0", "identifierFund": cod, "typeFund": 7}))
-        else:
-            url = URL_PROV_CIA.format(param=b64({"issuingCompany": cod, "language": "pt-br"}))
-        b = fonte.baixar(url, nome=f"proventos_{cod}.json", cache_dias=1)
+    for cod, b in respostas:
         if not b:
             continue
         try:
@@ -307,8 +330,6 @@ def carregar_proventos(fonte: Fonte, emissores: dict[str, str]) -> tuple[dict, d
             if isin and fator:
                 eventos[isin].append({"tipo": (e.get("label") or "").upper(),
                                       "data_com": data_br(e.get("lastDatePrior")), "fator": fator})
-        if not fonte.local and i % 20 == 19:
-            time.sleep(1)
     return dinheiro, eventos
 
 
@@ -621,13 +642,13 @@ def main() -> None:
     saida = Path(a.saida)
     (saida / "ativo").mkdir(parents=True, exist_ok=True)
 
-    print("1/5 cotações")
+    print("1/5 cotações", flush=True)
     cot = carregar_cotacoes(fonte, a.anos)
     ultimo_pregao = cot["data"].max()
     ativos_vivos = cot.loc[cot["data"] >= ultimo_pregao - pd.Timedelta(days=10), "ticker"].unique()
     cot = cot[cot["ticker"].isin(ativos_vivos)]
 
-    print("2/5 cadastro e demonstrações")
+    print("2/5 cadastro e demonstrações", flush=True)
     vm, geral = carregar_fca(fonte)
     cadastro: dict[str, dict] = {}
     if not vm.empty:
@@ -647,7 +668,7 @@ def main() -> None:
            for k, v in carregar_demonstracoes(fonte, a.anos + 1).items()}
     capital = dem.get("CAPITAL", pd.DataFrame())
 
-    print("3/5 FIIs")
+    print("3/5 FIIs", flush=True)
     fgeral, fcomp = carregar_fii(fonte)
     fii_info: dict[str, dict] = {}
     if not fcomp.empty:
@@ -673,14 +694,14 @@ def main() -> None:
                 "dy_mes": [(d, num(v)) for d, v in fcomp[fcomp[col_cnpj] == cnpj][["Data_Referencia", "Percentual_Dividend_Yield_Mes"]].values],
             }
 
-    print("4/5 proventos")
+    print("4/5 proventos", flush=True)
     ultimos = cot.sort_values("data").groupby("ticker").tail(1).set_index("ticker")
     emissores = {}
     for tk, row in ultimos.iterrows():
         emissores[tk[:4]] = "fii" if row["bdi"] == "12" else emissores.get(tk[:4], "acao")
     dinheiro, eventos = carregar_proventos(fonte, emissores)
 
-    print("5/5 montando arquivos")
+    print("5/5 montando arquivos", flush=True)
     lista_ativos, detalhes = [], {}
     for tk, grupo in cot.groupby("ticker"):
         u = grupo.iloc[-1]
