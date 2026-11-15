@@ -1,0 +1,25 @@
+name: Diagnostico das fontes
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/diagnostico.yml"]
+  workflow_dispatch: {}
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Velocidade de cada fonte
+        run: |
+          testar() {
+            echo "== $1"
+            curl -sS -L -o /dev/null --max-time 90 -A "Mozilla/5.0" \
+              -w "http %{http_code} | %{size_download} bytes | %{speed_download} B/s | %{time_total}s\n" "$2" || echo "falhou"
+          }
+          testar "B3 COTAHIST 2026" "https://bvmf.bmfbovespa.com.br/InstDados/SerHist/COTAHIST_A2026.ZIP"
+          testar "B3 COTAHIST dia" "https://bvmf.bmfbovespa.com.br/InstDados/SerHist/COTAHIST_D13112026.ZIP"
+          testar "CVM DFP 2025" "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip"
+          testar "CVM FII 2026" "https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_2026.zip"
+          testar "B3 proventos PETR" "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetListedSupplementCompany/eyJpc3N1aW5nQ29tcGFueSI6IlBFVFIiLCJsYW5ndWFnZSI6InB0LWJyIn0="
