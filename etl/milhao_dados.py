@@ -702,6 +702,12 @@ def main() -> None:
     dinheiro, eventos = carregar_proventos(fonte, emissores)
 
     print("5/5 montando arquivos", flush=True)
+    # separa as demonstrações por empresa uma vez só (evita varrer a base inteira a cada ação)
+    por_cvm = {k: dict(tuple(v.groupby("CD_CVM"))) for k, v in dem.items()
+               if k != "CAPITAL" and isinstance(v, pd.DataFrame) and len(v)}
+    col_cnpj_cap = next((c for c in capital.columns if "CNPJ" in c.upper()), None) if not capital.empty else None
+    cap_por_cnpj = dict(tuple(capital.groupby(col_cnpj_cap))) if col_cnpj_cap else {}
+    vazio_cap = capital.iloc[0:0] if not capital.empty else capital
     lista_ativos, detalhes = [], {}
     for tk, grupo in cot.groupby("ticker"):
         u = grupo.iloc[-1]
@@ -730,7 +736,9 @@ def main() -> None:
                 nome, setor = u["nome"], "Sem cadastro na CVM"
             else:
                 cad = {**cad, "liquidez": liq}
-                det = montar_acao(tk, preco, pontos, cad, dem, capital, prov)
+                dem_emp = {k: g.get(cad["cvm"]) for k, g in por_cvm.items()}
+                dem_emp = {k: v for k, v in dem_emp.items() if v is not None}
+                det = montar_acao(tk, preco, pontos, cad, dem_emp, cap_por_cnpj.get(cad["cnpj"], vazio_cap), prov)
                 nome, setor = cad.get("nome") or u["nome"], cad.get("setor") or "Outros"
         det.update({
             "ticker": tk, "nome": nome, "tipo": tipo, "setor": setor, "isin": isin,
