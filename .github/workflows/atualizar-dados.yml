@@ -1,0 +1,56 @@
+# Roda o robô de dados todo dia útil e publica o site no GitHub Pages.
+# Custo: zero em repositório público (GitHub Actions e Pages gratuitos).
+name: Atualizar dados e publicar
+
+on:
+  schedule:
+    - cron: "30 23 * * 1-5"   # 20h30 em Brasília, depois do fechamento da B3
+  workflow_dispatch: {}        # botão "Run workflow" para rodar na hora
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  dados-e-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install pandas requests
+
+      - name: Reaproveitar arquivos já baixados
+        uses: actions/cache@v4
+        with:
+          path: .cache-dados
+          key: dados-${{ github.run_id }}
+          restore-keys: dados-
+
+      - name: Rodar o robô de dados
+        run: python etl/milhao_dados.py --saida site/data --cache .cache-dados
+
+      - name: Montar o site
+        run: cp index.html site/ && touch site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
