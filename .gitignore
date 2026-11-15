@@ -1,0 +1,6 @@
+.cache-dados/
+data/
+site/
+tests/fixtures/
+milhao.html
+__pycache__/
