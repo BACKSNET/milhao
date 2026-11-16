@@ -120,7 +120,20 @@ def div(a, b):
 
 
 def r(v, casas=4):
-    return None if v is None else round(v, casas)
+    return None if v is None or not math.isfinite(v) else round(v, casas)
+
+
+def limpar(obj):
+    """NaN e infinito não existem em JSON: viram null (senão o navegador não lê o arquivo)."""
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
+    if isinstance(obj, dict):
+        return {k: limpar(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [limpar(v) for v in obj]
+    if hasattr(obj, "item"):  # números do numpy
+        return limpar(obj.item())
+    return obj
 
 
 # --------------------------------------------------------------------------
@@ -185,7 +198,7 @@ def carregar_fca(fonte: Fonte) -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.DataFrame(), pd.DataFrame()
 
 
-DOCS = ("DRE", "BPA", "BPP", "DFC_MI")
+DOCS = ("DRE", "BPA", "BPP", "DFC_MI", "DFC_MD")
 
 
 def carregar_demonstracoes(fonte: Fonte, anos: int) -> dict[str, pd.DataFrame]:
@@ -209,7 +222,7 @@ def carregar_demonstracoes(fonte: Fonte, anos: int) -> dict[str, pd.DataFrame]:
             capital.append(c)
     out = {k: pd.concat(v, ignore_index=True) for k, v in tabs.items()}
     out["CAPITAL"] = pd.concat(capital, ignore_index=True) if capital else pd.DataFrame()
-    for k in DOCS:
+    for k in DOCS[:4]:
         if k not in out:
             aviso(f"demonstração {k} indisponível")
     return out
@@ -503,13 +516,69 @@ INDICADORES = [
 ]
 
 
+def conta_lucro(dre: pd.DataFrame | None) -> str:
+    """Lucro do período: 3.11 nas empresas em geral; bancos e seguradoras usam outra numeração."""
+    if dre is None or dre.empty:
+        return "3.11"
+    nivel1 = dre[dre["CD_CONTA"].str.fullmatch(r"3\.\d\d", na=False)].drop_duplicates("CD_CONTA")
+    ds = nivel1["DS_CONTA"].fillna("").str.lower()
+    cand = nivel1[ds.str.contains("lucro") & ds.str.contains("per[ií]odo") & ~ds.str.contains("antes")
+                  & ~ds.str.contains("continuad")]
+    if len(cand):
+        return sorted(cand["CD_CONTA"])[-1]
+    return "3.11" if (dre["CD_CONTA"] == "3.11").any() else "3.11"
+
+
+RE_CAPEX = r"(?:imobiliz|intang)"
+RE_NAO_CAPEX = r"(?:venda|alien|receb|baixa|resgate|dividend)"
+
+
+def linhas_capex(dfc: pd.DataFrame) -> pd.DataFrame:
+    """Compra de imobilizado e intangível (linhas 6.02.xx da DFC), somadas por período."""
+    ds = dfc["DS_CONTA"].fillna("").str.lower()
+    d = dfc[dfc["CD_CONTA"].str.fullmatch(r"6\.02\.\d\d", na=False) & ds.str.contains(RE_CAPEX)
+            & ~ds.str.contains(RE_NAO_CAPEX)]
+    d = d[d["VL"].fillna(0) < 0]
+    if d.empty:
+        return d
+    chaves = [c for c in ("CD_CVM", "TIPO", "ORDEM_EXERC", "FIM", "INI") if c in d]
+    g = d.groupby(chaves, dropna=False, as_index=False)["VL"].sum()
+    g["CD_CONTA"] = "CAPEX"
+    return g
+
+
+def fluxo_de_caixa(dfc: pd.DataFrame | None, cvm: str) -> dict:
+    """Caixa das operações, investimentos, financiamentos e fluxo de caixa livre, por ano e nos 12 meses."""
+    if dfc is None or dfc.empty:
+        return {}
+    capex = linhas_capex(dfc)
+    anual_ = lambda cod, df=dfc: anual(df, cvm, cod) if df is not None and len(df) else {}  # noqa: E731
+    fco, fci, fcf = anual_("6.01"), anual_("6.02"), anual_("6.03")
+    cpx = anual_("CAPEX", capex)
+    anos = sorted(set(fco) | set(fci))
+    por_ano = {}
+    for a in anos:
+        c = cpx.get(a, 0.0) if fco.get(a) is not None else None
+        por_ano[str(a)] = {"fco": fco.get(a), "fci": fci.get(a), "fcf": fcf.get(a), "capex": c,
+                           "fcl": (fco[a] + c) if fco.get(a) is not None and c is not None else None}
+    fco12, ref = ttm(dfc, cvm, "6.01")
+    fci12, _ = ttm(dfc, cvm, "6.02")
+    fcf12, _ = ttm(dfc, cvm, "6.03")
+    cpx12, _ = ttm(capex, cvm, "CAPEX") if len(capex) else (0.0, None)
+    doze = {"fco": fco12, "fci": fci12, "fcf": fcf12, "capex": cpx12 or 0.0,
+            "fcl": (fco12 + (cpx12 or 0.0)) if fco12 is not None else None, "referencia": ref}
+    return {"anual": por_ano, "12m": doze}
+
+
 def montar_acao(t, preco, pontos, cad, dem, capital, provs) -> dict:
     cvm, cnpj = cad["cvm"], cad["cnpj"]
-    dre, bpa, bpp, dfc = dem.get("DRE"), dem.get("BPA"), dem.get("BPP"), dem.get("DFC_MI")
+    dre, bpa, bpp = dem.get("DRE"), dem.get("BPA"), dem.get("BPP")
+    dfc = dem.get("DFC_MI") if dem.get("DFC_MI") is not None else dem.get("DFC_MD")
+    cod_lucro = conta_lucro(dre)
     receita, ref = ttm(dre, cvm, "3.01") if dre is not None else (None, None)
     bruto, _ = ttm(dre, cvm, "3.03") if dre is not None else (None, None)
     ebit, _ = ttm(dre, cvm, "3.05") if dre is not None else (None, None)
-    lucro, _ = ttm(dre, cvm, "3.11") if dre is not None else (None, None)
+    lucro, _ = ttm(dre, cvm, cod_lucro) if dre is not None else (None, None)
     da = None
     if dfc is not None:
         dep = dfc[(dfc["CD_CVM"] == cvm) & dfc["CD_CONTA"].str.startswith("6.01.01")
@@ -535,6 +604,14 @@ def montar_acao(t, preco, pontos, cad, dem, capital, provs) -> dict:
     passivo = (pc or 0) + (pnc or 0) if pc is not None else None
     dl = divida - caixa
     n = acoes_em_circulacao(capital, cnpj)
+    # algumas empresas informam a quantidade de ações em milhares (ex.: Vale, Itaú):
+    # se o P/VP sai absurdo e fica normal com x1000, a quantidade estava em milhares
+    if n and pl and pl > 0:
+        pvp_bruto = preco / (pl / n)
+        if pvp_bruto < 0.02 and 0.05 <= pvp_bruto * 1000 <= 60:
+            n *= 1000
+    elif n and receita and receita > 0 and preco * n / receita < 0.001:
+        n *= 1000
     vm = preco * n if n else None
     ev = vm + dl if vm is not None else None
     lpa, vpa = div(lucro, n), div(pl, n)
@@ -562,7 +639,7 @@ def montar_acao(t, preco, pontos, cad, dem, capital, provs) -> dict:
         "passivo_ativo": div(passivo, ativo),
     }
     rec_a = anual(dre, cvm, "3.01") if dre is not None else {}
-    luc_a = anual(dre, cvm, "3.11") if dre is not None else {}
+    luc_a = anual(dre, cvm, cod_lucro) if dre is not None else {}
     ind["cagr_rec"], ind["cagr_luc"] = cagr(rec_a), cagr(luc_a)
 
     graham = math.sqrt(22.5 * lpa * vpa) if lpa and vpa and lpa > 0 and vpa > 0 else None
@@ -613,6 +690,9 @@ def montar_acao(t, preco, pontos, cad, dem, capital, provs) -> dict:
         "checklist": [{"item": c["item"], "ok": bool(c["ok"])} for c in checklist],
         "pontos": sum(1 for c in checklist if c["ok"]),
         "historico": {str(k): {kk: r(vv) for kk, vv in v.items()} for k, v in hist.items()},
+        "fluxo": fluxo_de_caixa(dfc, cvm),
+        "banco": bool(cod_lucro != "3.11" or (dre is not None and len(dre) and dre["DS_CONTA"].fillna("").str.contains(
+            "intermedia", case=False).any())),
         "proventos": lista[:120], "media_proventos_5a": r(media5),
     }
 
@@ -777,10 +857,10 @@ def main() -> None:
             "magic": ind.get("magic_number"), "vp": ind.get("vp_cota"),
         })
         (saida / "ativo" / f"{d['ticker']}.json").write_text(
-            json.dumps(d, ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
+            json.dumps(limpar(d), ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
 
     lista_ativos.sort(key=lambda x: -(x["liq"] or 0))
-    (saida / "ativos.json").write_text(json.dumps(lista_ativos, ensure_ascii=False, separators=(",", ":"),
+    (saida / "ativos.json").write_text(json.dumps(limpar(lista_ativos), ensure_ascii=False, separators=(",", ":"),
                                                   default=str), encoding="utf-8")
     (saida / "meta.json").write_text(json.dumps({
         "atualizado_em": dt.datetime.now().isoformat(timespec="minutes"),
