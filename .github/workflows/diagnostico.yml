@@ -11,15 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Velocidade de cada fonte
+      - name: Cabecalhos dos arquivos da CVM
         run: |
-          testar() {
-            echo "== $1"
-            curl -sS -L -o /dev/null --max-time 90 -A "Mozilla/5.0" \
-              -w "http %{http_code} | %{size_download} bytes | %{speed_download} B/s | %{time_total}s\n" "$2" || echo "falhou"
-          }
-          testar "B3 COTAHIST 2026" "https://bvmf.bmfbovespa.com.br/InstDados/SerHist/COTAHIST_A2026.ZIP"
-          testar "B3 COTAHIST dia" "https://bvmf.bmfbovespa.com.br/InstDados/SerHist/COTAHIST_D13112026.ZIP"
-          testar "CVM DFP 2025" "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip"
-          testar "CVM FII 2026" "https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_2026.zip"
-          testar "B3 proventos PETR" "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetListedSupplementCompany/eyJpc3N1aW5nQ29tcGFueSI6IlBFVFIiLCJsYW5ndWFnZSI6InB0LWJyIn0="
+          u() { iconv -f latin1 -t utf-8; }
+          mkdir d && cd d
+          curl -sSL -o itr.zip https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip
+          curl -sSL -o fii.zip https://dados.cvm.gov.br/dados/FII/DOC/INF_MENSAL/DADOS/inf_mensal_fii_2026.zip
+          unzip -oq itr.zip && unzip -oq fii.zip && ls
+          echo "== composicao_capital"; head -3 itr_cia_aberta_composicao_capital_2026.csv | u
+          echo "== composicao PETROBRAS"; grep "33.000.167" itr_cia_aberta_composicao_capital_2026.csv | u | tail -2
+          echo "== DRE VALE"; grep ";004170;" itr_cia_aberta_DRE_con_2026.csv | u | grep ";3.11;" | tail -3
+          echo "== BPP ITAU"; grep ";019348;" itr_cia_aberta_BPP_con_2026.csv | u | cut -d';' -f9-13 | grep -E ";2(\.0[0-9])?;" | tail -14
+          echo "== FII geral cabecalho"; head -1 inf_mensal_fii_geral_2026.csv | u
+          echo "== FII complemento cabecalho"; head -1 inf_mensal_fii_complemento_2026.csv | u
+          echo "== MXRF e HGLG no geral"; grep -E "BRMXRF|BRHGLG" inf_mensal_fii_geral_2026.csv | u | tail -4
