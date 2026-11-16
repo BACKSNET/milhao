@@ -168,11 +168,27 @@ dialog::backdrop{background:rgba(19,36,28,.35)}
 dialog form{padding:22px;display:flex;flex-direction:column;gap:14px}
 dialog .linha2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+dialog.largo{width:min(720px,94vw)}
+.imp-resumo{list-style:none;margin:0;padding:0;border:1px solid var(--linha-2);border-radius:8px}
+.imp-resumo li{display:flex;justify-content:space-between;gap:16px;padding:8px 12px;border-bottom:1px solid var(--linha-2);font-size:14px}
+.imp-resumo li:last-child{border-bottom:none}
+.imp-resumo li.fora{color:var(--tinta-3)}
+.imp-tabela{max-height:300px;overflow:auto;border:1px solid var(--linha-2);border-radius:8px}
+.imp-tabela input{width:110px;padding:5px 8px;text-align:right}
+.imp-nota{background:var(--ouro-claro);color:#6B4D10;border-radius:8px;padding:10px 12px;font-size:13.5px;margin:0}
+.imp-check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.passos{margin:0;padding-left:20px;font-size:14px;color:var(--tinta-2)}
+.passos li{margin:3px 0}
 .aviso{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:50}
 
 /* ---------- ferramentas ---------- */
 .calc{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
 .calc form{display:flex;flex-direction:column;gap:12px}
+.fcd{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr);gap:26px;align-items:start}
+.fcd form{display:flex;flex-direction:column;gap:12px}
+.fcd h3{margin:18px 0 6px}
+.fcd td.esq{white-space:normal}
+@media (max-width:980px){.fcd{grid-template-columns:1fr}}
 .resultado-grande{font-size:34px;font-weight:800;font-stretch:112%;letter-spacing:-.02em;color:var(--verde)}
 
 @media (max-width:980px){
@@ -225,8 +241,18 @@ dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
     </footer>
   </form>
 </dialog>
+<dialog id="dlg-importar" class="largo">
+  <form method="dialog" id="form-importar">
+    <h2 id="imp-titulo">Importar da B3</h2>
+    <div id="imp-corpo"></div>
+    <footer>
+      <button class="btn" value="cancelar" formnovalidate>Cancelar</button>
+      <button class="btn primario" value="ok" id="imp-ok">Importar</button>
+    </footer>
+  </form>
+</dialog>
 <datalist id="lista-tickers"></datalist>
-<input type="file" id="arquivo-importar" accept=".xlsx,.csv,.txt" class="oculto">
+<input type="file" id="arquivo-importar" accept=".xlsx,.csv,.txt" multiple class="oculto">
 <input type="file" id="arquivo-backup" accept=".json" class="oculto">
 
 <script>
@@ -246,13 +272,16 @@ const F = { n0: nf(0), n1: nf(1), n2: nf(2) };
 const vazio = (v) => v === null || v === undefined || Number.isNaN(v);
 const brl = (v, c = 2) => vazio(v) ? "–" : (v < 0 ? "-R$ " : "R$ ") + nf(c).format(Math.abs(v));
 const pct = (v, c = 1, sinal = false) => vazio(v) ? "–" : (sinal && v > 0 ? "+" : "") + nf(c).format(v * 100) + "%";
+const qtdF = (v) => Number.isInteger(v) ? F.n0.format(v) : nf(0).format(Math.trunc(v)) + "," + String(Math.round((v % 1) * 1e6)).padStart(6, "0").replace(/0+$/, "");
 const xv = (v, c = 2) => vazio(v) ? "–" : nf(c).format(v);
 function compacto(v) {
   if (vazio(v)) return "–";
   const a = Math.abs(v);
-  if (a >= 1e9) return "R$ " + F.n1.format(v / 1e9) + " bi";
-  if (a >= 1e6) return "R$ " + F.n1.format(v / 1e6) + " mi";
-  if (a >= 1e3) return "R$ " + F.n1.format(v / 1e3) + " mil";
+  const sinal = v < 0 ? "-R$ " : "R$ ";
+  if (a >= 1e12) return sinal + F.n2.format(a / 1e12) + " tri";
+  if (a >= 1e9) return sinal + F.n1.format(a / 1e9) + " bi";
+  if (a >= 1e6) return sinal + F.n1.format(a / 1e6) + " mi";
+  if (a >= 1e3) return sinal + F.n1.format(a / 1e3) + " mil";
   return brl(v);
 }
 const cls = (v) => vazio(v) || v === 0 ? "" : v > 0 ? "alta" : "baixa";
@@ -302,18 +331,28 @@ async function detalhe(t) {
 const precoAtual = (t) => S.porTicker[t]?.preco ?? null;
 
 /* ---------- carteira: contas ---------- */
-function ordenados(c) { return [...c.lancamentos].sort((a, b) => a.data.localeCompare(b.data)); }
+/* tipos de lançamento: C compra, V venda, B entrada sem compra (desdobro, bonificação),
+   G saída sem venda (grupamento, fração) — B e G mexem na quantidade e mantêm o custo */
+const ORDEM_TIPO = { B: 0, G: 1, C: 2, V: 3 };
+const sinalQtd = (l) => (l.tipo === "C" || l.tipo === "B" ? 1 : -1);
+const NOME_TIPO = { C: "Compra", V: "Venda", B: "Entrada de ações", G: "Saída de ações" };
+const nomeLanc = (l) => l.evento || NOME_TIPO[l.tipo] || l.tipo;
+function ordenados(c) {
+  return [...c.lancamentos].sort((a, b) => a.data.localeCompare(b.data) || (ORDEM_TIPO[a.tipo] ?? 9) - (ORDEM_TIPO[b.tipo] ?? 9));
+}
 function posicoes(c) {
   const m = {};
   for (const l of ordenados(c)) {
     const p = m[l.ticker] ??= { ticker: l.ticker, qtd: 0, custo: 0, realizado: 0 };
-    if (l.tipo === "C") { p.custo += l.qtd * l.preco; p.qtd += l.qtd; }
+    if (l.tipo === "C" || l.tipo === "B") { p.custo += l.qtd * (l.preco || 0); p.qtd += l.qtd; }
+    else if (l.tipo === "G") { p.qtd = Math.max(p.qtd - l.qtd, 0); if (!p.qtd) p.custo = 0; }
     else {
       const pm = p.qtd ? p.custo / p.qtd : 0, q = Math.min(l.qtd, p.qtd);
       p.realizado += q * (l.preco - pm); p.custo -= q * pm; p.qtd -= q;
     }
   }
   return Object.values(m).map((p) => {
+    p.qtd = Math.round(p.qtd * 1e6) / 1e6;
     const preco = precoAtual(p.ticker);
     const valor = preco !== null ? p.qtd * preco : null;
     return { ...p, pm: p.qtd ? p.custo / p.qtd : 0, preco, valor, resultado: valor !== null ? valor - p.custo : null };
@@ -321,7 +360,7 @@ function posicoes(c) {
 }
 function qtdEm(c, t, data) {
   let q = 0;
-  for (const l of c.lancamentos) if (l.ticker === t && l.data <= data) q += l.tipo === "C" ? l.qtd : -l.qtd;
+  for (const l of c.lancamentos) if (l.ticker === t && l.data <= data) q += sinalQtd(l) * l.qtd;
   return Math.max(q, 0);
 }
 async function proventosDaCarteira(c) {
@@ -357,7 +396,7 @@ async function evolucao(c) {
       const q = qtdEm(c, t, d);
       if (q && ultimo[t]) total += q * ultimo[t];
     }
-    for (const l of lanc) if (l.data <= d) custo += (l.tipo === "C" ? 1 : -1) * l.qtd * l.preco;
+    for (const l of lanc) if (l.data <= d && (l.tipo === "C" || l.tipo === "V")) custo += (l.tipo === "C" ? 1 : -1) * l.qtd * l.preco;
     return { d, v: total, custo };
   });
 }
@@ -583,8 +622,8 @@ rotas.carteira = async (el) => {
   const custo = abertas.reduce((s, p) => s + p.custo, 0);
   const realizado = pos.reduce((s, p) => s + p.realizado, 0);
   el.innerHTML = `<div class="cabeca"><div><h1>${esc(c.nome)}</h1>
-      <p class="sutil" style="margin:6px 0 0">${abertas.length ? abertas.length + (abertas.length > 1 ? " ativos" : " ativo") + ", avaliados pelo fechamento de " + dataBR(S.meta?.ultimo_pregao) : "Comece lançando suas compras ou importando a planilha da B3."}</p></div>
-    <div class="acoes"><button class="btn" id="importar">Importar planilha</button><button class="btn primario" id="lancar">Lançar compra ou venda</button></div></div>
+      <p class="sutil" style="margin:6px 0 0">${abertas.length ? abertas.length + (abertas.length > 1 ? " ativos" : " ativo") + ", avaliados pelo fechamento de " + dataBR(S.meta?.ultimo_pregao) : "Comece importando suas operações da B3 ou lançando suas compras."}</p></div>
+    <div class="acoes"><button class="btn" id="importar">Importar da B3</button><button class="btn primario" id="lancar">Lançar compra ou venda</button></div></div>
     ${c.lancamentos.length ? `
     <div class="numeros">
       <div><span>Patrimônio</span><strong>${brl(total)}</strong></div>
@@ -600,19 +639,19 @@ rotas.carteira = async (el) => {
       <div class="painel"><h2>Posições</h2><div style="overflow:auto"><table>
         <thead><tr><th>Ativo</th><th>Qtd.</th><th>Preço médio</th><th>Cotação</th><th>Valor</th><th>Resultado</th><th>Resultado (R$)</th><th>% da carteira</th></tr></thead>
         <tbody>${abertas.map((p) => `<tr><td><a class="tk" href="#ativo-${p.ticker}">${p.ticker}</a><small>${esc(S.porTicker[p.ticker]?.n || "Fora da base atual")}</small></td>
-          <td>${F.n0.format(p.qtd)}</td><td>${brl(p.pm)}</td><td>${brl(p.preco)}</td><td>${brl(p.valor)}</td>
+          <td>${qtdF(p.qtd)}</td><td>${brl(p.pm)}</td><td>${brl(p.preco)}</td><td>${brl(p.valor)}</td>
           <td class="${cls(p.resultado)}">${pct(p.custo ? p.resultado / p.custo : null, 1, true)}</td><td class="${cls(p.resultado)}">${brl(p.resultado)}</td><td>${pct(total ? (p.valor || 0) / total : null)}</td></tr>`).join("")}</tbody></table></div></div>
     <div class="painel"><div class="cabeca" style="margin-bottom:10px"><h2 style="margin:0">Lançamentos</h2><span class="fraco">${c.lancamentos.length} no total</span></div>
       <div class="rolagem" style="max-height:340px"><table><thead><tr><th>Data</th><th class="esq">Ativo</th><th class="esq">Operação</th><th>Qtd.</th><th>Preço</th><th>Total</th><th></th></tr></thead>
       <tbody>${ordenados(c).reverse().map((l) => `<tr><td style="text-align:left">${dataBR(l.data)}</td><td class="esq"><a class="tk" href="#ativo-${l.ticker}">${l.ticker}</a></td>
-        <td class="esq">${l.tipo === "C" ? "Compra" : "Venda"}</td><td>${F.n0.format(l.qtd)}</td><td>${brl(l.preco)}</td><td>${brl(l.qtd * l.preco)}</td>
+        <td class="esq">${esc(nomeLanc(l))}</td><td>${qtdF(l.qtd)}</td><td>${l.tipo === "G" ? "–" : brl(l.preco)}</td><td>${l.tipo === "G" ? "–" : brl(l.qtd * l.preco)}</td>
         <td><button class="btn texto perigo" data-apagar="${l.id}" aria-label="Apagar lançamento">Apagar</button></td></tr>`).join("")}</tbody></table></div></div>`
-    : `<div class="painel vazio"><h3>Esta carteira está vazia</h3><p>Lance suas compras uma a uma ou importe a planilha de negociação da Área do Investidor da B3.</p>
-       <div class="acoes"><button class="btn" id="importar2">Importar planilha</button><button class="btn primario" id="lancar2">Lançar compra</button></div></div>`}`;
+    : `<div class="painel vazio"><h3>Esta carteira está vazia</h3><p>Traga suas operações da Área do Investidor da B3 ou lance as compras uma a uma.</p>
+       <div class="acoes"><button class="btn primario" id="importar2">Importar da B3</button><button class="btn" id="lancar2">Lançar compra</button></div></div>`}`;
   $("#lancar").onclick = () => abrirLancamento();
   if ($("#lancar2")) $("#lancar2").onclick = () => abrirLancamento();
-  $("#importar").onclick = () => $("#arquivo-importar").click();
-  if ($("#importar2")) $("#importar2").onclick = () => $("#arquivo-importar").click();
+  $("#importar").onclick = () => abrirImportacao();
+  if ($("#importar2")) $("#importar2").onclick = () => abrirImportacao();
   $$("[data-apagar]").forEach((b) => b.onclick = () => {
     c.lancamentos = c.lancamentos.filter((l) => l.id !== b.dataset.apagar); salvar(); aviso("Lançamento apagado"); render();
   });
@@ -659,12 +698,12 @@ function abrirLancamento(ticker = "") {
   };
 }
 
-/* ---------- importação: planilha da B3 (.xlsx) ou CSV ---------- */
+/* ---------- importação: planilhas da Área do Investidor da B3 (.xlsx) ou CSV ---------- */
 async function lerZip(buf) {
   const dv = new DataView(buf), u8 = new Uint8Array(buf);
   let eocd = -1;
   for (let i = u8.length - 22; i >= 0; i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-  if (eocd < 0) throw new Error("arquivo não é uma planilha .xlsx");
+  if (eocd < 0) throw new Error("o arquivo não é uma planilha .xlsx");
   const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
   const arquivos = {};
   for (let k = 0; k < n; k++) {
@@ -675,7 +714,7 @@ async function lerZip(buf) {
     arquivos[nome] = { metodo, tam, off };
     p += 46 + ln + le + lc;
   }
-  return async (nome) => {
+  const ler = async (nome) => {
     const a = arquivos[nome]; if (!a) return null;
     const ini = a.off + 30 + dv.getUint16(a.off + 26, true) + dv.getUint16(a.off + 28, true);
     const dados = u8.subarray(ini, ini + a.tam);
@@ -683,78 +722,284 @@ async function lerZip(buf) {
     const s = new Blob([dados]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
     return await new Response(s).text();
   };
+  ler.nomes = Object.keys(arquivos);
+  return ler;
 }
-async function linhasXlsx(buf) {
+/* devolve todas as abas: [{ nome, linhas: [[célula, ...], ...] }] */
+async function abasXlsx(buf) {
   const ler = await lerZip(buf), dp = new DOMParser();
+  const xmlDe = (t) => dp.parseFromString(t, "application/xml");
   const ss = await ler("xl/sharedStrings.xml");
-  const textos = ss ? [...dp.parseFromString(ss, "application/xml").getElementsByTagName("si")].map((si) => si.textContent) : [];
-  const xml = await ler("xl/worksheets/sheet1.xml");
-  if (!xml) throw new Error("planilha sem a primeira aba");
-  const doc = dp.parseFromString(xml, "application/xml");
-  return [...doc.getElementsByTagName("row")].map((row) => {
-    const out = [];
-    for (const c of row.getElementsByTagName("c")) {
-      const ref = c.getAttribute("r") || "", col = ref.replace(/\d+/g, "").split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0) - 1;
-      const v = c.getElementsByTagName("v")[0]?.textContent ?? c.getElementsByTagName("t")[0]?.textContent ?? "";
-      out[col] = c.getAttribute("t") === "s" ? textos[+v] : v;
-    }
-    return out.map((x) => x ?? "");
-  });
-}
-function linhasCsv(texto) {
-  const sep = (texto.split("\n")[0].match(/;/g) || []).length >= (texto.split("\n")[0].match(/,/g) || []).length ? ";" : ",";
-  return texto.split(/\r?\n/).filter((l) => l.trim()).map((l) => l.split(sep).map((x) => x.replace(/^"|"$/g, "").trim()));
-}
-const semAcento = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-function numeroBR(v) {
-  if (typeof v === "number") return v;
-  const s = String(v).replace(/R\$|\s/g, "");
-  if (/^-?\d+(\.\d+)?$/.test(s)) return +s;
-  return +s.replace(/\./g, "").replace(",", ".");
-}
-function dataImport(v) {
-  const s = String(v).trim();
-  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return `${s.slice(6, 10)}-${s.slice(3, 5)}-${s.slice(0, 2)}`;
-  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-  if (/^\d{5}(\.\d+)?$/.test(s)) return new Date(Date.UTC(1899, 11, 30) + (+s) * 864e5).toISOString().slice(0, 10);
-  return null;
-}
-function interpretar(linhas) {
-  const iCab = linhas.findIndex((l) => l.some((c) => /codigo de negociacao|ticker|ativo|produto/.test(semAcento(c))));
-  if (iCab < 0) throw new Error("não achei a coluna do ativo. Use a planilha de Negociação da B3 ou um CSV com data;ativo;operação;quantidade;preço");
-  const cab = linhas[iCab].map(semAcento);
-  const col = (...nomes) => cab.findIndex((c) => nomes.some((n) => c.includes(n)));
-  const cData = col("data"), cTk = col("codigo de negociacao", "ticker", "ativo", "produto"), cTipo = col("tipo de movimentacao", "operacao", "tipo", "c/v");
-  const cQtd = col("quantidade", "qtd"), cPreco = col("preco");
+  const textos = ss ? [...xmlDe(ss).getElementsByTagName("si")].map((si) =>
+    [...si.getElementsByTagName("t")].map((t) => t.textContent).join("")) : [];
+  // nomes das abas na ordem do arquivo
+  let abas = [];
+  const wb = await ler("xl/workbook.xml"), rels = await ler("xl/_rels/workbook.xml.rels");
+  if (wb && rels) {
+    const alvo = {};
+    for (const r of xmlDe(rels).getElementsByTagName("Relationship")) alvo[r.getAttribute("Id")] = r.getAttribute("Target");
+    abas = [...xmlDe(wb).getElementsByTagName("sheet")].map((s) => {
+      const id = s.getAttribute("r:id") || s.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
+      const t = (alvo[id] || "").replace(/^\/?(xl\/)?/, "");
+      return { nome: s.getAttribute("name"), arquivo: "xl/" + t };
+    });
+  }
+  if (!abas.length) abas = ler.nomes.filter((n) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort()
+    .map((a, i) => ({ nome: "Aba " + (i + 1), arquivo: a }));
   const out = [];
-  for (const l of linhas.slice(iCab + 1)) {
-    if (!l[cTk]) continue;
-    let t = String(l[cTk]).trim().toUpperCase().split(" ")[0].split("-")[0];
-    if (/^[A-Z]{4}\d{1,2}F$/.test(t)) t = t.slice(0, -1); // mercado fracionário
-    const tipoTxt = semAcento(l[cTipo] || "c");
-    const lanc = { id: novoId(), ticker: t, tipo: /venda|^v/.test(tipoTxt) ? "V" : "C", data: dataImport(l[cData]),
-      qtd: Math.round(numeroBR(l[cQtd])), preco: numeroBR(l[cPreco]) };
-    if (lanc.data && lanc.qtd > 0 && lanc.preco >= 0) out.push(lanc);
+  for (const aba of abas) {
+    const xml = await ler(aba.arquivo); if (!xml) continue;
+    const linhas = [...xmlDe(xml).getElementsByTagName("row")].map((row) => {
+      const cel = [];
+      for (const c of row.getElementsByTagName("c")) {
+        const ref = c.getAttribute("r") || "";
+        const col = ref.replace(/\d+/g, "").split("").reduce((s, ch) => s * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+        const t = c.getAttribute("t");
+        let v;
+        if (t === "inlineStr") v = [...c.getElementsByTagName("t")].map((x) => x.textContent).join("");
+        else v = c.getElementsByTagName("v")[0]?.textContent ?? "";
+        cel[col >= 0 ? col : cel.length] = t === "s" ? textos[+v] : v;
+      }
+      return Array.from(cel, (x) => x ?? "");
+    });
+    out.push({ nome: aba.nome, linhas });
   }
   return out;
 }
+function linhasCsv(texto) {
+  const prim = texto.split("\n")[0];
+  const sep = (prim.match(/;/g) || []).length >= (prim.match(/,/g) || []).length ? ";" : ",";
+  return texto.split(/\r?\n/).filter((l) => l.trim()).map((l) => l.split(sep).map((x) => x.replace(/^"|"$/g, "").trim()));
+}
+const semAcento = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+function numeroBR(v) {
+  if (typeof v === "number") return v;
+  const s = String(v ?? "").replace(/R\$|\s/g, "");
+  if (!s || s === "-") return NaN;
+  if (/^-?\d+(\.\d+)?(e-?\d+)?$/i.test(s)) return +s;
+  return +s.replace(/\./g, "").replace(",", ".");
+}
+function dataImport(v) {
+  const s = String(v ?? "").trim();
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return `${s.slice(6, 10)}-${s.slice(3, 5)}-${s.slice(0, 2)}`;
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  if (/^\d{5}(\.\d+)?$/.test(s)) return new Date(Date.UTC(1899, 11, 30) + Math.floor(+s) * 864e5).toISOString().slice(0, 10);
+  return null;
+}
+/* "PETR4 - PETROLEO BRASILEIRO" / "PETR4F" / "petr4" → "PETR4"; renda fixa, Tesouro e direitos de subscrição → null */
+function tickerDe(v) {
+  const m = String(v ?? "").trim().toUpperCase().match(/^([A-Z]{4})(\d{1,2})F?(?=$|[\s-])/);
+  if (!m) return null;
+  if (["1", "2", "9", "10", "12", "13", "14", "15"].includes(m[2])) return null; // direitos e recibos de subscrição
+  return m[1] + m[2];
+}
+function acharCabecalho(linhas) {
+  for (let i = 0; i < Math.min(linhas.length, 30); i++) {
+    const cab = linhas[i].map(semAcento);
+    const tem = (...n) => n.some((x) => cab.some((c) => c.includes(x)));
+    if (tem("codigo de negociacao", "produto", "ticker", "ativo") && tem("quantidade", "qtd")) return { i, cab };
+  }
+  return null;
+}
+const PROVENTO = /dividendo|juros sobre capital|rendimento|reembolso|leilao de fracao|amortizacao|restituicao|premio|pagamento de juros/;
+const LANC_MOV = [ // movimentação da B3 → lançamento do Milhão
+  [/liquidacao|^compra$|^venda$/, (cred) => (cred ? "C" : "V"), null],
+  [/desdobr/, (cred) => (cred ? "B" : null), "Desdobramento"],
+  [/bonificacao/, (cred) => (cred ? "B" : null), "Bonificação"],
+  [/grupamento/, (cred) => (cred ? "B" : "G"), "Grupamento"],
+  [/fracao em ativos/, (cred) => (cred ? null : "G"), "Fração vendida em leilão"],
+];
+/* lê uma aba e devolve o que dá para aproveitar dela */
+function interpretarAba(linhas, nomeAba) {
+  const h = acharCabecalho(linhas);
+  if (!h) return null;
+  const { i, cab } = h;
+  const col = (...nomes) => { for (const n of nomes) { const k = cab.findIndex((c) => c.includes(n)); if (k >= 0) return k; } return -1; };
+  const corpo = linhas.slice(i + 1).filter((l) => l.some((x) => String(x).trim()));
+  const r = { tipo: "generico", aba: nomeAba, lancs: [], posicao: [], proventos: 0, foraBolsa: 0, outros: {} };
+  const outro = (nome) => { r.outros[nome] = (r.outros[nome] || 0) + 1; };
+
+  if (col("entrada/saida") >= 0) { // planilha de Movimentação
+    r.tipo = "movimentacao";
+    const cES = col("entrada/saida"), cData = col("data"), cMov = col("movimentacao"), cProd = col("produto");
+    const cQtd = col("quantidade"), cPreco = col("preco");
+    for (const l of corpo) {
+      const mov = semAcento(l[cMov]), cred = /credito|entrada/.test(semAcento(l[cES]));
+      const t = tickerDe(l[cProd]);
+      if (PROVENTO.test(mov)) { r.proventos++; continue; }
+      if (!t) { r.foraBolsa++; continue; }
+      const regra = LANC_MOV.find(([re]) => re.test(mov));
+      const tipo = regra ? regra[1](cred) : null;
+      if (!tipo) { outro(String(l[cMov]).trim() || "Sem nome"); continue; }
+      const preco = numeroBR(l[cPreco]);
+      const q = Math.abs(numeroBR(l[cQtd]));
+      // frações (desdobro, leilão de fração) ficam com casas decimais; compra e venda são sempre inteiras
+      const lanc = { id: novoId(), ticker: t, tipo, data: dataImport(l[cData]), qtd: tipo === "B" || tipo === "G" ? Math.round(q * 1e6) / 1e6 : Math.round(q),
+        preco: tipo === "G" ? 0 : (Number.isFinite(preco) && (tipo === "C" || tipo === "V" || regra[2] === "Bonificação") ? preco : 0),
+        origem: "b3-movimentacao" };
+      if (regra[2]) lanc.evento = regra[2];
+      if (lanc.data && lanc.qtd > 0) r.lancs.push(lanc); else outro("Linha sem data ou quantidade");
+    }
+    return r;
+  }
+  if (col("quantidade disponivel", "valor atualizado", "preco de fechamento") >= 0) { // planilha de Posição
+    r.tipo = "posicao";
+    const cTk = col("codigo de negociacao"), cProd = col("produto"), cQtd = col("quantidade");
+    const cPreco = col("preco de fechamento", "preco");
+    for (const l of corpo) {
+      const t = tickerDe(cTk >= 0 && l[cTk] ? l[cTk] : l[cProd]);
+      const qtd = Math.round(numeroBR(l[cQtd]));
+      if (!t) { if (String(l[cProd] ?? "").trim() && !/^total/i.test(String(l[cProd]))) r.foraBolsa++; continue; }
+      if (!(qtd > 0)) continue;
+      const preco = numeroBR(l[cPreco]);
+      r.posicao.push({ ticker: t, qtd, preco: Number.isFinite(preco) ? preco : (precoAtual(t) ?? 0) });
+    }
+    return r;
+  }
+  // planilha de Negociação ou CSV simples (data; ativo; operação; quantidade; preço)
+  r.tipo = col("data do negocio") >= 0 || (col("tipo de movimentacao") >= 0 && col("codigo de negociacao") >= 0) ? "negociacao" : "generico";
+  const cData = col("data do negocio", "data"), cTk = col("codigo de negociacao", "ticker", "ativo", "produto");
+  const cTipo = col("tipo de movimentacao", "operacao", "c/v", "tipo"), cQtd = col("quantidade", "qtd"), cPreco = col("preco");
+  for (const l of corpo) {
+    const t = tickerDe(l[cTk]);
+    if (!t) { if (String(l[cTk] ?? "").trim()) r.foraBolsa++; continue; }
+    const tipoTxt = semAcento(cTipo >= 0 ? l[cTipo] : "c");
+    const lanc = { id: novoId(), ticker: t, tipo: /venda|^v$/.test(tipoTxt) ? "V" : "C", data: dataImport(l[cData]),
+      qtd: Math.round(Math.abs(numeroBR(l[cQtd]))), preco: numeroBR(l[cPreco]),
+      origem: r.tipo === "negociacao" ? "b3-negociacao" : "planilha" };
+    if (lanc.data && lanc.qtd > 0 && lanc.preco >= 0) r.lancs.push(lanc); else outro("Linha sem data, quantidade ou preço");
+  }
+  return r;
+}
+/* junta todas as abas de todos os arquivos escolhidos */
+async function lerArquivosImportacao(arquivos) {
+  const tudo = { tipos: new Set(), lancs: [], posicao: {}, proventos: 0, foraBolsa: 0, outros: {}, arquivos: [] };
+  for (const arq of arquivos) {
+    const abas = /\.xlsx$/i.test(arq.name) ? await abasXlsx(await arq.arrayBuffer())
+      : [{ nome: arq.name, linhas: linhasCsv(await arq.text()) }];
+    let usou = false;
+    for (const aba of abas) {
+      const r = interpretarAba(aba.linhas, aba.nome);
+      if (!r) continue;
+      usou = true; tudo.tipos.add(r.tipo);
+      for (const l of r.lancs) l.arq = tudo.arquivos.length;
+      tudo.lancs.push(...r.lancs); tudo.proventos += r.proventos; tudo.foraBolsa += r.foraBolsa;
+      for (const [k, v] of Object.entries(r.outros)) tudo.outros[k] = (tudo.outros[k] || 0) + v;
+      for (const p of r.posicao) { // a mesma ação em duas corretoras vira uma linha só
+        const q = tudo.posicao[p.ticker] ??= { ticker: p.ticker, qtd: 0, preco: p.preco };
+        q.qtd += p.qtd;
+      }
+    }
+    tudo.arquivos.push({ nome: arq.name, usou });
+  }
+  if (!tudo.arquivos.some((a) => a.usou))
+    throw new Error("não reconheci a planilha. Use as planilhas de Negociação, Movimentação ou Posição da Área do Investidor da B3, ou um CSV com data; ativo; operação; quantidade; preço");
+  tudo.posicao = Object.values(tudo.posicao).sort((a, b) => a.ticker.localeCompare(b.ticker));
+  return tudo;
+}
+const chaveLanc = (l) => [l.data, l.ticker, l.tipo, l.qtd, (+l.preco || 0).toFixed(2)].join("|");
+const plural = (n, um, varios) => `${F.n0.format(n)} ${n === 1 ? um : varios}`;
+
+/* passo 1: explica de onde baixar; passo 2: mostra o que vai entrar e pede confirmação */
+function abrirImportacao() {
+  const dlg = $("#dlg-importar");
+  $("#imp-titulo").textContent = "Importar da B3";
+  $("#imp-corpo").innerHTML = `
+    <p class="sutil" style="margin:0">Baixe suas planilhas na Área do Investidor da B3 e traga para cá. Dá para escolher mais de um arquivo de uma vez, e o que já estiver na carteira não entra de novo.</p>
+    <ol class="passos">
+      <li>Entre em <a href="https://www.investidor.b3.com.br" target="_blank" rel="noopener">investidor.b3.com.br</a> com sua conta gov.br ou CPF.</li>
+      <li>Vá em <b>Extratos</b>, escolha <b>Negociação</b> ou <b>Movimentação</b>, ajuste o período e clique em baixar Excel.</li>
+      <li>Se preferir só o retrato de hoje, baixe a planilha de <b>Posição</b>.</li>
+    </ol>
+    <ul class="imp-resumo">
+      <li><span><b>Negociação</b>: suas compras e vendas, com a data do pregão.</span></li>
+      <li><span><b>Movimentação</b>: compras e vendas mais desdobramentos, bonificações e grupamentos.</span></li>
+      <li><span><b>Posição</b>: o que você tem hoje, sem o preço que pagou.</span></li>
+    </ul>
+    <p class="fraco" style="margin:0">Os arquivos são lidos aqui no seu navegador e não saem do seu computador.</p>`;
+  $("#imp-ok").textContent = "Escolher planilhas";
+  dlg.returnValue = ""; dlg.showModal();
+  dlg.onclose = () => { if (dlg.returnValue === "ok") $("#arquivo-importar").click(); };
+}
+function previaImportacao(tudo) {
+  const c = carteira(), dlg = $("#dlg-importar");
+  const temNeg = c.lancamentos.some((l) => l.origem === "b3-negociacao") || tudo.lancs.some((l) => l.origem === "b3-negociacao");
+  const movTrocavel = c.lancamentos.filter((l) => l.origem === "b3-movimentacao" && (l.tipo === "C" || l.tipo === "V"));
+  // Negociação e Movimentação trazem as mesmas compras (uma na data do pregão, outra na liquidação):
+  // quando há Negociação, da Movimentação só entram os eventos
+  let novos = tudo.lancs.filter((l) => !(temNeg && l.origem === "b3-movimentacao" && (l.tipo === "C" || l.tipo === "V")));
+  const pulados = tudo.lancs.length - novos.length;
+  // duas operações iguais no mesmo dia são reais e entram as duas; o que se repete entre arquivos
+  // (períodos que se sobrepõem) ou que já está na carteira entra uma vez só
+  const noArq = new Map(), precisa = new Map(), tem = new Map();
+  for (const l of novos) { const k = chaveLanc(l) + "#" + l.arq; noArq.set(k, (noArq.get(k) || 0) + 1); }
+  for (const [k, n] of noArq) { const base = k.split("#")[0]; precisa.set(base, Math.max(precisa.get(base) || 0, n)); }
+  for (const l of c.lancamentos) tem.set(chaveLanc(l), (tem.get(chaveLanc(l)) || 0) + 1);
+  const entra = [];
+  for (const l of novos) {
+    const k = chaveLanc(l), falta = (precisa.get(k) || 0) - (tem.get(k) || 0);
+    if (falta > 0) { entra.push(l); tem.set(k, (tem.get(k) || 0) + 1); }
+  }
+  novos = entra.map(({ arq, ...l }) => l);
+  const repetidos = tudo.lancs.length - pulados - novos.length;
+  const conta = (f) => novos.filter(f).length;
+  const nC = conta((l) => l.tipo === "C"), nV = conta((l) => l.tipo === "V"), nE = conta((l) => l.tipo === "B" || l.tipo === "G");
+
+  // Posição: entra só o que a carteira ainda não tem
+  const atual = Object.fromEntries(posicoes(c).map((p) => [p.ticker, p.qtd]));
+  const posNovas = tudo.posicao.filter((p) => !atual[p.ticker] && !novos.some((l) => l.ticker === p.ticker));
+  const posDif = tudo.posicao.filter((p) => atual[p.ticker] && atual[p.ticker] !== p.qtd);
+
+  const itens = [];
+  if (nC) itens.push(["Compras", nC]); if (nV) itens.push(["Vendas", nV]);
+  if (nE) itens.push(["Desdobramentos, bonificações e grupamentos", nE]);
+  if (posNovas.length) itens.push(["Ativos da planilha de posição", posNovas.length]);
+  const fora = [];
+  if (repetidos > 0) fora.push(["Repetidos (já na carteira ou em mais de um arquivo)", repetidos]);
+  if (pulados) fora.push(["Compras e vendas da Movimentação que já vêm da Negociação", pulados]);
+  if (tudo.proventos) fora.push(["Proventos (o Milhão calcula pelos dados da B3)", tudo.proventos]);
+  if (tudo.foraBolsa) fora.push(["Tesouro, renda fixa, opções e outros que o Milhão não acompanha", tudo.foraBolsa]);
+  for (const [k, v] of Object.entries(tudo.outros)) fora.push([k, v]);
+  const semCot = [...new Set([...novos.map((l) => l.ticker), ...posNovas.map((p) => p.ticker)])].filter((t) => !S.porTicker[t]);
+  const total = novos.length + posNovas.length;
+
+  $("#imp-titulo").textContent = total ? `Importar ${plural(total, "item", "itens")} para ${c.nome}` : "Nada novo para importar";
+  $("#imp-corpo").innerHTML = `
+    ${itens.length ? `<ul class="imp-resumo">${itens.map(([k, v]) => `<li><span>${esc(k)}</span><b>${F.n0.format(v)}</b></li>`).join("")}</ul>` : ""}
+    ${posNovas.length ? `<p class="imp-nota">A planilha de posição não traz o preço que você pagou. Coloque o preço médio de cada ativo (veja na sua corretora) para o resultado da carteira sair certo. Se deixar como está, o Milhão usa a cotação da planilha e a carteira começa em zero a zero.</p>
+      <div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Quantidade</th><th>Preço médio (R$)</th></tr></thead><tbody>
+      ${posNovas.map((p, k) => `<tr><td><b>${esc(p.ticker)}</b></td><td>${F.n0.format(p.qtd)}</td>
+        <td><input type="number" step="0.01" min="0" data-pm="${k}" value="${(+p.preco || 0).toFixed(2)}" aria-label="Preço médio de ${esc(p.ticker)}"></td></tr>`).join("")}
+      </tbody></table></div>` : ""}
+    ${movTrocavel.length && tudo.tipos.has("negociacao") ? `<label class="imp-check"><input type="checkbox" id="imp-trocar" checked>
+      <span>Trocar as ${plural(movTrocavel.length, "compra ou venda", "compras e vendas")} que vieram da Movimentação pelas da Negociação, que têm a data do pregão. Assim nada fica em dobro.</span></label>` : ""}
+    ${posDif.length ? `<p class="imp-nota">A quantidade na B3 é diferente da carteira em ${posDif.map((p) => `${esc(p.ticker)} (B3: ${qtdF(p.qtd)}, carteira: ${qtdF(atual[p.ticker])})`).slice(0, 6).join(", ")}. Confira se falta algum lançamento.</p>` : ""}
+    ${fora.length ? `<h3 style="margin:2px 0 -6px">Fica de fora</h3><ul class="imp-resumo">${fora.map(([k, v]) => `<li class="fora"><span>${esc(k)}</span><span>${F.n0.format(v)}</span></li>`).join("")}</ul>` : ""}
+    ${semCot.length ? `<p class="fraco" style="margin:0">Sem cotação na base do Milhão: ${esc(semCot.slice(0, 8).join(", "))}${semCot.length > 8 ? "…" : ""}. Eles entram na carteira, mas sem valor atual.</p>` : ""}`;
+  $("#imp-ok").textContent = total ? `Importar ${plural(total, "item", "itens")}` : "Fechar";
+  dlg.returnValue = ""; if (!dlg.open) dlg.showModal();
+  dlg.onclose = () => {
+    if (dlg.returnValue !== "ok" || !total) return;
+    if ($("#imp-trocar")?.checked) {
+      const sai = new Set(movTrocavel.map((l) => l.id));
+      c.lancamentos = c.lancamentos.filter((l) => !sai.has(l.id));
+    }
+    const hoje = hojeISO();
+    $$("[data-pm]").forEach((inp) => {
+      const p = posNovas[+inp.dataset.pm], pm = numeroBR(inp.value);
+      novos.push({ id: novoId(), ticker: p.ticker, tipo: "C", data: hoje, qtd: p.qtd,
+        preco: Number.isFinite(pm) && pm >= 0 ? pm : p.preco, origem: "b3-posicao", evento: "Posição na B3" });
+    });
+    c.lancamentos.push(...novos); salvar();
+    aviso(`${plural(novos.length, "item importado", "itens importados")} para ${c.nome}`);
+    if (location.hash === "#carteira") render(); else ir("#carteira");
+  };
+}
 $("#arquivo-importar").addEventListener("change", async (e) => {
-  const arq = e.target.files[0]; e.target.value = "";
-  if (!arq) return;
-  try {
-    const linhas = /\.xlsx$/i.test(arq.name) ? await linhasXlsx(await arq.arrayBuffer()) : linhasCsv(await arq.text());
-    const novos = interpretar(linhas);
-    if (!novos.length) throw new Error("nenhuma operação válida no arquivo");
-    const c = carteira(), chave = (l) => [l.data, l.ticker, l.tipo, l.qtd, l.preco.toFixed(2)].join("|");
-    const ja = new Set(c.lancamentos.map(chave));
-    const add = novos.filter((l) => !ja.has(chave(l)));
-    c.lancamentos.push(...add); salvar();
-    const fora = [...new Set(add.map((l) => l.ticker).filter((t) => !S.porTicker[t]))];
-    const rep = novos.length - add.length;
-    aviso((add.length ? `${add.length} ${add.length === 1 ? "operação importada" : "operações importadas"}` : "Nada novo no arquivo")
-      + (rep ? `, ${rep} ${rep === 1 ? "já estava" : "já estavam"} na carteira` : "") + (fora.length ? `. Sem cotação na base: ${fora.slice(0, 4).join(", ")}` : ""));
-    render();
-  } catch (err) { aviso("Não deu para importar: " + err.message); }
+  const arqs = [...e.target.files]; e.target.value = "";
+  if (!arqs.length) return;
+  try { previaImportacao(await lerArquivosImportacao(arqs)); }
+  catch (err) { aviso("Não deu para importar: " + err.message); }
 });
 
 /* ---------- backup ---------- */
@@ -915,6 +1160,11 @@ rotas.ativo = async (el, t) => {
         ${fii ? `<td>${xv(a.pvp)}</td><td>${compacto(a.liq)}</td>` : `<td>${xv(a.pl)}</td><td>${xv(a.pvp)}</td><td>${pct(a.roe)}</td><td>${pct(a.m_liq)}</td>`}</tr>`).join("")}</tbody></table></div></div>` : ""}
     <p class="fraco" style="margin-top:18px">Indicadores calculados pelo Milhão com demonstrações da CVM (últimos 12 meses${d.base?.referencia ? ", até " + dataBR(d.base.referencia) : ""}) e cotações da B3. Não é recomendação de investimento.</p>`;
   $("#add").onclick = () => abrirLancamento(d.ticker);
+  if (!fii) {
+    ligarValuation(d); graficoFluxo($("#g-fluxo"), d);
+    const card = $("#card-fcd");
+    if (card) card.onclick = (e) => { e.preventDefault(); $("#valuation").scrollIntoView({ behavior: "smooth", block: "start" }); };
+  }
   const todos = d.precos.map(([dd, v]) => ({ d: dd, v }));
   const periodo = (dias) => {
     const corte = new Date(new Date(d.data).getTime() - dias * 864e5).toISOString().slice(0, 10);
@@ -931,11 +1181,158 @@ rotas.ativo = async (el, t) => {
   graficoBarras($("#g-div"), Object.entries(porAno).sort().slice(-6).map(([r, v]) => ({ r, v, parcial: r === anoAtual })), { formato: (v) => brl(v, 2) });
 };
 
+/* ---------- valuation: fluxo de caixa descontado e modelo de dividendos ---------- */
+const TAXA_PADRAO = 14, PERPETUO_PADRAO = 4; // % ao ano; o usuário ajusta na tela
+const arred = (v, passo = 0.5) => Math.round(v / passo) * passo;
+function baseFluxo(d, qual) {
+  const f = d.fluxo || {}, anos = Object.entries(f.anual || {}).sort().map(([, v]) => v.fcl).filter((v) => !vazio(v));
+  if (qual === "12m") return f["12m"]?.fcl ?? null;
+  if (qual === "ano") return anos.at(-1) ?? null;
+  const ult = anos.slice(-3);
+  return ult.length ? ult.reduce((s, v) => s + v, 0) / ult.length : null;
+}
+function premissasSugeridas(d) {
+  const cagr = d.ind?.cagr_rec;
+  const g = vazio(cagr) ? 5 : Math.min(Math.max(arred(cagr * 100), 0), 12);
+  return d.banco
+    ? { taxa: TAXA_PADRAO + 1, perpetuo: PERPETUO_PADRAO, dpa: Math.round(d.preco * (d.ind?.dy || 0) * 100) / 100 }
+    : { base: "media3", cresc: g, perpetuo: PERPETUO_PADRAO, taxa: TAXA_PADRAO };
+}
+function calcularFcd(d, p) {
+  const fcl0 = baseFluxo(d, p.base), acoes = d.base?.acoes, dl = d.base?.divida_liquida ?? 0;
+  const r = p.taxa / 100, gp = p.perpetuo / 100, g5 = p.cresc / 100;
+  if (vazio(fcl0) || !acoes) return { erro: "Falta o fluxo de caixa ou a quantidade de ações desta empresa nos dados da CVM." };
+  if (r <= gp) return { erro: "A taxa de desconto precisa ser maior que o crescimento na perpetuidade." };
+  if (fcl0 <= 0) return { erro: "O fluxo de caixa livre está negativo na base escolhida, e aí o desconto de fluxos dá um valor negativo. Experimente outra base ou olhe Graham e Bazin.", fcl0 };
+  const anos = []; let fcl = fcl0, somaVp = 0;
+  for (let k = 1; k <= 10; k++) {
+    const g = k <= 5 ? g5 : g5 + (gp - g5) * (k - 5) / 5;
+    fcl *= 1 + g; const vp = fcl / (1 + r) ** k; somaVp += vp;
+    anos.push({ k, g, fcl, vp });
+  }
+  const perp = fcl * (1 + gp) / (r - gp), vpPerp = perp / (1 + r) ** 10;
+  const ev = somaVp + vpPerp, equity = ev - dl, preco = equity / acoes;
+  return { fcl0, anos, somaVp, vpPerp, ev, dl, equity, acoes, preco, upside: preco / d.preco - 1 };
+}
+function calcularGordon(d, p) {
+  const r = p.taxa / 100, g = p.perpetuo / 100;
+  if (!(p.dpa > 0)) return { erro: "Sem dividendos nos últimos 12 meses: o modelo de dividendos não se aplica." };
+  if (r <= g) return { erro: "O custo de capital precisa ser maior que o crescimento dos dividendos." };
+  const preco = p.dpa * (1 + g) / (r - g);
+  return { preco, upside: preco / d.preco - 1 };
+}
+function precoJustoSugerido(d) {
+  const p = premissasSugeridas(d), res = d.banco ? calcularGordon(d, p) : calcularFcd(d, p);
+  return res.erro ? null : res.preco;
+}
+
+function blocoFluxo(d) {
+  const f = d.fluxo || {}, anos = Object.entries(f.anual || {}).sort().slice(-6);
+  if (!anos.length && !f["12m"]) return "";
+  const cols = [...anos.map(([a, v]) => [a, v]), ...(f["12m"]?.fco != null ? [["12 meses", f["12m"]]] : [])];
+  const linha = (nome, k, forte) => `<tr${forte ? ' style="font-weight:700"' : ""}><td>${nome}</td>${cols.map(([, v]) => `<td class="${k === "fcl" ? cls(v[k]) : ""}">${compacto(v[k])}</td>`).join("")}</tr>`;
+  return `<div class="painel" id="fluxo"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">Fluxo de caixa</h2>
+      <span class="legenda"><span><i style="background:var(--verde-claro);outline:1px solid var(--verde)"></i>Caixa das operações</span><span><i style="background:var(--queda)"></i>Investimento em imobilizado e intangível</span><span><i style="background:var(--verde)"></i>Fluxo de caixa livre</span></span></div>
+    <div class="grafico" id="g-fluxo"></div>
+    <div style="overflow:auto;margin-top:10px"><table>
+      <thead><tr><th>R$</th>${cols.map(([a]) => `<th>${esc(a)}</th>`).join("")}</tr></thead>
+      <tbody>${linha("Caixa das operações", "fco")}${linha("Caixa de investimentos", "fci")}${linha("Caixa de financiamentos", "fcf")}
+        ${linha("Compra de imobilizado e intangível", "capex")}${linha("Fluxo de caixa livre", "fcl", true)}</tbody></table></div>
+    <p class="fraco" style="margin:10px 0 0">Fluxo de caixa livre = caixa das operações − compra de imobilizado e intangível. Dados da DFC enviada à CVM${f["12m"]?.referencia ? ", 12 meses até " + dataBR(f["12m"].referencia) : ""}.</p></div>`;
+}
+function graficoFluxo(el, d) {
+  if (!el) return;
+  const f = d.fluxo || {}, anos = Object.entries(f.anual || {}).sort().slice(-6);
+  const itens = [...anos, ...(f["12m"]?.fco != null ? [["12m", f["12m"]]] : [])];
+  if (!itens.length) { el.innerHTML = ""; return; }
+  const series = [["fco", "var(--verde-claro)", "var(--verde)"], ["capex", "var(--queda)", null], ["fcl", "var(--verde)", null]];
+  const vals = itens.flatMap(([, v]) => series.map(([k]) => v[k] || 0));
+  const max = Math.max(0, ...vals), min = Math.min(0, ...vals);
+  const L = Math.max(el.clientWidth, 320), A = 230, m = { t: 14, b: 26, e: 4, d: 4 };
+  const Y = (v) => m.t + (max - v) / ((max - min) || 1) * (A - m.t - m.b), w = (L - m.e - m.d) / itens.length;
+  const bw = Math.min(w * 0.22, 34);
+  let svg = `<line x1="${m.e}" x2="${L - m.d}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--linha)"/>`;
+  itens.forEach(([ano, v], i) => {
+    const cx = m.e + w * i + w / 2;
+    series.forEach(([k, cor, borda], j) => {
+      const val = v[k] || 0, x = cx + (j - 1.5) * bw + 2, y = Math.min(Y(val), Y(0)), h = Math.abs(Y(val) - Y(0));
+      svg += `<rect x="${x}" y="${y}" width="${bw - 4}" height="${Math.max(h, 1)}" rx="2" fill="${cor}" ${borda ? `stroke="${borda}"` : ""}><title>${esc(ano)}: ${esc(compacto(val))}</title></rect>`;
+    });
+    svg += `<text x="${cx}" y="${A - 6}" text-anchor="middle" font-size="12" fill="var(--tinta-3)">${esc(ano === "12m" ? "12 meses" : ano)}</text>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${L} ${A}" height="${A}" role="img" aria-label="Fluxo de caixa por ano">${svg}</svg>`;
+}
+
+function blocoValuation(d) {
+  const s = premissasSugeridas(d);
+  const campo = (nome, rotulo, valor, passo = 0.5) => `<label class="campo">${rotulo}<input type="number" name="${nome}" value="${valor}" step="${passo}"></label>`;
+  const form = d.banco
+    ? `${campo("dpa", "Dividendos por ação nos próximos 12 meses (R$)", (s.dpa || 0).toFixed(2), 0.01)}
+       ${campo("perpetuo", "Crescimento dos dividendos (% ao ano)", s.perpetuo)}
+       ${campo("taxa", "Custo de capital (% ao ano)", s.taxa)}`
+    : `<label class="campo">Fluxo de caixa de partida<select name="base">
+         <option value="media3">Média dos últimos 3 anos</option><option value="12m">Últimos 12 meses</option><option value="ano">Último ano fechado</option></select></label>
+       ${campo("cresc", "Crescimento nos próximos 5 anos (% ao ano)", s.cresc)}
+       ${campo("perpetuo", "Crescimento na perpetuidade (% ao ano)", s.perpetuo)}
+       ${campo("taxa", "Taxa de desconto (% ao ano)", s.taxa)}`;
+  return `<div class="painel" id="valuation"><div class="cabeca" style="margin-bottom:12px"><div><h2 style="margin:0">${d.banco ? "Valuation pelo modelo de dividendos" : "Valuation por fluxo de caixa descontado"}</h2>
+      <p class="fraco" style="margin:4px 0 0">${d.banco ? "Em bancos e seguradoras o caixa é a matéria-prima do negócio, então o preço justo sai dos dividendos que a empresa paga." : "Quanto valem hoje os fluxos de caixa que a empresa deve gerar daqui para a frente."}</p></div>
+      <button class="btn texto" id="fcd-padrao" type="button">Voltar às premissas sugeridas</button></div>
+    <div class="fcd"><form id="f-fcd">${form}
+      <p class="fraco" style="margin:0">Sugestão do Milhão: crescimento pela receita dos últimos 5 anos (limitado a 12%), perpetuidade de ${PERPETUO_PADRAO}% e taxa de ${d.banco ? TAXA_PADRAO + 1 : TAXA_PADRAO}%. A taxa precisa ficar acima da Selic.</p></form>
+      <div id="r-fcd"></div></div></div>`;
+}
+function ligarValuation(d) {
+  const f = $("#f-fcd"); if (!f) return;
+  const ler = () => d.banco
+    ? { dpa: numeroBR(f.dpa.value), perpetuo: numeroBR(f.perpetuo.value), taxa: numeroBR(f.taxa.value) }
+    : { base: f.base.value, cresc: numeroBR(f.cresc.value), perpetuo: numeroBR(f.perpetuo.value), taxa: numeroBR(f.taxa.value) };
+  const mostrar = () => {
+    const p = ler(), res = d.banco ? calcularGordon(d, p) : calcularFcd(d, p), out = $("#r-fcd");
+    if (res.erro) { out.innerHTML = `<div class="painel vazio" style="border-style:dashed"><h3>Não dá para calcular com essas premissas</h3><p>${esc(res.erro)}</p></div>`; return; }
+    const cabeca = `<div class="numeros"><div><span>Preço justo</span><strong>${brl(res.preco)}</strong></div>
+        <div><span>Preço atual</span><strong>${brl(d.preco)}</strong></div>
+        <div><span>${res.upside >= 0 ? "Potencial até o preço justo" : "Acima do preço justo"}</span><strong class="${cls(res.upside)}">${pct(res.upside, 1, true)}</strong>
+          <small class="fraco">${res.upside >= 0 ? "a ação está abaixo do preço justo" : "a ação está acima do preço justo"}</small></div></div>`;
+    if (d.banco) { out.innerHTML = cabeca + `<p class="sutil" style="margin:14px 0 0">Preço justo = dividendo de ${brl(p.dpa)} × (1 + ${xv(p.perpetuo, 1)}%) ÷ (${xv(p.taxa, 1)}% − ${xv(p.perpetuo, 1)}%).</p>`; return; }
+    // sensibilidade: taxa de desconto x crescimento na perpetuidade
+    const taxas = [-2, -1, 0, 1, 2].map((x) => p.taxa + x), perps = [-1, -0.5, 0, 0.5, 1].map((x) => p.perpetuo + x);
+    const grade = taxas.map((tx) => `<tr><th>${xv(tx, 1)}%</th>${perps.map((gp) => {
+      const r2 = calcularFcd(d, { ...p, taxa: tx, perpetuo: gp });
+      const atual = tx === p.taxa && gp === p.perpetuo;
+      return `<td class="${r2.erro ? "" : cls(r2.upside)}" style="${atual ? "background:var(--verde-claro);font-weight:700" : ""}">${r2.erro ? "–" : brl(r2.preco)}</td>`;
+    }).join("")}</tr>`).join("");
+    out.innerHTML = cabeca + `
+        <h3>Como o preço justo é montado</h3><table><tbody>
+          <tr><td class="esq">Fluxo de caixa livre de partida</td><td>${compacto(res.fcl0)}</td></tr>
+          <tr><td class="esq">Valor presente dos próximos 10 anos</td><td>${compacto(res.somaVp)}</td></tr>
+          <tr><td class="esq">Valor presente da perpetuidade</td><td>${compacto(res.vpPerp)} <small class="fraco">(${pct(res.vpPerp / res.ev, 0)} do total)</small></td></tr>
+          <tr style="font-weight:700"><td class="esq">Valor da empresa</td><td>${compacto(res.ev)}</td></tr>
+          <tr><td class="esq">${res.dl >= 0 ? "Menos a dívida líquida" : "Mais o caixa líquido"}</td><td>${compacto(Math.abs(res.dl))}</td></tr>
+          <tr style="font-weight:700"><td class="esq">Valor para os acionistas</td><td>${compacto(res.equity)}</td></tr>
+          <tr><td class="esq">Dividido por ${F.n0.format(res.acoes)} ações</td><td><b>${brl(res.preco)}</b></td></tr></tbody></table>
+        <h3>Preço justo com outras premissas</h3>
+        <div style="overflow:auto"><table><thead><tr><th>Taxa de desconto ↓ / perpetuidade →</th>${perps.map((g) => `<th>${xv(g, 1)}%</th>`).join("")}</tr></thead><tbody>${grade}</tbody></table></div>
+        <p class="fraco" style="margin:8px 0 0">Em verde, preços justos acima da cotação de hoje; em vermelho, abaixo. Em destaque, as premissas escolhidas.</p>
+      <details style="margin-top:14px"><summary class="sutil" style="cursor:pointer">Ver a projeção ano a ano</summary>
+        <div style="overflow:auto;margin-top:8px"><table><thead><tr><th>Ano</th><th>Crescimento</th><th>Fluxo de caixa livre</th><th>Valor presente</th></tr></thead>
+        <tbody>${res.anos.map((a) => `<tr><td>${a.k}</td><td>${pct(a.g, 1)}</td><td>${compacto(a.fcl)}</td><td>${compacto(a.vp)}</td></tr>`).join("")}</tbody></table></div></details>`;
+  };
+  f.addEventListener("input", mostrar);
+  $("#fcd-padrao").onclick = () => {
+    const s = premissasSugeridas(d);
+    for (const [k, v] of Object.entries(s)) if (f[k]) f[k].value = typeof v === "number" ? (k === "dpa" ? v.toFixed(2) : v) : v;
+    mostrar();
+  };
+  mostrar();
+}
+
 function blocoAcao(d, ind, med) {
   const grupos = {};
   for (const m of S.meta.indicadores) (grupos[m.grupo] ??= []).push(m);
   const up = (v) => v && d.preco ? v / d.preco - 1 : null;
   const hist = Object.entries(d.historico || {}).sort().slice(-6);
+  const fcdSug = precoJustoSugerido(d);
   return `<div class="grade g-ativo">
     <div class="painel"><div class="cabeca" style="margin-bottom:10px"><h2 style="margin:0">Indicadores</h2><span class="fraco">Mediana do setor à direita</span></div>
       ${Object.entries(grupos).map(([g, itens]) => `<div class="ind-grupo"><h3>${g}</h3>${itens.map((m) => `<div class="ind-linha"><span>${m.nome}</span><strong>${fmtInd(ind[m.chave], m.formato)}</strong><span class="cmp">${fmtInd(med[m.chave], m.formato)}</span></div>`).join("")}</div>`).join("")}
@@ -945,11 +1342,16 @@ function blocoAcao(d, ind, med) {
         <div class="valor-justo">
           <div><span>Graham</span><strong>${brl(d.graham)}</strong><span class="${cls(up(d.graham))}">${d.graham ? pct(up(d.graham), 0, true) + " de upside" : "Não se aplica (lucro ou patrimônio negativo)"}</span></div>
           <div><span>Bazin (DY de 6%)</span><strong>${brl(d.bazin)}</strong><span class="${cls(up(d.bazin))}">${d.bazin ? pct(up(d.bazin), 0, true) + " de upside" : "Sem dividendos em 5 anos"}</span></div>
+          <a href="#valuation" style="grid-column:1/-1;text-decoration:none;border:1px solid var(--linha-2);border-radius:8px;padding:12px;display:block" id="card-fcd">
+            <span>${d.banco ? "Modelo de dividendos" : "Fluxo de caixa descontado"}</span><strong>${brl(fcdSug)}</strong>
+            <span class="${cls(up(fcdSug))}">${fcdSug ? pct(up(fcdSug), 0, true) + " de upside com as premissas sugeridas" : "Não se aplica agora"}</span></a>
         </div>
-        <p class="fraco" style="margin:10px 0 0">Graham: √(22,5 × LPA × VPA). Bazin: média de proventos de 5 anos ÷ 6%.</p></div>
+        <p class="fraco" style="margin:10px 0 0">Graham: √(22,5 × LPA × VPA). Bazin: média de proventos de 5 anos ÷ 6%. ${d.banco ? "Modelo de dividendos" : "Fluxo de caixa descontado"}: veja e ajuste as premissas abaixo.</p></div>
       <div class="painel"><h2>Checklist buy and hold</h2><p class="placar"><b>${d.pontos ?? 0}</b> de ${d.checklist?.length || 8} critérios</p>
         <ul class="checklist">${(d.checklist || []).map((c) => `<li class="${c.ok ? "sim" : "nao"}"><i aria-hidden="true">${c.ok ? "✓" : "×"}</i><span>${esc(c.item)}<span class="oculto">: ${c.ok ? "sim" : "não"}</span></span></li>`).join("")}</ul></div>
     </div></div>
+    ${blocoValuation(d)}
+    ${blocoFluxo(d)}
     ${hist.length ? `<div class="painel"><h2>Resultados por ano</h2><div style="overflow:auto"><table>
       <thead><tr><th>Ano</th><th>Receita líquida</th><th>Lucro líquido</th><th>Margem líquida</th><th>ROE</th><th>P/L no fim do ano</th><th>Proventos por ação</th><th>DY no ano</th></tr></thead>
       <tbody>${hist.reverse().map(([a, h]) => `<tr><td>${a}</td><td>${compacto(h.receita)}</td><td class="${cls(h.lucro)}">${compacto(h.lucro)}</td><td>${pct(h.m_liq)}</td><td>${pct(h.roe)}</td><td>${xv(h.pl)}</td><td>${brl(h.proventos)}</td><td>${pct(h.dy)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
