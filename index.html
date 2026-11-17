@@ -436,10 +436,23 @@ details.ajustar .painel{border:none;padding:0}
 /* Filtrão: fica quieto no canto até ser chamado */
 .filtrao{display:none}
 body.com-filtrao .filtrao{display:block}
-.filtrao-botao{position:fixed;right:18px;bottom:16px;z-index:40;width:64px;height:64px;padding:0;border:none;background:none;cursor:pointer;border-radius:50%;
-  filter:drop-shadow(0 4px 10px rgba(19,36,28,.22))}
-.filtrao-botao .filtrao-boneco{transition:transform .2s ease}
-.filtrao-botao:hover .filtrao-boneco{transform:translateY(-3px) rotate(-4deg)}
+.filtrao-botao{position:fixed;right:18px;bottom:16px;z-index:40;width:64px;height:64px;padding:0;border:none;background:none;cursor:pointer;border-radius:50%}
+.filtrao-cena{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .2s ease}
+.filtrao-botao:hover .filtrao-cena{transform:translateY(-3px) rotate(-4deg)}
+.filtrao-botao .filtrao-boneco{animation:respirar 4.5s ease-in-out infinite;transform:translateZ(0);filter:drop-shadow(0 4px 8px rgba(19,36,28,.22))}
+@keyframes respirar{0%,100%{translate:0 0}50%{translate:0 -1.5px}}
+/* gráficos girando em volta da cabeça, passando por trás dela */
+.filtrao-orbita{position:absolute;left:50%;top:9%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(72deg);--r:31px;pointer-events:none}
+.filtrao-orbita i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:4px;background:#fff;box-shadow:0 1px 3px rgba(19,36,28,.28);
+  display:flex;align-items:center;justify-content:center;animation:orbitar 8s linear infinite}
+.filtrao-orbita i svg{width:11px;height:11px}
+@keyframes orbitar{
+  from{transform:rotateZ(var(--a)) translateX(var(--r)) rotateZ(calc(-1 * var(--a))) rotateX(-72deg)}
+  to{transform:rotateZ(calc(var(--a) + 360deg)) translateX(var(--r)) rotateZ(calc(-1 * var(--a) - 360deg)) rotateX(-72deg)}}
+.filtrao.pensando .filtrao-orbita i{animation-duration:2.2s}
+.filtrao-pupilas{transform:translate(var(--ox,0px),var(--oy,0px));transition:transform .18s ease-out}
+.filtrao-botao.ocioso .filtrao-pupilas{animation:olhar 7s ease-in-out infinite}
+@keyframes olhar{0%,18%{transform:translate(0,0)}24%,40%{transform:translate(-2.1px,.4px)}46%,60%{transform:translate(2.1px,-.6px)}66%,80%{transform:translate(.6px,1.4px)}86%,100%{transform:translate(0,0)}}
 .filtrao-botao:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
 .filtrao-botao .filtrao-boneco{width:64px;height:64px;display:block}
 .filtrao-dica{position:absolute;right:72px;bottom:18px;white-space:nowrap;background:var(--tinta);color:var(--papel);font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:8px;
@@ -481,9 +494,10 @@ body.com-filtrao .filtrao{display:block}
 .filtrao-enviar{width:40px;height:40px;flex:none;border:none;border-radius:12px;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .filtrao-enviar svg{width:19px;height:19px}
 .filtrao-aviso{margin:0;padding:0 12px 10px;font-size:11.5px;color:var(--tinta-3);line-height:1.35}
-@media (max-width:700px){.filtrao-botao{right:12px;bottom:12px;width:54px;height:54px}.filtrao-botao .filtrao-boneco{width:54px;height:54px}
+@media (max-width:700px){.filtrao-orbita{--r:27px}.filtrao-orbita i{width:12px;height:12px;left:-6px;top:-6px}.filtrao-orbita i svg{width:10px;height:10px}
+  .filtrao-botao{right:12px;bottom:12px;width:54px;height:54px}.filtrao-botao .filtrao-boneco{width:54px;height:54px}
   .filtrao-painel{right:12px;bottom:76px;height:min(560px,calc(100vh - 100px))}.filtrao-dica{display:none}}
-@media (prefers-reduced-motion:reduce){.filtrao-olhos,.fm.pensando span,.filtrao-painel{animation:none}}
+@media (prefers-reduced-motion:reduce){.filtrao-olhos,.fm.pensando span,.filtrao-painel,.filtrao-orbita i,.filtrao-botao .filtrao-boneco,.filtrao-pupilas{animation:none!important}}
 </style>
 </head>
 <body>
@@ -2812,12 +2826,19 @@ const FILTRAO_SVG = (cls = "") => `<svg class="filtrao-boneco ${cls}" viewBox="0
   <path d="M13.6 29C13 15 25 6 40 6s27.5 9 26.4 22.5c-5.5-6.6-13.6-9.6-22-9.4-3 3.1-8.4 5-14.6 5-6.3 0-11.4 1.8-16.2 4.9z" fill="#3A2416"/>
   <path d="M23.5 26.5q5.5-3.4 11 0M45.5 26.5q5.5-3.4 11 0" stroke="#3A2416" stroke-width="2.4" fill="none" stroke-linecap="round"/>
   <g class="filtrao-olhos">
-    <ellipse cx="29" cy="35" rx="5.2" ry="5.8" fill="#fff"/><circle cx="30" cy="36" r="3" fill="#1C1410"/><circle cx="31.1" cy="34.8" r="1" fill="#fff"/>
-    <ellipse cx="51" cy="35" rx="5.2" ry="5.8" fill="#fff"/><circle cx="52" cy="36" r="3" fill="#1C1410"/><circle cx="53.1" cy="34.8" r="1" fill="#fff"/>
+    <ellipse cx="29" cy="35" rx="5.2" ry="5.8" fill="#fff"/><ellipse cx="51" cy="35" rx="5.2" ry="5.8" fill="#fff"/>
+    <g class="filtrao-pupilas"><circle cx="29.5" cy="35.5" r="3" fill="#1C1410"/><circle cx="30.6" cy="34.3" r="1" fill="#fff"/>
+      <circle cx="51.5" cy="35.5" r="3" fill="#1C1410"/><circle cx="52.6" cy="34.3" r="1" fill="#fff"/></g>
   </g>
   <ellipse cx="21.5" cy="44" rx="4.2" ry="2.6" fill="#E3876A" opacity=".45"/><ellipse cx="58.5" cy="44" rx="4.2" ry="2.6" fill="#E3876A" opacity=".45"/>
   <path d="M33 45.5q7 6.5 14 0" stroke="#5A2E1E" stroke-width="2.4" fill="none" stroke-linecap="round"/>
 </svg>`;
+const ORBITA_FILTRAO = [
+  '<svg viewBox="0 0 16 16"><path d="M5 2.5v11M11 3.5v9" stroke="#7B8C83" stroke-width="1.2"/><rect x="3" y="5" width="4" height="6" rx="1" fill="#0F8A62"/><rect x="9" y="6" width="4" height="4" rx="1" fill="#C0432E"/></svg>',
+  '<svg viewBox="0 0 16 16" fill="none" stroke="#0F8A62" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12 6 8.5l3 2 4.5-6"/><path d="M10 4.5h3.5V8"/></svg>',
+  '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3" fill="#E2B04A" stroke="#A97A1C" stroke-width="1.2"/><path d="M9.8 6.2c-.4-.6-1-.9-1.8-.9-1 0-1.7.5-1.7 1.3 0 1.8 3.6.9 3.6 2.8 0 .8-.8 1.4-1.9 1.4-.8 0-1.5-.4-1.9-1M8 4v1.3M8 10.8V12" fill="none" stroke="#6B4D10" stroke-width="1.1" stroke-linecap="round"/></svg>',
+  '<svg viewBox="0 0 16 16"><rect x="2.5" y="9" width="2.6" height="4.5" rx=".6" fill="#2FCB8F"/><rect x="6.7" y="6" width="2.6" height="7.5" rx=".6" fill="#0F8A62"/><rect x="10.9" y="3" width="2.6" height="10.5" rx=".6" fill="#0B6E4F"/></svg>',
+];
 const SUGESTOES_FILTRAO = ["Como importo minhas ações da B3?", "O que é preço teto?", "Como está minha carteira?", "Como uso o gráfico da Análise?"];
 const FT = { aberto: false, msgs: [], pensando: false };
 
@@ -2840,7 +2861,7 @@ function montarFiltrao() {
       <p class="filtrao-aviso">Respostas do Gemini, do Google. Sua pergunta e um resumo da carteira vão para ele. Não é recomendação de investimento.</p>
     </section>
     <button class="filtrao-botao" id="filtrao-botao" aria-label="Abrir o Filtrão, assistente do Milhão" aria-expanded="false" aria-controls="filtrao-painel">
-      ${FILTRAO_SVG()}<span class="filtrao-dica">Dúvidas? Chama o Filtrão</span>
+      <span class="filtrao-cena"><span class="filtrao-orbita" aria-hidden="true">${ORBITA_FILTRAO.map((ico, k) => `<i style="--a:${k * 90}deg">${ico}</i>`).join("")}</span>${FILTRAO_SVG()}</span><span class="filtrao-dica">Dúvidas? Chama o Filtrão</span>
     </button>`;
   document.body.appendChild(raiz);
   $("#filtrao-botao").onclick = () => abrirFiltrao(!FT.aberto);
@@ -2854,6 +2875,24 @@ function montarFiltrao() {
     const t = txt.value.trim(); if (!t || FT.pensando) return;
     txt.value = ""; txt.style.height = "auto"; perguntarFiltrao(t);
   };
+  const botao = $("#filtrao-botao");
+  botao.classList.add("ocioso");
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let quadro = 0, parado = 0;
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "touch" || quadro) return;
+      quadro = requestAnimationFrame(() => {
+        quadro = 0;
+        const r = botao.getBoundingClientRect(); if (!r.width) return;
+        const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height * 0.45), d = Math.hypot(dx, dy) || 1;
+        const k = Math.min(1, d / 120);   // perto, ele olha menos de lado
+        botao.style.setProperty("--ox", (dx / d * 2.1 * k).toFixed(2) + "px");
+        botao.style.setProperty("--oy", (dy / d * 1.8 * k).toFixed(2) + "px");
+        botao.classList.remove("ocioso"); clearTimeout(parado);
+        parado = setTimeout(() => botao.classList.add("ocioso"), 4000);
+      });
+    }, { passive: true });
+  }
   raiz.addEventListener("keydown", (e) => { if (e.key === "Escape" && FT.aberto) { abrirFiltrao(false); $("#filtrao-botao").focus(); } });
 }
 function abrirFiltrao(abrir) {
@@ -2918,7 +2957,7 @@ async function contextoFiltrao() {
   return L.join("\n");
 }
 async function perguntarFiltrao(texto) {
-  FT.msgs.push({ de: "eu", texto }); FT.pensando = true; desenharFiltrao();
+  FT.msgs.push({ de: "eu", texto }); FT.pensando = true; desenharFiltrao(); $("#filtrao").classList.add("pensando");
   let resposta, erro = false;
   try {
     if (!S.nuvem || !S.usuario) throw Object.assign(new Error("sem_login"), { codigo: "sem_login" });
@@ -2940,7 +2979,7 @@ async function perguntarFiltrao(texto) {
       rede: "Parece que a internet caiu. Confere a conexão e tenta de novo.",
     }[e.codigo] || "Não consegui responder agora. Tenta de novo daqui a pouco.";
   }
-  FT.msgs.push({ de: "filtrao", texto: resposta, erro }); FT.pensando = false; desenharFiltrao();
+  FT.msgs.push({ de: "filtrao", texto: resposta, erro }); FT.pensando = false; desenharFiltrao(); $("#filtrao").classList.remove("pensando");
 }
 
 /* ---------- início ---------- */
