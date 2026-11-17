@@ -198,6 +198,64 @@ th.ordena[aria-sort=descending]::after{content:" ▾"} th.ordena[aria-sort=ascen
 .lista-carteiras button{text-align:left;border:1px solid var(--linha);background:var(--branco);border-radius:var(--r);padding:18px;cursor:pointer}
 .lista-carteiras button:hover{border-color:var(--verde)}
 .lista-carteiras strong{font-size:18px;display:block;margin-bottom:4px}
+/* análise */
+.analise-ativos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.analise-ativos button{border:1px solid var(--linha);background:var(--branco);border-radius:999px;padding:6px 14px;font-weight:650;cursor:pointer}
+.analise-ativos button[aria-pressed=true]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.analise-ativos input{max-width:200px;border-radius:999px}
+.analise-painel{padding:16px 16px 10px}
+.analise-barra{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.analise-titulo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.analise-titulo .tk{font-size:22px;font-weight:800}
+.analise-titulo span{color:var(--tinta-3);font-size:13.5px}
+.analise-titulo strong{font-size:20px}
+.analise-titulo em{font-style:normal;font-weight:700}
+.analise-controles{display:flex;gap:10px;flex-wrap:wrap}
+.segmentos{display:inline-flex;border:1px solid var(--linha);border-radius:8px;overflow:hidden;background:var(--branco)}
+.segmentos button{border:none;background:none;padding:6px 11px;font-size:13.5px;font-weight:600;color:var(--tinta-2);cursor:pointer}
+.segmentos button+button{border-left:1px solid var(--linha-2)}
+.segmentos button[aria-pressed=true]{background:var(--verde-claro);color:var(--verde)}
+.analise-ind{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip-check{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px 4px 8px;border:1px solid var(--linha-2);border-radius:999px;cursor:pointer;color:var(--tinta-2)}
+.chip-check input{accent-color:var(--cor,var(--verde));margin:0}
+.chip-check:has(input:checked){border-color:var(--cor,var(--verde));color:var(--tinta)}
+.velas-caixa{position:relative;height:clamp(380px,62vh,620px);user-select:none}
+.velas-caixa canvas{display:block;cursor:crosshair;touch-action:none}
+.velas-legenda{position:absolute;left:8px;top:6px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--tinta-2);pointer-events:none;
+  background:rgba(255,255,255,.86);padding:4px 8px;border-radius:6px;max-width:calc(100% - 90px)}
+.velas-legenda b{color:var(--tinta)}
+.link-analise{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:650;color:var(--verde);text-decoration:none}
+.link-analise svg,.ir-grafico svg{width:17px;height:17px}
+/* preço teto */
+.painel.teto{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;border-color:#E8D8B0;background:linear-gradient(90deg,var(--ouro-claro),var(--branco) 70%)}
+.painel.teto .rotulo{font-size:13px;color:var(--tinta-2)}
+.painel.teto strong{display:block;font-size:30px;font-weight:800;margin:2px 0}
+.painel.teto p{margin:0;color:var(--tinta-2)}
+.margem span{display:flex;align-items:center;gap:6px}
+.margem input{width:80px}
+.celula-teto small{display:block;font-size:11.5px;font-weight:650}
+/* seletor de carteiras mais rico */
+.cc-valor{display:block;font-size:24px;font-weight:800;letter-spacing:-.01em;margin-top:2px}
+.cc-dia{display:block;font-size:13.5px;font-weight:650}
+.cc-spark{display:block;height:44px;margin:10px 0 8px}
+.cc-spark svg{width:100%;height:44px}
+.cc-dados{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--linha-2);padding-top:10px}
+.cc-dados small{display:block;font-size:11.5px;color:var(--tinta-3)}
+.cc-dados b{font-size:14.5px}
+.g-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mercado-lista{padding:16px 18px}
+.mercado-lista h3{margin-bottom:8px}
+.mercado-lista ol{list-style:none;margin:0;padding:0}
+.mercado-lista li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--linha-2)}
+.mercado-lista li:first-child{border-top:none}
+.mercado-ativo{text-decoration:none;min-width:0}
+.mercado-ativo b{display:block}
+.mercado-ativo span{display:block;font-size:12px;color:var(--tinta-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mercado-num{text-align:right;font-size:13.5px}
+.mercado-num em{display:block;font-style:normal;font-weight:700;font-size:12.5px}
+.ir-grafico{color:var(--tinta-3);display:flex;padding:6px;border-radius:6px}
+.ir-grafico:hover{color:var(--verde);background:var(--verde-claro)}
+@media (max-width:980px){.g-3{grid-template-columns:1fr}.painel.teto{grid-template-columns:1fr}}
 .cartao-carteira{position:relative;display:flex}
 .cartao-carteira > button[data-id]{flex:1;padding-right:48px}
 .lista-carteiras .excluir-carteira{position:absolute;top:10px;right:10px;padding:7px;border:1px solid transparent;border-radius:8px;background:none;
@@ -596,6 +654,262 @@ function graficoBarras(el, itens, { altura = 200, cor = "var(--ouro)", formato =
   }).join("") + `</svg>`;
 }
 
+/* ---------- gráfico de candles (canvas desenhado à mão) ---------- */
+function agruparVelas(d, tempo) {
+  if (tempo === "D") return d.t.map((t, i) => ({ t, o: d.o[i], h: d.h[i], l: d.l[i], c: d.c[i], v: d.v[i] }));
+  const chave = tempo === "S"
+    ? (t) => { const x = new Date(t + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x.toISOString().slice(0, 10); }
+    : (t) => t.slice(0, 7);
+  const out = []; let atual = null, k = null;
+  d.t.forEach((t, i) => {
+    const kk = chave(t);
+    if (kk !== k) { if (atual) out.push(atual); k = kk; atual = { t, o: d.o[i], h: d.h[i], l: d.l[i], c: d.c[i], v: d.v[i] }; }
+    else { atual.h = Math.max(atual.h, d.h[i]); atual.l = Math.min(atual.l, d.l[i]); atual.c = d.c[i]; atual.v += d.v[i]; }
+  });
+  if (atual) out.push(atual);
+  return out;
+}
+function mediaMovel(vals, n) {
+  const out = Array(vals.length).fill(null); let s = 0;
+  for (let i = 0; i < vals.length; i++) { s += vals[i]; if (i >= n) s -= vals[i - n]; if (i >= n - 1) out[i] = s / n; }
+  return out;
+}
+function bandasBollinger(vals, n = 20, k = 2) {
+  const mm = mediaMovel(vals, n), sup = [], inf = [];
+  for (let i = 0; i < vals.length; i++) {
+    if (mm[i] === null) { sup.push(null); inf.push(null); continue; }
+    let s2 = 0; for (let j = i - n + 1; j <= i; j++) s2 += (vals[j] - mm[i]) ** 2;
+    const dp = Math.sqrt(s2 / n); sup.push(mm[i] + k * dp); inf.push(mm[i] - k * dp);
+  }
+  return { mm, sup, inf };
+}
+function indiceForcaRelativa(vals, n = 14) {
+  const out = Array(vals.length).fill(null); let g = 0, p = 0;
+  for (let i = 1; i < vals.length; i++) {
+    const d = vals[i] - vals[i - 1], gi = Math.max(d, 0), pi = Math.max(-d, 0);
+    if (i <= n) { g += gi; p += pi; if (i === n) { g /= n; p /= n; out[i] = p === 0 ? 100 : 100 - 100 / (1 + g / p); } }
+    else { g = (g * (n - 1) + gi) / n; p = (p * (n - 1) + pi) / n; out[i] = p === 0 ? 100 : 100 - 100 / (1 + g / p); }
+  }
+  return out;
+}
+const CORES_MM = { 9: "#2E7BD6", 21: "#A97A1C", 50: "#8E44AD", 200: "#13241C" };
+
+function GraficoVelas(caixa) {
+  const g = { velas: [], tempo: "D", ind: {}, marcas: [], linhas: [], ini: 0, fim: 0, mouse: null };
+  caixa.innerHTML = `<canvas></canvas><div class="velas-legenda"></div>`;
+  const cv = $("canvas", caixa), leg = $(".velas-legenda", caixa), ctx = cv.getContext("2d");
+  const DIR = 70, BAIXO = 26, ALTURA_IFR = 92;
+  const UP = "#0F8A62", DOWN = "#C0432E", GRADE = "#EBF0ED", TEXTO = "#7B8C83";
+  let calc = {};
+
+  g.dados = (velas, tempo) => { g.velas = velas; g.tempo = tempo; recalcular(); };
+  g.config = (c) => { Object.assign(g, c); recalcular(); };
+  g.periodo = (n) => { const N = g.velas.length; g.fim = N + 2; g.ini = Math.max(0, N - n); desenhar(); };
+  function recalcular() {
+    const c = g.velas.map((v) => v.c);
+    calc = { mm: {}, boll: g.ind.boll ? bandasBollinger(c) : null, ifr: g.ind.ifr ? indiceForcaRelativa(c) : null };
+    for (const n of [9, 21, 50, 200]) if (g.ind["mm" + n]) calc.mm[n] = mediaMovel(c, n);
+    // marcas das operações: cada uma vai para o candle do período em que aconteceu
+    calc.marcas = [];
+    for (const m of g.marcas) {
+      let lo = 0, hi = g.velas.length - 1, i = -1;
+      while (lo <= hi) { const md = (lo + hi) >> 1; if (g.velas[md].t <= m.t) { i = md; lo = md + 1; } else hi = md - 1; }
+      if (i >= 0) calc.marcas.push({ i, tipo: m.tipo });
+    }
+    desenhar();
+  }
+  const fmtP = (v) => nf(v >= 100 ? 2 : v >= 1 ? 2 : 4).format(v);
+  const fmtData = (t) => g.tempo === "M" ? t.slice(5, 7) + "/" + t.slice(0, 4) : dataBR(t);
+
+  function desenhar() {
+    const W = caixa.clientWidth, H = caixa.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (!W || !H) return;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const N = g.velas.length; if (!N) return;
+    const pw = W - DIR, hIfr = calc.ifr ? ALTURA_IFR : 0, hMain = H - BAIXO - hIfr;
+    const vis = g.fim - g.ini, esp = pw / vis;
+    const X = (i) => (i - g.ini + 0.5) * esp;
+    const i0 = Math.max(0, Math.floor(g.ini)), i1 = Math.min(N - 1, Math.ceil(g.fim));
+    // escala de preço: o que está visível, mais médias, bandas e linhas da posição
+    let mn = Infinity, mx = -Infinity;
+    for (let i = i0; i <= i1; i++) { mn = Math.min(mn, g.velas[i].l); mx = Math.max(mx, g.velas[i].h); }
+    const inclui = (arr) => { if (!arr) return; for (let i = i0; i <= i1; i++) if (arr[i] !== null) { mn = Math.min(mn, arr[i]); mx = Math.max(mx, arr[i]); } };
+    Object.values(calc.mm).forEach(inclui); if (calc.boll) { inclui(calc.boll.sup); inclui(calc.boll.inf); }
+    // linhas da posição entram na escala só se estiverem perto; longe demais, viram uma etiqueta na borda
+    const faixa = (mx - mn) || mx * 0.05;
+    for (const l of g.linhas) {
+      l.fora = !(l.v > 0) ? 0 : l.v > mx + faixa * 0.35 ? 1 : l.v < mn - faixa * 0.35 ? -1 : 0;
+      if (l.v > 0 && !l.fora) { mn = Math.min(mn, l.v); mx = Math.max(mx, l.v); }
+    }
+    if (mn === mx) { mn *= 0.98; mx *= 1.02; }
+    const folga = (mx - mn) * 0.07; mn -= folga; mx += folga;
+    const Y = (v) => 8 + (1 - (v - mn) / (mx - mn)) * (hMain - 16);
+    g._esc = { X, Y, esp, pw, hMain, hIfr, mn, mx, W, H };
+
+    // grade e eixo de preço
+    ctx.font = "11.5px Archivo, Arial, sans-serif"; ctx.textBaseline = "middle";
+    const passoBruto = (mx - mn) / 6, pot = 10 ** Math.floor(Math.log10(passoBruto));
+    const passo = [1, 2, 2.5, 5, 10].map((k) => k * pot).find((k) => k >= passoBruto) || passoBruto;
+    for (let v = Math.ceil(mn / passo) * passo; v <= mx; v += passo) {
+      const y = Math.round(Y(v)) + 0.5;
+      ctx.strokeStyle = GRADE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke();
+      ctx.fillStyle = TEXTO; ctx.textAlign = "left"; ctx.fillText(fmtP(v), pw + 8, y);
+    }
+    // eixo de datas
+    const cada = Math.max(1, Math.ceil(90 / esp));
+    ctx.textAlign = "center";
+    for (let i = i0; i <= i1; i++) {
+      if ((N - 1 - i) % cada) continue;
+      const x = X(i); if (x < 30 || x > pw - 30) continue;
+      ctx.strokeStyle = GRADE; ctx.beginPath(); ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, hMain); ctx.stroke();
+      ctx.fillStyle = TEXTO; ctx.fillText(fmtData(g.velas[i].t), x, H - BAIXO / 2);
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, pw, hMain); ctx.clip();
+    // volume no rodapé do gráfico de preço
+    if (g.ind.vol) {
+      let vmax = 0; for (let i = i0; i <= i1; i++) vmax = Math.max(vmax, g.velas[i].v);
+      const hv = hMain * 0.2;
+      for (let i = i0; i <= i1; i++) {
+        const v = g.velas[i], h = vmax ? (v.v / vmax) * hv : 0;
+        ctx.fillStyle = v.c >= v.o ? "rgba(15,138,98,.22)" : "rgba(192,67,46,.22)";
+        ctx.fillRect(X(i) - Math.max(esp * 0.35, 0.5), hMain - h, Math.max(esp * 0.7, 1), h);
+      }
+    }
+    // bandas de Bollinger
+    if (calc.boll) {
+      const { sup, inf, mm } = calc.boll;
+      ctx.beginPath(); let ok = false;
+      for (let i = i0; i <= i1; i++) if (sup[i] !== null) { ok ? ctx.lineTo(X(i), Y(sup[i])) : ctx.moveTo(X(i), Y(sup[i])); ok = true; }
+      for (let i = i1; i >= i0; i--) if (inf[i] !== null) ctx.lineTo(X(i), Y(inf[i]));
+      ctx.fillStyle = "rgba(46,123,214,.07)"; ctx.fill();
+      for (const arr of [sup, inf, mm]) linha(arr, "rgba(46,123,214,.55)", arr === mm ? [4, 3] : []);
+    }
+    // candles
+    const corpo = Math.max(1, Math.min(esp * 0.72, 22));
+    for (let i = i0; i <= i1; i++) {
+      const v = g.velas[i], x = Math.round(X(i)) + 0.5, sobe = v.c >= v.o;
+      ctx.strokeStyle = ctx.fillStyle = sobe ? UP : DOWN; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, Y(v.h)); ctx.lineTo(x, Y(v.l)); ctx.stroke();
+      const yA = Y(Math.max(v.o, v.c)), yB = Y(Math.min(v.o, v.c));
+      ctx.fillRect(Math.round(X(i) - corpo / 2), yA, Math.max(corpo, 1), Math.max(yB - yA, 1));
+    }
+    // médias móveis
+    for (const [n, arr] of Object.entries(calc.mm)) linha(arr, CORES_MM[n], []);
+    // linhas da posição (preço médio, preço teto)
+    for (const l of g.linhas) {
+      if (!(l.v > 0)) continue;
+      if (l.fora) {
+        const txt = `${l.fora > 0 ? "▲" : "▼"} ${l.rotulo} ${fmtP(l.v)}`, y = l.fora > 0 ? 34 : hMain - 14;
+        ctx.font = "600 11.5px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
+        const tw = ctx.measureText(txt).width + 12;
+        ctx.fillStyle = l.cor; ctx.fillRect(pw - tw - 6, y - 10, tw, 20); ctx.fillStyle = "#fff"; ctx.fillText(txt, pw - tw, y);
+        continue;
+      }
+      const y = Math.round(Y(l.v)) + 0.5;
+      ctx.setLineDash([6, 4]); ctx.strokeStyle = l.cor; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.font = "600 11.5px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
+      const tw = ctx.measureText(l.rotulo).width + 12;
+      ctx.fillStyle = l.cor; ctx.fillRect(6, y - 10, tw, 20); ctx.fillStyle = "#fff"; ctx.fillText(l.rotulo, 12, y);
+    }
+    // compras e vendas
+    for (const m of calc.marcas) {
+      if (m.i < i0 || m.i > i1) continue;
+      const v = g.velas[m.i], x = X(m.i), compra = m.tipo === "C", y = compra ? Y(v.l) + 10 : Y(v.h) - 10;
+      ctx.fillStyle = compra ? "#0B6E4F" : "#C0432E"; ctx.beginPath();
+      if (compra) { ctx.moveTo(x, y - 5); ctx.lineTo(x - 6, y + 6); ctx.lineTo(x + 6, y + 6); }
+      else { ctx.moveTo(x, y + 5); ctx.lineTo(x - 6, y - 6); ctx.lineTo(x + 6, y - 6); }
+      ctx.fill();
+    }
+    ctx.restore();
+    // IFR
+    if (calc.ifr) {
+      const top = hMain + 6, h = hIfr - 10, Yi = (v) => top + (1 - v / 100) * h;
+      ctx.strokeStyle = "#DCE4DF"; ctx.beginPath(); ctx.moveTo(0, hMain + 0.5); ctx.lineTo(W, hMain + 0.5); ctx.stroke();
+      ctx.fillStyle = "rgba(169,122,28,.06)"; ctx.fillRect(0, Yi(70), pw, Yi(30) - Yi(70));
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = "#C9B58A";
+      for (const n of [30, 70]) { ctx.beginPath(); ctx.moveTo(0, Yi(n) + 0.5); ctx.lineTo(pw, Yi(n) + 0.5); ctx.stroke(); }
+      ctx.setLineDash([]); ctx.fillStyle = TEXTO; ctx.font = "11px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
+      ctx.fillText("70", pw + 8, Yi(70)); ctx.fillText("30", pw + 8, Yi(30)); ctx.fillText("IFR 14", 6, top + 8);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, top - 2, pw, h + 4); ctx.clip();
+      ctx.strokeStyle = "#A97A1C"; ctx.lineWidth = 1.5; ctx.beginPath(); let ok = false;
+      for (let i = i0; i <= i1; i++) if (calc.ifr[i] !== null) { ok ? ctx.lineTo(X(i), Yi(calc.ifr[i])) : ctx.moveTo(X(i), Yi(calc.ifr[i])); ok = true; }
+      ctx.stroke(); ctx.restore();
+    }
+    // etiqueta do último preço
+    const ult = g.velas[N - 1], yU = Y(ult.c);
+    if (yU > 0 && yU < hMain) etiqueta(fmtP(ult.c), yU, ult.c >= ult.o ? UP : DOWN);
+    for (const l of g.linhas) if (l.v > 0 && !l.fora && Y(l.v) > 0 && Y(l.v) < hMain) etiqueta(fmtP(l.v), Y(l.v), l.cor);
+    // mira
+    let alvo = N - 1;
+    if (g.mouse) {
+      const { x, y } = g.mouse;
+      alvo = Math.max(i0, Math.min(i1, Math.round(x / esp + g.ini - 0.5)));
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = "#7B8C83"; ctx.lineWidth = 1;
+      const xa = Math.round(X(alvo)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(xa, 0); ctx.lineTo(xa, H - BAIXO); ctx.stroke();
+      if (y < hMain) { ctx.beginPath(); ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(pw, Math.round(y) + 0.5); ctx.stroke(); }
+      ctx.setLineDash([]);
+      if (y < hMain) etiqueta(fmtP(mn + (1 - (y - 8) / (hMain - 16)) * (mx - mn)), y, "#13241C");
+      const txt = fmtData(g.velas[alvo].t); ctx.font = "11.5px Archivo, Arial, sans-serif";
+      const tw = ctx.measureText(txt).width + 14;
+      ctx.fillStyle = "#13241C"; ctx.fillRect(Math.min(Math.max(xa - tw / 2, 0), pw - tw), H - BAIXO + 3, tw, BAIXO - 6);
+      ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(txt, Math.min(Math.max(xa, tw / 2), pw - tw / 2), H - BAIXO / 2);
+    }
+    legenda(alvo);
+    function linha(arr, cor, traco) {
+      ctx.strokeStyle = cor; ctx.lineWidth = 1.5; ctx.setLineDash(traco); ctx.beginPath(); let ok = false;
+      for (let i = i0; i <= i1; i++) if (arr[i] !== null) { ok ? ctx.lineTo(X(i), Y(arr[i])) : ctx.moveTo(X(i), Y(arr[i])); ok = true; }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    function etiqueta(txt, y, cor) {
+      ctx.font = "600 11.5px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
+      ctx.fillStyle = cor; ctx.fillRect(pw + 1, y - 10, DIR - 2, 20); ctx.fillStyle = "#fff"; ctx.fillText(txt, pw + 8, y);
+    }
+  }
+  function legenda(i) {
+    const v = g.velas[i], ant = g.velas[i - 1];
+    if (!v) { leg.innerHTML = ""; return; }
+    const varr = ant ? v.c / ant.c - 1 : null;
+    const mms = Object.entries(calc.mm).map(([n, arr]) => arr[i] !== null ? `<span style="color:${CORES_MM[n]}">MM${n} ${fmtP(arr[i])}</span>` : "").join("");
+    leg.innerHTML = `<b>${fmtData(v.t)}</b><span>Abertura <b>${fmtP(v.o)}</b></span><span>Máxima <b>${fmtP(v.h)}</b></span><span>Mínima <b>${fmtP(v.l)}</b></span>
+      <span>Fechamento <b>${fmtP(v.c)}</b></span><span class="${cls(varr)}">${pct(varr, 2, true)}</span><span>Volume <b>${compacto(v.v)}</b></span>
+      ${calc.ifr && calc.ifr[i] !== null ? `<span style="color:#A97A1C">IFR ${xv(calc.ifr[i], 0)}</span>` : ""}${mms}`;
+  }
+  // zoom com a roda do mouse, arrastar para os lados, duplo clique volta ao período
+  cv.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, esc = g._esc; if (!esc) return;
+    const ancora = g.ini + x / esc.esp, f = e.deltaY > 0 ? 1.15 : 1 / 1.15;
+    let vis = Math.min(Math.max((g.fim - g.ini) * f, 12), g.velas.length + 10);
+    g.ini = ancora - (x / esc.pw) * vis; g.fim = g.ini + vis; limitar(); desenhar();
+  }, { passive: false });
+  let arrasto = null;
+  cv.addEventListener("pointerdown", (e) => { arrasto = { x: e.clientX, ini: g.ini, fim: g.fim }; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+  cv.addEventListener("pointermove", (e) => {
+    const r = cv.getBoundingClientRect();
+    g.mouse = { x: e.clientX - r.left, y: e.clientY - r.top };
+    if (arrasto && g._esc) {
+      const d = (e.clientX - arrasto.x) / g._esc.esp;
+      g.ini = arrasto.ini - d; g.fim = arrasto.fim - d; limitar();
+    }
+    desenhar();
+  });
+  const soltar = () => { arrasto = null; cv.style.cursor = "crosshair"; };
+  cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
+  cv.addEventListener("pointerleave", () => { if (!arrasto) { g.mouse = null; desenhar(); } });
+  cv.addEventListener("dblclick", () => g.aoDuploClique?.());
+  function limitar() {
+    const N = g.velas.length, vis = g.fim - g.ini;
+    if (g.ini < -2) { g.ini = -2; g.fim = g.ini + vis; }
+    if (g.fim > N + 8) { g.fim = N + 8; g.ini = g.fim - vis; }
+  }
+  new ResizeObserver(() => desenhar()).observe(caixa);
+  g.desenhar = desenhar;
+  return g;
+}
+
 /* ---------- ícones ---------- */
 const ICO = {
   carteira: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2M3 10h18M7 6V4h10v2"/></svg>',
@@ -603,6 +917,7 @@ const ICO = {
   explorar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>',
   ferramentas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h4"/></svg>',
   busca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  analise: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 3v18M12 6v14M18 2v16"/><rect x="4" y="7" width="4" height="8" rx="1" fill="currentColor" stroke="none"/><rect x="10" y="10" width="4" height="5" rx="1"/><rect x="16" y="5" width="4" height="9" rx="1" fill="currentColor" stroke="none"/></svg>',
   lixo: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
 };
 
@@ -809,13 +1124,26 @@ function telaCarteiras() {
       <h1>Olá, ${esc(S.estado.perfil.nome.split(" ")[0])}. Qual carteira vamos abrir?</h1></div>
       <button class="btn texto" id="sair">Sair</button></div>
     <div class="lista-carteiras">
-      ${cs.map((c) => { const pos = posicoes(c).filter((p) => p.qtd > 0);
-        const total = pos.reduce((s, p) => s + (p.valor || 0), 0);
+      ${cs.map((c) => { const r = resumoCarteira(c);
         return `<div class="cartao-carteira"><button data-id="${c.id}"><strong>${esc(c.nome)}</strong>
-          <span class="sutil">${pos.length ? brl(total) + " em " + pos.length + (pos.length > 1 ? " ativos" : " ativo") : "Ainda sem ativos"}</span></button>
+          ${r.pos.length ? `<span class="cc-valor">${brl(r.total)}</span>
+          <span class="cc-dia ${cls(r.dia)}">${r.dia >= 0 ? "+" : "-"}${brl(Math.abs(r.dia)).replace("-", "")} (${pct(r.diaPct, 2, true)}) hoje</span>
+          <span class="cc-spark" data-spark="${c.id}"></span>
+          <span class="cc-dados"><span><small>Resultado</small><b class="${cls(r.resultado)}">${pct(r.resultadoPct, 1, true)}</b></span>
+            <span><small>Yield</small><b>${pct(r.yield, 1)}</b></span><span><small>Ativos</small><b>${r.pos.length}</b></span></span>`
+          : `<span class="sutil">Ainda sem ativos. Abra para importar da B3 ou lançar compras.</span>`}</button>
           <button class="excluir-carteira" data-excluir="${c.id}" aria-label="Excluir a carteira ${esc(c.nome)}" title="Excluir carteira">${ICO.lixo}</button></div>`; }).join("")}
       <button class="nova" id="nova-carteira">Criar carteira</button>
-    </div></main>`;
+    </div>
+    ${S.ativos.length ? blocoMercado() : ""}</main>`;
+  // mini gráfico da evolução de cada carteira nos últimos 3 meses
+  for (const c of cs) {
+    if (!c.lancamentos.length) continue;
+    evolucao(c).then((ev) => {
+      const corte = new Date(Date.now() - 92 * 864e5).toISOString().slice(0, 10);
+      const el = $(`[data-spark="${c.id}"]`); if (el) el.innerHTML = miniGrafico(ev.filter((p) => p.d >= corte && p.v > 0));
+    }).catch(() => {});
+  }
   $$(".lista-carteiras button[data-id]").forEach((b) => b.onclick = () => { S.estado.ativa = b.dataset.id; salvar(); ir("#carteira"); });
   $$("[data-excluir]").forEach((b) => b.onclick = async () => { if (await excluirCarteira(b.dataset.excluir)) telaCarteiras(); });
   $("#nova-carteira").onclick = async () => {
@@ -844,7 +1172,7 @@ function moldura(rota) {
       <a href="#carteira" class="marca-link" aria-label="Milhão, ir para a carteira">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
-        ${item("carteira", "Carteira")}${item("proventos", "Proventos")}${item("explorar", "Ações e FIIs")}${item("ferramentas", "Ferramentas")}
+        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("explorar", "Ações e FIIs")}${item("ferramentas", "Ferramentas")}
       </nav>
       <div class="rodape">
         <span>Cotações de fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span>
@@ -925,9 +1253,9 @@ rotas.carteira = async (el) => {
       <div class="painel"><h2>Onde está o dinheiro</h2><div id="alocacao"></div></div>
     </div>
       <div class="painel"><h2>Posições</h2><div style="overflow:auto"><table>
-        <thead><tr><th>Ativo</th><th>Qtd.</th><th>Preço médio</th><th>Cotação</th><th>Valor</th><th>Resultado</th><th>Resultado (R$)</th><th>% da carteira</th></tr></thead>
+        <thead><tr><th>Ativo</th><th>Qtd.</th><th>Preço médio</th><th>Cotação</th><th>Preço teto</th><th>Valor</th><th>Resultado</th><th>Resultado (R$)</th><th>% da carteira</th></tr></thead>
         <tbody>${abertas.map((p) => `<tr><td><a class="tk" href="#ativo-${p.ticker}">${p.ticker}</a><small>${esc(S.porTicker[p.ticker]?.n || "Fora da base atual")}</small></td>
-          <td>${qtdF(p.qtd)}</td><td>${brl(p.pm)}</td><td>${brl(p.preco)}</td><td>${brl(p.valor)}</td>
+          <td>${qtdF(p.qtd)}</td><td>${brl(p.pm)}</td><td>${brl(p.preco)}</td><td class="celula-teto" data-teto="${p.ticker}">${S.porTicker[p.ticker]?.tipo === "acao" ? "…" : "–"}</td><td>${brl(p.valor)}</td>
           <td class="${cls(p.resultado)}">${pct(p.custo ? p.resultado / p.custo : null, 1, true)}</td><td class="${cls(p.resultado)}">${brl(p.resultado)}</td><td>${pct(total ? (p.valor || 0) / total : null)}</td></tr>`).join("")}</tbody></table></div></div>
     <div class="painel"><div class="cabeca" style="margin-bottom:10px"><h2 style="margin:0">Lançamentos</h2><span class="fraco">${c.lancamentos.length} no total</span></div>
       <div class="rolagem" style="max-height:340px"><table><thead><tr><th>Data</th><th class="esq">Ativo</th><th class="esq">Operação</th><th>Qtd.</th><th>Preço</th><th>Total</th><th></th></tr></thead>
@@ -961,6 +1289,13 @@ rotas.carteira = async (el) => {
   };
   $("#alocacao").innerHTML = total ? barra(porClasse, "Por classe") + barra(porSetor, "Por setor") : `<p class="fraco">Sem posições abertas.</p>`;
 
+  // preço teto de cada ação (precisa do detalhe da empresa, que chega aos poucos)
+  $$("[data-teto]").forEach(async (td) => {
+    const t = td.dataset.teto; if (S.porTicker[t]?.tipo !== "acao") return;
+    let d; try { d = await detalhe(t); } catch (e) { td.textContent = "–"; return; }
+    const teto = precoTeto(d), p = S.porTicker[t]?.preco;
+    td.innerHTML = teto ? `${brl(teto)}<small class="${p <= teto ? "alta" : "baixa"}">${p <= teto ? "abaixo do teto" : "acima do teto"}</small>` : "–";
+  });
   const [ev, provs] = await Promise.all([evolucao(c), proventosDaCarteira(c)]);
   if (!$("#g-evolucao")) return;
   graficoLinha($("#g-evolucao"), ev, { segunda: ev.map((p) => ({ d: p.d, v: p.custo })), formato: compacto,
@@ -1589,7 +1924,7 @@ rotas.ativo = async (el, t) => {
     if (desenhado.has(k)) return; desenhado.add(k);
     if (k === "resumo") ligarCotacao(d);
     if (k === "dividendos" || k === "rendimentos") graficoProventos(d);
-    if (k === "preco") ligarValuation(d);
+    if (k === "preco") { ligarValuation(d); ligarTeto(d); }
     if (k === "numeros") graficoFluxo($("#g-fluxo"), d);
   };
   const abrir = (k) => {
@@ -1604,7 +1939,8 @@ rotas.ativo = async (el, t) => {
 
 /* ---------- página do ativo: peças ---------- */
 function blocoCotacao(d) {
-  return `<div class="painel"><div class="cabeca" style="margin-bottom:6px"><h2 style="margin:0">Cotação</h2>
+  return `<div class="painel"><div class="cabeca" style="margin-bottom:6px"><div style="display:flex;align-items:baseline;gap:14px"><h2 style="margin:0">Cotação</h2>
+      <a class="link-analise" href="#analise-${d.ticker}">${ICO.analise}Ver em candles</a></div>
       <div class="periodos">${[["1M", 31], ["6M", 183], ["1A", 366], ["5A", 1830]].map(([n, dd], i) => `<button aria-pressed="${i === 2}" data-dias="${dd}">${n}</button>`).join("")}</div></div>
     <div class="grafico" id="g-preco"></div><p class="fraco" id="rent-periodo" style="margin:6px 0 0"></p></div>`;
 }
@@ -1694,6 +2030,7 @@ const PAINEIS_ACAO = {
       ["Bazin", d.bazin, "Preço máximo para a ação render 6% ao ano em dividendos."],
     ];
     return `${blocoVeredito(d, true)}
+      ${blocoTeto(d)}
       <div class="painel"><h2>Três jeitos de calcular</h2><div class="cartoes c3">${metodos.map(([n, v, tx]) => `<div><span>${n}</span><strong>${v ? brl(v) : "Não se aplica"}</strong>
         ${v ? `<em class="${cls(up(v))}">${pct(up(v), 0, true)} em relação à cotação</em>` : ""}<p>${tx}</p></div>`).join("")}</div></div>
       <details class="painel ajustar"><summary><h2 style="display:inline">Ajustar as contas</h2> <span class="fraco">para quem quer mudar crescimento e taxa</span></summary>
@@ -1759,6 +2096,163 @@ const PAINEIS_FII = {
           <td>${brl(a.preco)}</td><td class="${cls(a.var_12m)}">${pct(a.var_12m, 1, true)}</td><td>${pct(a.dy)}</td><td>${xv(a.pvp)}</td><td>${compacto(a.liq)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}`;
   },
 };
+
+/* ---------- preço teto: preço justo pelo fluxo de caixa menos a margem de segurança ---------- */
+const margemSeguranca = () => S.estado?.margem ?? 0.25;
+function precoTeto(d) {
+  const j = d && d.tipo !== "fii" ? precoJustoSugerido(d) : null;
+  return j ? j * (1 - margemSeguranca()) : null;
+}
+function blocoTeto(d) {
+  const teto = precoTeto(d), justo = precoJustoSugerido(d), m = margemSeguranca();
+  const abaixo = teto && d.preco <= teto;
+  return `<div class="painel teto" id="teto">
+    <div><span class="rotulo">Preço teto pelo ${d.banco ? "modelo de dividendos" : "fluxo de caixa"}</span>
+      <strong>${teto ? brl(teto) : "Não se aplica agora"}</strong>
+      ${teto ? `<p>É até onde vale pagar para ter <b>${pct(m, 0)}</b> de margem de segurança sobre o preço justo de ${brl(justo)}.
+        Hoje a cotação de ${brl(d.preco)} está <b class="${abaixo ? "alta" : "baixa"}">${abaixo ? "abaixo do teto" : "acima do teto"}</b>.</p>`
+        : `<p>Sem preço justo pelo fluxo de caixa para esta empresa, não dá para calcular o teto.</p>`}</div>
+    <label class="campo margem">Margem de segurança<span><input type="number" id="margem" min="0" max="90" step="5" value="${Math.round(m * 100)}"> %</span></label>
+  </div>`;
+}
+function ligarTeto(d) {
+  const campo = $("#margem"); if (!campo) return;
+  campo.onchange = () => {
+    const v = Math.min(Math.max(numeroBR(campo.value), 0), 90), caixa = $("#teto");
+    if (!Number.isFinite(v) || !caixa?.isConnected || v / 100 === margemSeguranca()) return;
+    S.estado.margem = v / 100; salvar();
+    const novo = document.createElement("div"); novo.innerHTML = blocoTeto(d);
+    caixa.replaceWith(novo.firstElementChild); ligarTeto(d);
+  };
+}
+
+/* ---------- tela: Análise (gráfico de candles com a sua posição) ---------- */
+const PERIODOS = { "3M": 63, "6M": 126, "1A": 252, "2A": 504, "5A": 1260, Tudo: Infinity };
+const DIVISOR_TEMPO = { D: 1, S: 5, M: 21 };
+S.ohlc = {};
+async function velasDe(t) {
+  if (!S.ohlc[t]) S.ohlc[t] = await j(`data/ohlc/${encodeURIComponent(t)}.json`);
+  return S.ohlc[t];
+}
+rotas.analise = async (el, alvo) => {
+  const c = carteira();
+  const abertas = c ? posicoes(c).filter((p) => p.qtd > 0 && S.porTicker[p.ticker]).sort((a, b) => (b.valor || 0) - (a.valor || 0)) : [];
+  const t = String(alvo || S.analiseTicker || abertas[0]?.ticker || S.ativos[0]?.t || "").toUpperCase();
+  S.analiseTicker = t;
+  const a = S.porTicker[t];
+  const cfg = S.cfgAnalise ??= { tempo: "D", periodo: "1A", ind: { mm21: true, mm50: true, vol: true, ops: true } };
+  const chips = [...new Set([...abertas.map((p) => p.ticker), ...(abertas.some((p) => p.ticker === t) ? [] : [t])])];
+  el.innerHTML = `<div class="cabeca"><div><h1>Análise</h1>
+      <p class="sutil" style="margin:6px 0 0">Gráfico de candles com as suas compras e vendas. Gire a roda do mouse para aproximar, arraste para os lados e dê dois cliques para voltar.</p></div></div>
+    <div class="analise-ativos" role="group" aria-label="Escolher ativo">
+      ${chips.map((x) => `<button data-tk="${x}" aria-pressed="${x === t}">${x}</button>`).join("")}
+      <input type="search" id="outro-ativo" list="lista-tickers" placeholder="Analisar outro ativo" aria-label="Analisar outro ativo" autocomplete="off">
+    </div>
+    <div class="painel analise-painel">
+      <div class="analise-barra">
+        <div class="analise-titulo"><a class="tk" href="#ativo-${t}">${esc(t)}</a><span>${esc(a?.n || "")}</span>
+          <strong>${brl(a?.preco)}</strong><em class="${cls(a?.var_dia)}">${pct(a?.var_dia, 2, true)}</em></div>
+        <div class="analise-controles">
+          <div class="segmentos" role="group" aria-label="Tempo de cada candle">${[["D", "Diário"], ["S", "Semanal"], ["M", "Mensal"]].map(([k, n]) => `<button data-tempo="${k}" aria-pressed="${cfg.tempo === k}">${n}</button>`).join("")}</div>
+          <div class="segmentos" role="group" aria-label="Período">${Object.keys(PERIODOS).map((k) => `<button data-per="${k}" aria-pressed="${cfg.periodo === k}">${k}</button>`).join("")}</div>
+        </div>
+      </div>
+      <div class="analise-ind">${[["mm9", "MM 9"], ["mm21", "MM 21"], ["mm50", "MM 50"], ["mm200", "MM 200"], ["boll", "Bollinger"], ["vol", "Volume"], ["ifr", "IFR"], ["ops", "Minhas operações"]]
+        .map(([k, n]) => `<label class="chip-check"${CORES_MM[k.slice(2)] ? ` style="--cor:${CORES_MM[k.slice(2)]}"` : ""}><input type="checkbox" data-ind="${k}" ${cfg.ind[k] ? "checked" : ""}>${n}</label>`).join("")}</div>
+      <div class="velas-caixa" id="velas"><p class="fraco" style="padding:20px">Carregando os candles de ${esc(t)}…</p></div>
+    </div>
+    <div id="leitura"></div>`;
+  $$("[data-tk]").forEach((b) => b.onclick = () => ir("#analise-" + b.dataset.tk));
+  $("#outro-ativo").onchange = (e) => { const v = e.target.value.trim().toUpperCase(); if (S.porTicker[v]) ir("#analise-" + v); };
+  if (!t) return;
+  let dados;
+  try { dados = await velasDe(t); }
+  catch (e) {
+    $("#velas").innerHTML = `<div class="vazio" style="padding:40px"><h3>Ainda sem candles para ${esc(t)}</h3><p>O histórico de candles entra na próxima atualização diária dos dados. Volte depois das 20h30.</p></div>`;
+    return;
+  }
+  if (!$("#velas")) return;
+  let d = null; try { d = a?.tipo === "acao" ? await detalhe(t) : null; } catch (e) { /* sem detalhe */ }
+  const pos = abertas.find((p) => p.ticker === t);
+  const teto = precoTeto(d);
+  const gr = GraficoVelas($("#velas"));
+  const aplicar = () => {
+    gr.config({
+      ind: cfg.ind,
+      linhas: cfg.ind.ops ? [pos && { v: pos.pm, rotulo: "Seu preço médio", cor: "#0B6E4F" }, teto && { v: teto, rotulo: "Preço teto", cor: "#A97A1C" }].filter(Boolean) : [],
+      marcas: cfg.ind.ops && c ? c.lancamentos.filter((l) => l.ticker === t && (l.tipo === "C" || l.tipo === "V")).map((l) => ({ t: l.data, tipo: l.tipo })) : [],
+    });
+  };
+  const mostrar = () => {
+    gr.dados(agruparVelas(dados, cfg.tempo), cfg.tempo);
+    aplicar();
+    gr.periodo(Math.max(12, Math.ceil(PERIODOS[cfg.periodo] / DIVISOR_TEMPO[cfg.tempo])));
+  };
+  gr.aoDuploClique = () => gr.periodo(Math.max(12, Math.ceil(PERIODOS[cfg.periodo] / DIVISOR_TEMPO[cfg.tempo])));
+  $$("[data-tempo]").forEach((b) => b.onclick = () => { cfg.tempo = b.dataset.tempo; $$("[data-tempo]").forEach((x) => x.setAttribute("aria-pressed", x === b)); mostrar(); });
+  $$("[data-per]").forEach((b) => b.onclick = () => { cfg.periodo = b.dataset.per; $$("[data-per]").forEach((x) => x.setAttribute("aria-pressed", x === b)); gr.aoDuploClique(); });
+  $$("[data-ind]").forEach((x) => x.onchange = () => { cfg.ind[x.dataset.ind] = x.checked; aplicar(); });
+  mostrar();
+  $("#leitura").innerHTML = leituraGrafico(dados, pos, teto, d);
+};
+/* leitura em português claro do que o gráfico mostra (sempre no diário) */
+function leituraGrafico(dados, pos, teto, d) {
+  const c = dados.c, n = c.length, ult = c[n - 1];
+  const mm50 = mediaMovel(c, 50)[n - 1], mm200 = mediaMovel(c, 200)[n - 1], forca = indiceForcaRelativa(c)[n - 1];
+  const ano = Math.max(0, n - 252), max52 = Math.max(...dados.h.slice(ano)), min52 = Math.min(...dados.l.slice(ano));
+  const onde = max52 > min52 ? (ult - min52) / (max52 - min52) : null;
+  const tendencia = mm200 === null
+    ? ["Pouco histórico", "Ainda não há 200 pregões para medir a tendência longa."]
+    : ult >= mm200 && (mm50 ?? ult) >= mm200 ? ["Alta no longo prazo", "A cotação e a média de 50 dias estão acima da média de 200 dias."]
+    : ult < mm200 && (mm50 ?? ult) < mm200 ? ["Baixa no longo prazo", "A cotação e a média de 50 dias estão abaixo da média de 200 dias."]
+    : ["Indefinida", "A cotação está cruzando a média de 200 dias: o mercado ainda não escolheu direção."];
+  const ifrTxt = forca === null ? ["–", "Pouco histórico."]
+    : forca >= 70 ? [xv(forca, 0), "Subiu forte nos últimos dias. Costuma ser chamado de sobrecompra."]
+    : forca <= 30 ? [xv(forca, 0), "Caiu forte nos últimos dias. Costuma ser chamado de sobrevenda."]
+    : [xv(forca, 0), "Sem exagero para cima nem para baixo."];
+  const cartoes = [];
+  if (pos) cartoes.push(["Sua posição", `${qtdF(pos.qtd)} ${S.porTicker[pos.ticker]?.tipo === "fii" ? "cotas" : "ações"}`,
+    `Preço médio de ${brl(pos.pm)}. Resultado de <b class="${cls(pos.resultado)}">${brl(pos.resultado)}</b> (${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}). A cotação está ${pct(Math.abs(ult / pos.pm - 1), 1)} ${ult >= pos.pm ? "acima" : "abaixo"} do seu preço médio.`]);
+  if (teto) cartoes.push(["Preço teto", brl(teto), `Pelo ${d?.banco ? "modelo de dividendos" : "fluxo de caixa"}, com ${pct(margemSeguranca(), 0)} de margem. Hoje está <b class="${ult <= teto ? "alta" : "baixa"}">${ult <= teto ? "abaixo do teto" : "acima do teto"}</b>.`]);
+  cartoes.push(["Tendência", tendencia[0], tendencia[1]]);
+  cartoes.push(["IFR de 14 dias", ifrTxt[0], ifrTxt[1]]);
+  cartoes.push(["Últimas 52 semanas", `${brl(min52)} a ${brl(max52)}`, onde === null ? "" : `Hoje está a ${pct(onde, 0)} do caminho entre a mínima e a máxima do ano.`]);
+  return `<div class="cartoes">${cartoes.map(([nm, v, tx]) => `<div><span>${nm}</span><strong>${v}</strong><p>${tx}</p></div>`).join("")}</div>
+    <p class="fraco" style="margin:0">Leitura automática dos números do gráfico. Não é recomendação de compra ou venda.</p>`;
+}
+
+/* ---------- seletor de carteiras: resumo de cada carteira e o mercado do dia ---------- */
+function resumoCarteira(c) {
+  const pos = posicoes(c).filter((p) => p.qtd > 0);
+  let total = 0, custo = 0, dia = 0, renda = 0;
+  for (const p of pos) {
+    const a = S.porTicker[p.ticker], v = p.valor || 0;
+    total += v; custo += p.custo;
+    if (a?.var_dia != null) dia += v - v / (1 + a.var_dia);
+    renda += v * (a?.dy || 0);
+  }
+  return { pos, total, custo, dia, diaPct: total ? dia / (total - dia) : null, resultado: total - custo,
+    resultadoPct: custo ? (total - custo) / custo : null, yield: total ? renda / total : null };
+}
+function miniGrafico(pontos) {
+  if (pontos.length < 2) return "";
+  const vs = pontos.map((p) => p.v), mn = Math.min(...vs), mx = Math.max(...vs) || 1;
+  const pts = vs.map((v, i) => `${(i / (vs.length - 1) * 100).toFixed(2)},${(36 - ((v - mn) / ((mx - mn) || 1)) * 32).toFixed(2)}`).join(" ");
+  const cor = vs.at(-1) >= vs[0] ? "var(--verde-2)" : "var(--queda)";
+  return `<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${cor}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function blocoMercado() {
+  const liquidas = S.ativos.filter((a) => a.var_dia != null && (a.liq || 0) >= 2e6);
+  const altas = [...liquidas].sort((a, b) => b.var_dia - a.var_dia).slice(0, 5);
+  const baixas = [...liquidas].sort((a, b) => a.var_dia - b.var_dia).slice(0, 5);
+  const negociadas = [...S.ativos].sort((a, b) => (b.liq || 0) - (a.liq || 0)).slice(0, 5);
+  const lista = (titulo, itens, extra) => `<div class="painel mercado-lista"><h3>${titulo}</h3><ol>${itens.map((a) => `<li>
+      <a class="mercado-ativo" href="#ativo-${a.t}"><b>${esc(a.t)}</b><span>${esc(a.n)}</span></a>
+      <span class="mercado-num">${extra === "liq" ? compacto(a.liq) : brl(a.preco)}<em class="${cls(a.var_dia)}">${pct(a.var_dia, 2, true)}</em></span>
+      <a class="ir-grafico" href="#analise-${a.t}" title="Ver ${esc(a.t)} no gráfico de candles" aria-label="Ver ${esc(a.t)} no gráfico de candles">${ICO.analise}</a></li>`).join("")}</ol></div>`;
+  return `<section class="mercado"><div class="cabeca" style="margin:34px 0 12px"><h2 style="margin:0">Mercado hoje</h2><span class="fraco">Fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span></div>
+    <div class="grade g-3">${lista("Maiores altas", altas)}${lista("Maiores baixas", baixas)}${lista("Mais negociadas", negociadas, "liq")}</div></section>`;
+}
 
 /* ---------- tela: ferramentas ---------- */
 rotas.ferramentas = (el) => {
