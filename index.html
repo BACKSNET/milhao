@@ -233,11 +233,39 @@ th.ordena[aria-sort=descending]::after{content:" ▾"} th.ordena[aria-sort=ascen
 .chip-check{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px 4px 8px;border:1px solid var(--linha-2);border-radius:999px;cursor:pointer;color:var(--tinta-2)}
 .chip-check input{accent-color:var(--cor,var(--verde));margin:0}
 .chip-check:has(input:checked){border-color:var(--cor,var(--verde));color:var(--tinta)}
-.velas-caixa{position:relative;height:clamp(380px,62vh,620px);user-select:none}
-.velas-caixa canvas{display:block;cursor:crosshair;touch-action:none}
-.velas-legenda{position:absolute;left:8px;top:6px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--tinta-2);pointer-events:none;
-  background:rgba(255,255,255,.86);padding:4px 8px;border-radius:6px;max-width:calc(100% - 90px)}
-.velas-legenda b{color:var(--tinta)}
+.velas-caixa{position:relative;height:clamp(460px,70vh,740px);display:flex;flex-direction:column;user-select:none}
+.velas-info{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;font-size:12.5px;color:var(--tinta-2);min-height:24px;padding:2px 2px 6px}
+.velas-info b{color:var(--tinta);font-weight:650}
+.vi-data{font-weight:700;color:var(--tinta)}
+.vi-cursor{margin-left:auto}
+.vi-cursor em{font-style:normal;font-weight:650}
+.velas-tela{position:relative;flex:1;min-height:0}
+.velas-tela canvas{display:block;touch-action:none;outline:none}
+.velas-tela canvas:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+.velas-dica{margin:8px 0 0;font-size:12.5px;color:var(--tinta-3)}
+.analise-controles{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.analise-controles .espaco{flex:1}
+.btn-ferr{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linha);background:var(--branco);border-radius:8px;padding:6px 11px;font-size:13.5px;font-weight:600;color:var(--tinta-2);cursor:pointer;line-height:1.2}
+.btn-ferr:hover{color:var(--tinta);border-color:var(--tinta-3)}
+.btn-ferr.icone{padding:6px 8px}
+.btn-ferr svg,.ferramentas svg{width:17px;height:17px;flex:none}
+.ferramentas button{display:inline-flex;align-items:center;gap:6px}
+.segmentos #zoom-menos,.segmentos #zoom-mais{font-size:17px;line-height:1;padding:5px 12px}
+.contador{background:var(--verde-claro);color:var(--verde);border-radius:999px;padding:0 7px;font-size:12px}
+.menu-ind{position:relative}
+.lista-ind{position:absolute;top:calc(100% + 6px);left:0;z-index:30;background:var(--branco);border:1px solid var(--linha);border-radius:10px;box-shadow:0 10px 28px rgba(19,36,28,.12);padding:6px;display:grid;gap:1px;min-width:250px}
+.lista-ind label{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:6px;font-size:13.5px;cursor:pointer}
+.lista-ind label:hover{background:var(--papel)}
+.lista-ind input{accent-color:var(--cor,var(--verde));margin:0;width:16px;height:16px}
+.decisao{display:flex;gap:8px;flex-wrap:wrap}
+.decisao div{border:1px solid var(--linha-2);border-radius:10px;padding:6px 12px;display:grid;line-height:1.3}
+.decisao span{font-size:11.5px;color:var(--tinta-3)}
+.decisao b{font-size:15px}
+.decisao em{font-style:normal;font-size:12px;font-weight:650}
+.analise-painel:fullscreen{background:var(--branco);padding:18px;display:flex;flex-direction:column;overflow:auto}
+.analise-painel:fullscreen .velas-caixa,.analise-painel.expandido .velas-caixa{flex:1;height:auto;min-height:360px}
+.analise-painel.expandido{position:fixed;inset:0;z-index:60;border-radius:0;display:flex;flex-direction:column;overflow:auto;margin:0}
+@media (max-width:760px){.ferramentas span{display:none}.analise-controles .espaco{display:none}.velas-dica{display:none}}
 .link-analise{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:650;color:var(--verde);text-decoration:none}
 .link-analise svg,.ir-grafico svg{width:17px;height:17px}
 /* preço teto */
@@ -709,88 +737,106 @@ function indiceForcaRelativa(vals, n = 14) {
 const CORES_MM = { 9: "#2E7BD6", 21: "#A97A1C", 50: "#8E44AD", 200: "#13241C" };
 
 function GraficoVelas(caixa) {
-  const g = { velas: [], tempo: "D", ind: {}, marcas: [], linhas: [], ini: 0, fim: 0, mouse: null };
-  caixa.innerHTML = `<canvas></canvas><div class="velas-legenda"></div>`;
-  const cv = $("canvas", caixa), leg = $(".velas-legenda", caixa), ctx = cv.getContext("2d");
-  const DIR = 70, BAIXO = 26, ALTURA_IFR = 92;
-  const UP = "#0F8A62", DOWN = "#C0432E", GRADE = "#EBF0ED", TEXTO = "#7B8C83";
-  let calc = {};
+  const g = { velas: [], tempo: "D", tipo: "velas", ind: {}, marcas: [], linhas: [], linhasUser: [], ini: 0, fim: 0,
+    mouse: null, ferramenta: "mover", medida: null, escala: null };
+  caixa.innerHTML = `<div class="velas-info"></div><div class="velas-tela"><canvas tabindex="0" aria-label="Gráfico de preços. Setas movem, mais e menos aproximam, zero ajusta."></canvas></div>`;
+  const tela = $(".velas-tela", caixa), cv = $("canvas", caixa), info = $(".velas-info", caixa), ctx = cv.getContext("2d");
+  const DIR = 74, BAIXO = 24, ALTURA_IFR = 88, NAV = 54;
+  const UP = "#0F8A62", DOWN = "#C0432E", GRADE = "#EBF0ED", TEXTO = "#7B8C83", MARCA = "#2E7BD6", ESCURO = "#13241C";
+  let calc = { mm: {} }, E = null;
 
-  g.dados = (velas, tempo) => { g.velas = velas; g.tempo = tempo; recalcular(); };
+  g.dados = (velas, tempo) => { g.velas = velas; g.tempo = tempo; g.medida = null; recalcular(); };
   g.config = (c) => { Object.assign(g, c); recalcular(); };
-  g.periodo = (n) => { const N = g.velas.length; g.fim = N + 2; g.ini = Math.max(0, N - n); desenhar(); };
+  g.periodo = (n) => { const N = g.velas.length; g.escala = null; g.fim = N + 3; g.ini = Math.max(-1, N - n); desenhar(); };
+  g.zoom = (f, ancoraX) => {
+    if (!E) return;
+    const x = ancoraX ?? E.pw * 0.75, ancora = g.ini + x / E.esp;
+    const vis = (g.fim - g.ini) * f;
+    g.ini = ancora - (x / E.pw) * vis; g.fim = g.ini + vis; limitar(); desenhar();
+  };
+  g.mover = (frac) => { const d = (g.fim - g.ini) * frac; g.ini += d; g.fim += d; limitar(); desenhar(); };
+  g.usarFerramenta = (f) => { g.ferramenta = f; g.medida = null; cursor(); desenhar(); };
+
   function recalcular() {
     const c = g.velas.map((v) => v.c);
     calc = { mm: {}, boll: g.ind.boll ? bandasBollinger(c) : null, ifr: g.ind.ifr ? indiceForcaRelativa(c) : null };
     for (const n of [9, 21, 50, 200]) if (g.ind["mm" + n]) calc.mm[n] = mediaMovel(c, n);
-    // marcas das operações: cada uma vai para o candle do período em que aconteceu
     calc.marcas = [];
     for (const m of g.marcas) {
-      let lo = 0, hi = g.velas.length - 1, i = -1;
-      while (lo <= hi) { const md = (lo + hi) >> 1; if (g.velas[md].t <= m.t) { i = md; lo = md + 1; } else hi = md - 1; }
+      const i = indiceDaData(m.t);
       if (i >= 0) calc.marcas.push({ i, tipo: m.tipo });
     }
     desenhar();
   }
-  const fmtP = (v) => nf(v >= 100 ? 2 : v >= 1 ? 2 : 4).format(v);
+  function indiceDaData(t) {
+    let lo = 0, hi = g.velas.length - 1, i = -1;
+    while (lo <= hi) { const md = (lo + hi) >> 1; if (g.velas[md].t <= t) { i = md; lo = md + 1; } else hi = md - 1; }
+    return i;
+  }
+  const fmtP = (v) => nf(v >= 1 ? 2 : 4).format(v);
   const fmtData = (t) => g.tempo === "M" ? t.slice(5, 7) + "/" + t.slice(0, 4) : dataBR(t);
+  const ultimo = () => g.velas[g.velas.length - 1]?.c;
 
   function desenhar() {
-    const W = caixa.clientWidth, H = caixa.clientHeight, dpr = window.devicePixelRatio || 1;
+    const W = tela.clientWidth, H = tela.clientHeight, dpr = window.devicePixelRatio || 1;
     if (!W || !H) return;
     cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const N = g.velas.length; if (!N) return;
-    const pw = W - DIR, hIfr = calc.ifr ? ALTURA_IFR : 0, hMain = H - BAIXO - hIfr;
+    const pw = W - DIR, hIfr = calc.ifr ? ALTURA_IFR : 0, navTop = H - NAV + 10, hMain = H - NAV - BAIXO - hIfr;
     const vis = g.fim - g.ini, esp = pw / vis;
     const X = (i) => (i - g.ini + 0.5) * esp;
     const i0 = Math.max(0, Math.floor(g.ini)), i1 = Math.min(N - 1, Math.ceil(g.fim));
-    // escala de preço: o que está visível, mais médias, bandas e linhas da posição
+    // escala de preço: automática pelo que está visível, ou a que você esticou no eixo
     let mn = Infinity, mx = -Infinity;
-    for (let i = i0; i <= i1; i++) { mn = Math.min(mn, g.velas[i].l); mx = Math.max(mx, g.velas[i].h); }
-    const inclui = (arr) => { if (!arr) return; for (let i = i0; i <= i1; i++) if (arr[i] !== null) { mn = Math.min(mn, arr[i]); mx = Math.max(mx, arr[i]); } };
-    Object.values(calc.mm).forEach(inclui); if (calc.boll) { inclui(calc.boll.sup); inclui(calc.boll.inf); }
-    // linhas da posição entram na escala só se estiverem perto; longe demais, viram uma etiqueta na borda
-    const faixa = (mx - mn) || mx * 0.05;
-    for (const l of g.linhas) {
-      l.fora = !(l.v > 0) ? 0 : l.v > mx + faixa * 0.35 ? 1 : l.v < mn - faixa * 0.35 ? -1 : 0;
-      if (l.v > 0 && !l.fora) { mn = Math.min(mn, l.v); mx = Math.max(mx, l.v); }
+    if (g.escala) ({ mn, mx } = g.escala);
+    else {
+      for (let i = i0; i <= i1; i++) { mn = Math.min(mn, g.tipo === "linha" ? g.velas[i].c : g.velas[i].l); mx = Math.max(mx, g.tipo === "linha" ? g.velas[i].c : g.velas[i].h); }
+      if (!Number.isFinite(mn)) { mn = g.velas[N - 1].l; mx = g.velas[N - 1].h; }
+      const inclui = (arr) => { if (!arr) return; for (let i = i0; i <= i1; i++) if (arr[i] !== null) { mn = Math.min(mn, arr[i]); mx = Math.max(mx, arr[i]); } };
+      Object.values(calc.mm).forEach(inclui); if (calc.boll) { inclui(calc.boll.sup); inclui(calc.boll.inf); }
+      const faixa = (mx - mn) || mx * 0.05;
+      for (const l of [...g.linhas, ...g.linhasUser.map((v) => ({ v }))]) {
+        if (l.v > 0 && l.v <= mx + faixa * 0.35 && l.v >= mn - faixa * 0.35) { mn = Math.min(mn, l.v); mx = Math.max(mx, l.v); }
+      }
+      if (mn === mx) { mn *= 0.98; mx *= 1.02; }
+      const folga = (mx - mn) * 0.08; mn -= folga; mx += folga;
     }
-    if (mn === mx) { mn *= 0.98; mx *= 1.02; }
-    const folga = (mx - mn) * 0.07; mn -= folga; mx += folga;
-    const Y = (v) => 8 + (1 - (v - mn) / (mx - mn)) * (hMain - 16);
-    g._esc = { X, Y, esp, pw, hMain, hIfr, mn, mx, W, H };
+    const Y = (v) => 10 + (1 - (v - mn) / (mx - mn)) * (hMain - 20);
+    const P = (y) => mn + (1 - (y - 10) / (hMain - 20)) * (mx - mn);
+    E = { X, Y, P, esp, pw, hMain, hIfr, navTop, mn, mx, W, H, N, i0, i1 };
 
     // grade e eixo de preço
     ctx.font = "11.5px Archivo, Arial, sans-serif"; ctx.textBaseline = "middle";
-    const passoBruto = (mx - mn) / 6, pot = 10 ** Math.floor(Math.log10(passoBruto));
+    const passoBruto = (mx - mn) / Math.max(3, Math.round(hMain / 70)), pot = 10 ** Math.floor(Math.log10(passoBruto));
     const passo = [1, 2, 2.5, 5, 10].map((k) => k * pot).find((k) => k >= passoBruto) || passoBruto;
     for (let v = Math.ceil(mn / passo) * passo; v <= mx; v += passo) {
       const y = Math.round(Y(v)) + 0.5;
       ctx.strokeStyle = GRADE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke();
       ctx.fillStyle = TEXTO; ctx.textAlign = "left"; ctx.fillText(fmtP(v), pw + 8, y);
     }
+    ctx.strokeStyle = "#DCE4DF"; ctx.beginPath(); ctx.moveTo(pw + 0.5, 0); ctx.lineTo(pw + 0.5, hMain + hIfr); ctx.stroke();
     // eixo de datas
-    const cada = Math.max(1, Math.ceil(90 / esp));
+    const yDatas = hMain + hIfr + BAIXO / 2;
+    const cada = Math.max(1, Math.ceil(96 / esp));
     ctx.textAlign = "center";
     for (let i = i0; i <= i1; i++) {
       if ((N - 1 - i) % cada) continue;
-      const x = X(i); if (x < 30 || x > pw - 30) continue;
+      const x = X(i); if (x < 34 || x > pw - 34) continue;
       ctx.strokeStyle = GRADE; ctx.beginPath(); ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, hMain); ctx.stroke();
-      ctx.fillStyle = TEXTO; ctx.fillText(fmtData(g.velas[i].t), x, H - BAIXO / 2);
+      ctx.fillStyle = TEXTO; ctx.fillText(fmtData(g.velas[i].t), x, yDatas);
     }
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, pw, hMain); ctx.clip();
     // volume no rodapé do gráfico de preço
     if (g.ind.vol) {
       let vmax = 0; for (let i = i0; i <= i1; i++) vmax = Math.max(vmax, g.velas[i].v);
-      const hv = hMain * 0.2;
+      const hv = hMain * 0.18;
       for (let i = i0; i <= i1; i++) {
         const v = g.velas[i], h = vmax ? (v.v / vmax) * hv : 0;
-        ctx.fillStyle = v.c >= v.o ? "rgba(15,138,98,.22)" : "rgba(192,67,46,.22)";
+        ctx.fillStyle = v.c >= v.o ? "rgba(15,138,98,.2)" : "rgba(192,67,46,.2)";
         ctx.fillRect(X(i) - Math.max(esp * 0.35, 0.5), hMain - h, Math.max(esp * 0.7, 1), h);
       }
     }
-    // bandas de Bollinger
     if (calc.boll) {
       const { sup, inf, mm } = calc.boll;
       ctx.beginPath(); let ok = false;
@@ -799,47 +845,86 @@ function GraficoVelas(caixa) {
       ctx.fillStyle = "rgba(46,123,214,.07)"; ctx.fill();
       for (const arr of [sup, inf, mm]) linha(arr, "rgba(46,123,214,.55)", arr === mm ? [4, 3] : []);
     }
-    // candles
-    const corpo = Math.max(1, Math.min(esp * 0.72, 22));
-    for (let i = i0; i <= i1; i++) {
-      const v = g.velas[i], x = Math.round(X(i)) + 0.5, sobe = v.c >= v.o;
-      ctx.strokeStyle = ctx.fillStyle = sobe ? UP : DOWN; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(x, Y(v.h)); ctx.lineTo(x, Y(v.l)); ctx.stroke();
-      const yA = Y(Math.max(v.o, v.c)), yB = Y(Math.min(v.o, v.c));
-      ctx.fillRect(Math.round(X(i) - corpo / 2), yA, Math.max(corpo, 1), Math.max(yB - yA, 1));
+    // preço: candles ou linha
+    if (g.tipo === "linha") {
+      const grad = ctx.createLinearGradient(0, 0, 0, hMain);
+      grad.addColorStop(0, "rgba(15,138,98,.18)"); grad.addColorStop(1, "rgba(15,138,98,0)");
+      ctx.beginPath(); ctx.moveTo(X(i0), hMain);
+      for (let i = i0; i <= i1; i++) ctx.lineTo(X(i), Y(g.velas[i].c));
+      ctx.lineTo(X(i1), hMain); ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      linha(g.velas.map((v) => v.c), UP, [], 2);
+    } else {
+      const corpo = Math.max(1, Math.min(esp * 0.72, 24));
+      for (let i = i0; i <= i1; i++) {
+        const v = g.velas[i], x = Math.round(X(i)) + 0.5, sobe = v.c >= v.o;
+        ctx.strokeStyle = ctx.fillStyle = sobe ? UP : DOWN; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, Y(v.h)); ctx.lineTo(x, Y(v.l)); ctx.stroke();
+        const yA = Y(Math.max(v.o, v.c)), yB = Y(Math.min(v.o, v.c));
+        ctx.fillRect(Math.round(X(i) - corpo / 2), yA, Math.max(corpo, 1), Math.max(yB - yA, 1));
+      }
     }
-    // médias móveis
     for (const [n, arr] of Object.entries(calc.mm)) linha(arr, CORES_MM[n], []);
-    // linhas da posição (preço médio, preço teto)
-    for (const l of g.linhas) {
+    // linhas fixas (preço médio, preço teto) e as suas marcas
+    const todas = [...g.linhas, ...g.linhasUser.map((v) => ({ v, rotulo: "Sua marca", cor: MARCA, sua: true }))];
+    for (const l of todas) {
       if (!(l.v > 0)) continue;
-      if (l.fora) {
-        const txt = `${l.fora > 0 ? "▲" : "▼"} ${l.rotulo} ${fmtP(l.v)}`, y = l.fora > 0 ? 34 : hMain - 14;
+      const y = Y(l.v);
+      if (y < 0 || y > hMain) {
+        const txt = `${y < 0 ? "▲" : "▼"} ${l.rotulo} ${fmtP(l.v)}`, yy = y < 0 ? 16 : hMain - 16;
         ctx.font = "600 11.5px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
         const tw = ctx.measureText(txt).width + 12;
-        ctx.fillStyle = l.cor; ctx.fillRect(pw - tw - 6, y - 10, tw, 20); ctx.fillStyle = "#fff"; ctx.fillText(txt, pw - tw, y);
+        ctx.fillStyle = l.cor; ctx.globalAlpha = 0.9; ctx.fillRect(pw - tw - 6, yy - 10, tw, 20); ctx.globalAlpha = 1;
+        ctx.fillStyle = "#fff"; ctx.fillText(txt, pw - tw, yy);
         continue;
       }
-      const y = Math.round(Y(l.v)) + 0.5;
-      ctx.setLineDash([6, 4]); ctx.strokeStyle = l.cor; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke(); ctx.setLineDash([]);
+      const yr = Math.round(y) + 0.5;
+      ctx.setLineDash(l.sua ? [2, 3] : [6, 4]); ctx.strokeStyle = l.cor; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, yr); ctx.lineTo(pw, yr); ctx.stroke(); ctx.setLineDash([]);
+      const u = ultimo(), txt = l.sua && u ? `${l.rotulo} ${pct(l.v / u - 1, 1, true)}` : l.rotulo;
       ctx.font = "600 11.5px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
-      const tw = ctx.measureText(l.rotulo).width + 12;
-      ctx.fillStyle = l.cor; ctx.fillRect(6, y - 10, tw, 20); ctx.fillStyle = "#fff"; ctx.fillText(l.rotulo, 12, y);
+      const tw = ctx.measureText(txt).width + 12;
+      ctx.fillStyle = l.cor; ctx.fillRect(6, yr - 10, tw, 20); ctx.fillStyle = "#fff"; ctx.fillText(txt, 12, yr);
     }
     // compras e vendas
     for (const m of calc.marcas) {
       if (m.i < i0 || m.i > i1) continue;
-      const v = g.velas[m.i], x = X(m.i), compra = m.tipo === "C", y = compra ? Y(v.l) + 10 : Y(v.h) - 10;
+      const v = g.velas[m.i], x = X(m.i), compra = m.tipo === "C";
+      const y = compra ? Y(g.tipo === "linha" ? v.c : v.l) + 12 : Y(g.tipo === "linha" ? v.c : v.h) - 12;
       ctx.fillStyle = compra ? "#0B6E4F" : "#C0432E"; ctx.beginPath();
-      if (compra) { ctx.moveTo(x, y - 5); ctx.lineTo(x - 6, y + 6); ctx.lineTo(x + 6, y + 6); }
-      else { ctx.moveTo(x, y + 5); ctx.lineTo(x - 6, y - 6); ctx.lineTo(x + 6, y - 6); }
+      if (compra) { ctx.moveTo(x, y - 6); ctx.lineTo(x - 7, y + 6); ctx.lineTo(x + 7, y + 6); }
+      else { ctx.moveTo(x, y + 6); ctx.lineTo(x - 7, y - 6); ctx.lineTo(x + 7, y - 6); }
       ctx.fill();
+    }
+    // régua: quanto o preço andou entre dois pontos
+    if (g.medida) {
+      const { a, b } = g.medida, xa = X(a.i), xb = X(b.i), ya = Y(a.p), yb = Y(b.p);
+      const sobe = b.p >= a.p, cor = sobe ? "15,138,98" : "192,67,46";
+      ctx.fillStyle = `rgba(${cor},.12)`; ctx.fillRect(Math.min(xa, xb), Math.min(ya, yb), Math.abs(xb - xa), Math.abs(yb - ya));
+      ctx.strokeStyle = `rgb(${cor})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(xa, ya); ctx.lineTo(xb, yb); ctx.stroke();
+      const ia = Math.max(0, Math.min(N - 1, a.i)), ib = Math.max(0, Math.min(N - 1, b.i));
+      const dias = Math.round(Math.abs(new Date(g.velas[ib].t) - new Date(g.velas[ia].t)) / 864e5);
+      const l1 = `${pct(b.p / a.p - 1, 2, true)}  (${b.p >= a.p ? "+" : "−"}${brl(Math.abs(b.p - a.p))})`;
+      const l2 = `${Math.abs(b.i - a.i)} ${g.tempo === "D" ? "pregões" : g.tempo === "S" ? "semanas" : "meses"}, ${dias} dias`;
+      ctx.font = "700 13px Archivo, Arial, sans-serif"; const w1 = ctx.measureText(l1).width;
+      ctx.font = "12px Archivo, Arial, sans-serif"; const w2 = ctx.measureText(l2).width;
+      const bw = Math.max(w1, w2) + 20, bh = 42;
+      let bx = (xa + xb) / 2 - bw / 2, by = (sobe ? Math.min(ya, yb) - bh - 8 : Math.max(ya, yb) + 8);
+      bx = Math.max(4, Math.min(bx, pw - bw - 4)); by = Math.max(4, Math.min(by, hMain - bh - 4));
+      ctx.fillStyle = `rgb(${cor})`; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 8); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.textAlign = "center";
+      ctx.font = "700 13px Archivo, Arial, sans-serif"; ctx.fillText(l1, bx + bw / 2, by + 14);
+      ctx.font = "12px Archivo, Arial, sans-serif"; ctx.fillText(l2, bx + bw / 2, by + 30);
+    }
+    // linha fantasma da ferramenta de marcar
+    if (g.ferramenta === "marcar" && g.mouse && g.mouse.y < hMain && g.mouse.x < pw) {
+      const y = Math.round(g.mouse.y) + 0.5;
+      ctx.setLineDash([2, 3]); ctx.strokeStyle = "rgba(46,123,214,.6)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke(); ctx.setLineDash([]);
     }
     ctx.restore();
     // IFR
     if (calc.ifr) {
-      const top = hMain + 6, h = hIfr - 10, Yi = (v) => top + (1 - v / 100) * h;
+      const top = hMain + 6, h = hIfr - 12, Yi = (v) => top + (1 - v / 100) * h;
       ctx.strokeStyle = "#DCE4DF"; ctx.beginPath(); ctx.moveTo(0, hMain + 0.5); ctx.lineTo(W, hMain + 0.5); ctx.stroke();
       ctx.fillStyle = "rgba(169,122,28,.06)"; ctx.fillRect(0, Yi(70), pw, Yi(30) - Yi(70));
       ctx.setLineDash([3, 3]); ctx.strokeStyle = "#C9B58A";
@@ -847,34 +932,65 @@ function GraficoVelas(caixa) {
       ctx.setLineDash([]); ctx.fillStyle = TEXTO; ctx.font = "11px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
       ctx.fillText("70", pw + 8, Yi(70)); ctx.fillText("30", pw + 8, Yi(30)); ctx.fillText("IFR 14", 6, top + 8);
       ctx.save(); ctx.beginPath(); ctx.rect(0, top - 2, pw, h + 4); ctx.clip();
-      ctx.strokeStyle = "#A97A1C"; ctx.lineWidth = 1.5; ctx.beginPath(); let ok = false;
-      for (let i = i0; i <= i1; i++) if (calc.ifr[i] !== null) { ok ? ctx.lineTo(X(i), Yi(calc.ifr[i])) : ctx.moveTo(X(i), Yi(calc.ifr[i])); ok = true; }
-      ctx.stroke(); ctx.restore();
+      linha(calc.ifr, "#A97A1C", [], 1.5, Yi);
+      ctx.restore();
     }
-    // etiqueta do último preço
-    const ult = g.velas[N - 1], yU = Y(ult.c);
-    if (yU > 0 && yU < hMain) etiqueta(fmtP(ult.c), yU, ult.c >= ult.o ? UP : DOWN);
-    for (const l of g.linhas) if (l.v > 0 && !l.fora && Y(l.v) > 0 && Y(l.v) < hMain) etiqueta(fmtP(l.v), Y(l.v), l.cor);
+    // etiquetas no eixo: último preço e linhas
+    const ult = g.velas[N - 1], tags = [{ txt: fmtP(ult.c), y: Y(ult.c), cor: ult.c >= ult.o ? UP : DOWN }];
+    for (const l of todas) if (l.v > 0) tags.push({ txt: fmtP(l.v), y: Y(l.v), cor: l.cor });
+    // afasta as etiquetas que ficariam uma em cima da outra
+    const visiveis = tags.filter((e) => e.y > 0 && e.y < hMain).sort((a, b) => a.y - b.y);
+    for (let k = 1; k < visiveis.length; k++) if (visiveis[k].y - visiveis[k - 1].y < 21) visiveis[k].y = visiveis[k - 1].y + 21;
+    for (const e of visiveis) etiqueta(e.txt, Math.min(e.y, hMain - 10), e.cor);
+    if (g.escala) {
+      ctx.font = "600 11px Archivo, Arial, sans-serif"; ctx.textAlign = "center";
+      ctx.fillStyle = "#E4EFE9"; ctx.beginPath(); ctx.roundRect(pw + 8, hMain - 24, DIR - 16, 18, 9); ctx.fill();
+      ctx.fillStyle = "#0B6E4F"; ctx.fillText("Auto", pw + DIR / 2, hMain - 15);
+    }
     // mira
-    let alvo = N - 1;
-    if (g.mouse) {
+    let alvo = N - 1, precoCursor = null;
+    if (g.mouse && g.mouse.y < navTop - 10) {
       const { x, y } = g.mouse;
       alvo = Math.max(i0, Math.min(i1, Math.round(x / esp + g.ini - 0.5)));
-      ctx.setLineDash([4, 4]); ctx.strokeStyle = "#7B8C83"; ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = "#9AA9A1"; ctx.lineWidth = 1;
       const xa = Math.round(X(alvo)) + 0.5;
-      ctx.beginPath(); ctx.moveTo(xa, 0); ctx.lineTo(xa, H - BAIXO); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xa, 0); ctx.lineTo(xa, hMain + hIfr); ctx.stroke();
       if (y < hMain) { ctx.beginPath(); ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(pw, Math.round(y) + 0.5); ctx.stroke(); }
       ctx.setLineDash([]);
-      if (y < hMain) etiqueta(fmtP(mn + (1 - (y - 8) / (hMain - 16)) * (mx - mn)), y, "#13241C");
+      if (y < hMain) { precoCursor = P(y); etiqueta(fmtP(precoCursor), y, ESCURO); }
       const txt = fmtData(g.velas[alvo].t); ctx.font = "11.5px Archivo, Arial, sans-serif";
       const tw = ctx.measureText(txt).width + 14;
-      ctx.fillStyle = "#13241C"; ctx.fillRect(Math.min(Math.max(xa - tw / 2, 0), pw - tw), H - BAIXO + 3, tw, BAIXO - 6);
-      ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(txt, Math.min(Math.max(xa, tw / 2), pw - tw / 2), H - BAIXO / 2);
+      ctx.fillStyle = ESCURO; ctx.fillRect(Math.min(Math.max(xa - tw / 2, 0), pw - tw), yDatas - 9, tw, 18);
+      ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(txt, Math.min(Math.max(xa, tw / 2), pw - tw / 2), yDatas);
     }
-    legenda(alvo);
-    function linha(arr, cor, traco) {
-      ctx.strokeStyle = cor; ctx.lineWidth = 1.5; ctx.setLineDash(traco); ctx.beginPath(); let ok = false;
-      for (let i = i0; i <= i1; i++) if (arr[i] !== null) { ok ? ctx.lineTo(X(i), Y(arr[i])) : ctx.moveTo(X(i), Y(arr[i])); ok = true; }
+    // navegador: o histórico inteiro, com a janela que você está vendo
+    navegador();
+    legenda(alvo, precoCursor);
+
+    function navegador() {
+      const top = navTop, h = NAV - 14, NX = (i) => (N > 1 ? (i / (N - 1)) * pw : 0);
+      let a = Infinity, b = -Infinity; for (const v of g.velas) { a = Math.min(a, v.c); b = Math.max(b, v.c); }
+      const NY = (v) => top + 3 + (1 - (v - a) / ((b - a) || 1)) * (h - 6);
+      ctx.fillStyle = "#F4F7F5"; ctx.fillRect(0, top, pw, h);
+      ctx.beginPath(); ctx.moveTo(0, top + h);
+      const passoN = Math.max(1, Math.floor(N / pw));
+      for (let i = 0; i < N; i += passoN) ctx.lineTo(NX(i), NY(g.velas[i].c));
+      ctx.lineTo(NX(N - 1), NY(g.velas[N - 1].c)); ctx.lineTo(NX(N - 1), top + h); ctx.closePath();
+      ctx.fillStyle = "rgba(15,138,98,.14)"; ctx.fill();
+      ctx.beginPath(); for (let i = 0; i < N; i += passoN) i ? ctx.lineTo(NX(i), NY(g.velas[i].c)) : ctx.moveTo(NX(i), NY(g.velas[i].c));
+      ctx.strokeStyle = "rgba(15,138,98,.7)"; ctx.lineWidth = 1; ctx.stroke();
+      const wa = Math.max(0, NX(g.ini)), wb = Math.min(pw, NX(g.fim - 1));
+      ctx.fillStyle = "rgba(19,36,28,.08)"; ctx.fillRect(0, top, wa, h); ctx.fillRect(wb, top, pw - wb, h);
+      ctx.strokeStyle = "#0B6E4F"; ctx.lineWidth = 1.5; ctx.strokeRect(wa + 0.75, top + 0.75, Math.max(wb - wa - 1.5, 2), h - 1.5);
+      ctx.fillStyle = "#0B6E4F";
+      for (const x of [wa, wb]) { ctx.beginPath(); ctx.roundRect(x - 3.5, top + h / 2 - 10, 7, 20, 3); ctx.fill(); }
+      ctx.fillStyle = TEXTO; ctx.font = "11px Archivo, Arial, sans-serif"; ctx.textAlign = "left";
+      ctx.fillText(g.velas[0].t.slice(0, 4), pw + 8, top + 8); ctx.fillText(g.velas[N - 1].t.slice(0, 4), pw + 8, top + h - 6);
+      E.nav = { top, h, wa, wb, NX, Ninv: (x) => (x / pw) * (N - 1) };
+    }
+    function linha(arr, cor, traco, larg = 1.5, Yf = Y) {
+      ctx.strokeStyle = cor; ctx.lineWidth = larg; ctx.setLineDash(traco); ctx.beginPath(); let ok = false;
+      for (let i = i0; i <= i1; i++) if (arr[i] !== null && arr[i] !== undefined) { ok ? ctx.lineTo(X(i), Yf(arr[i])) : ctx.moveTo(X(i), Yf(arr[i])); ok = true; }
       ctx.stroke(); ctx.setLineDash([]);
     }
     function etiqueta(txt, y, cor) {
@@ -882,44 +998,137 @@ function GraficoVelas(caixa) {
       ctx.fillStyle = cor; ctx.fillRect(pw + 1, y - 10, DIR - 2, 20); ctx.fillStyle = "#fff"; ctx.fillText(txt, pw + 8, y);
     }
   }
-  function legenda(i) {
+  // faixa de cima: os números do candle sob o mouse (ou do último)
+  function legenda(i, precoCursor) {
     const v = g.velas[i], ant = g.velas[i - 1];
-    if (!v) { leg.innerHTML = ""; return; }
-    const varr = ant ? v.c / ant.c - 1 : null;
-    const mms = Object.entries(calc.mm).map(([n, arr]) => arr[i] !== null ? `<span style="color:${CORES_MM[n]}">MM${n} ${fmtP(arr[i])}</span>` : "").join("");
-    leg.innerHTML = `<b>${fmtData(v.t)}</b><span>Abertura <b>${fmtP(v.o)}</b></span><span>Máxima <b>${fmtP(v.h)}</b></span><span>Mínima <b>${fmtP(v.l)}</b></span>
-      <span>Fechamento <b>${fmtP(v.c)}</b></span><span class="${cls(varr)}">${pct(varr, 2, true)}</span><span>Volume <b>${compacto(v.v)}</b></span>
-      ${calc.ifr && calc.ifr[i] !== null ? `<span style="color:#A97A1C">IFR ${xv(calc.ifr[i], 0)}</span>` : ""}${mms}`;
+    if (!v) { info.innerHTML = ""; return; }
+    const varr = ant ? v.c / ant.c - 1 : null, u = ultimo();
+    const mms = Object.entries(calc.mm).map(([n, arr]) => arr[i] !== null ? `<span style="color:${CORES_MM[n]}">MM${n} <b style="color:inherit">${fmtP(arr[i])}</b></span>` : "").join("");
+    const dica = g.ferramenta === "medir" ? "Clique e arraste no gráfico para medir quanto o preço andou."
+      : g.ferramenta === "marcar" ? "Clique no gráfico para marcar um preço. Clique numa marca para apagar." : "";
+    info.innerHTML = `<span class="vi-data">${fmtData(v.t)}</span>
+      ${g.tipo === "linha" ? "" : `<span>Abertura <b>${fmtP(v.o)}</b></span><span>Máxima <b>${fmtP(v.h)}</b></span><span>Mínima <b>${fmtP(v.l)}</b></span>`}
+      <span>Fechamento <b>${fmtP(v.c)}</b></span><span class="${cls(varr)}"><b>${pct(varr, 2, true)}</b></span><span>Volume <b>${compacto(v.v)}</b></span>
+      ${calc.ifr && calc.ifr[i] !== null ? `<span style="color:#A97A1C">IFR <b style="color:inherit">${xv(calc.ifr[i], 0)}</b></span>` : ""}${mms}
+      ${precoCursor && u ? `<span class="vi-cursor">No cursor <b>${brl(precoCursor)}</b> <em class="${cls(precoCursor / u - 1)}">${pct(precoCursor / u - 1, 1, true)} da cotação</em></span>`
+        : dica ? `<span class="vi-cursor">${dica}</span>` : ""}`;
   }
-  // zoom com a roda do mouse, arrastar para os lados, duplo clique volta ao período
+  function cursor(modo) {
+    cv.style.cursor = modo || (g.ferramenta === "mover" ? "grab" : "crosshair");
+  }
+  function limitar() {
+    const N = g.velas.length; let vis = g.fim - g.ini;
+    vis = Math.min(Math.max(vis, 10), N + 20);
+    if (g.fim - g.ini !== vis) { const c = (g.ini + g.fim) / 2; g.ini = c - vis / 2; g.fim = c + vis / 2; }
+    if (g.ini < -vis * 0.3) { g.ini = -vis * 0.3; g.fim = g.ini + vis; }
+    if (g.fim > N + vis * 0.3) { g.fim = N + vis * 0.3; g.ini = g.fim - vis; }
+  }
+  const regiao = (x, y) => !E ? "fora" : y >= E.navTop - 4 ? "nav" : x > E.pw && y < E.hMain ? "eixo" : y < E.hMain + E.hIfr && x <= E.pw ? "grafico" : "fora";
+  const indiceEm = (x) => Math.round(x / E.esp + g.ini - 0.5);
+
+  // roda: aproxima onde está o mouse; com Shift (ou rolagem de lado) anda no tempo
   cv.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, esc = g._esc; if (!esc) return;
-    const ancora = g.ini + x / esc.esp, f = e.deltaY > 0 ? 1.15 : 1 / 1.15;
-    let vis = Math.min(Math.max((g.fim - g.ini) * f, 12), g.velas.length + 10);
-    g.ini = ancora - (x / esc.pw) * vis; g.fim = g.ini + vis; limitar(); desenhar();
+    e.preventDefault(); if (!E) return;
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (regiao(x, y) === "eixo") { esticarPreco(e.deltaY > 0 ? 1.1 : 1 / 1.1); return; }
+    if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) { g.mover((e.deltaX || e.deltaY) / 600); return; }
+    g.zoom(e.deltaY > 0 ? 1.12 : 1 / 1.12, Math.min(x, E.pw));
   }, { passive: false });
-  let arrasto = null;
-  cv.addEventListener("pointerdown", (e) => { arrasto = { x: e.clientX, ini: g.ini, fim: g.fim }; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+  function esticarPreco(f, base) {
+    const b = base || { mn: E.mn, mx: E.mx }, c = (b.mn + b.mx) / 2, meia = ((b.mx - b.mn) / 2) * f;
+    g.escala = { mn: c - meia, mx: c + meia }; desenhar();
+  }
+
+  const dedos = new Map(); let acao = null;
+  cv.addEventListener("pointerdown", (e) => {
+    if (!E) return;
+    cv.focus({ preventScroll: true });
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    dedos.set(e.pointerId, { x, y }); cv.setPointerCapture(e.pointerId);
+    if (dedos.size === 2) {   // pinça no celular
+      const [p1, p2] = [...dedos.values()];
+      acao = { tipo: "pinca", dist: Math.hypot(p1.x - p2.x, p1.y - p2.y) || 1, ini: g.ini, fim: g.fim, cx: (p1.x + p2.x) / 2 };
+      return;
+    }
+    const reg = regiao(x, y);
+    if (reg === "nav") {
+      const { wa, wb, Ninv } = E.nav, vis = g.fim - g.ini;
+      if (Math.abs(x - wa) < 8) acao = { tipo: "navEsq" };
+      else if (Math.abs(x - wb) < 8) acao = { tipo: "navDir" };
+      else {
+        if (x < wa || x > wb) { const c = Ninv(x); g.ini = c - vis / 2; g.fim = c + vis / 2; limitar(); desenhar(); }
+        acao = { tipo: "navMover", x, ini: g.ini, fim: g.fim };
+      }
+      cursor("grabbing");
+    } else if (reg === "eixo") {
+      if (g.escala && y > E.hMain - 28) { g.escala = null; desenhar(); return; }   // botão "Auto"
+      acao = { tipo: "eixo", y, base: { mn: E.mn, mx: E.mx } }; cursor("ns-resize");
+    } else if (reg === "grafico") {
+      if (g.ferramenta === "medir" && y < E.hMain) {
+        const ponto = { i: indiceEm(x), p: E.P(y) };
+        g.medida = { a: ponto, b: { ...ponto } }; acao = { tipo: "medir" }; desenhar();
+      } else if (g.ferramenta === "marcar" && y < E.hMain) {
+        const perto = g.linhasUser.findIndex((v) => Math.abs(E.Y(v) - y) < 7);
+        if (perto >= 0) g.linhasUser.splice(perto, 1); else g.linhasUser.push(+E.P(y).toFixed(2));
+        g.aoMarcar?.(g.linhasUser); desenhar();
+      } else {
+        acao = { tipo: "arrastar", x, y, ini: g.ini, fim: g.fim, escala: g.escala && { ...g.escala } }; cursor("grabbing");
+      }
+    }
+  });
   cv.addEventListener("pointermove", (e) => {
-    const r = cv.getBoundingClientRect();
-    g.mouse = { x: e.clientX - r.left, y: e.clientY - r.top };
-    if (arrasto && g._esc) {
-      const d = (e.clientX - arrasto.x) / g._esc.esp;
-      g.ini = arrasto.ini - d; g.fim = arrasto.fim - d; limitar();
+    const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (dedos.has(e.pointerId)) dedos.set(e.pointerId, { x, y });
+    g.mouse = { x, y };
+    if (!E) return;
+    if (!acao) {
+      const reg = regiao(x, y);
+      if (reg === "nav") { const { wa, wb } = E.nav; cursor(Math.abs(x - wa) < 8 || Math.abs(x - wb) < 8 ? "ew-resize" : x > wa && x < wb ? "grab" : "pointer"); }
+      else if (reg === "eixo") cursor("ns-resize"); else cursor();
+      desenhar(); return;
+    }
+    const N = g.velas.length;
+    if (acao.tipo === "pinca" && dedos.size === 2) {
+      const [p1, p2] = [...dedos.values()], dist = Math.hypot(p1.x - p2.x, p1.y - p2.y) || 1;
+      const vis0 = acao.fim - acao.ini, vis = vis0 * (acao.dist / dist), ancora = acao.ini + (acao.cx / E.pw) * vis0;
+      g.ini = ancora - (acao.cx / E.pw) * vis; g.fim = g.ini + vis; limitar();
+    } else if (acao.tipo === "arrastar") {
+      const d = (x - acao.x) / E.esp; g.ini = acao.ini - d; g.fim = acao.fim - d; limitar();
+      if (acao.escala) { const dp = ((y - acao.y) / (E.hMain - 20)) * (acao.escala.mx - acao.escala.mn); g.escala = { mn: acao.escala.mn + dp, mx: acao.escala.mx + dp }; }
+    } else if (acao.tipo === "eixo") {
+      esticarPreco(Math.exp((y - acao.y) * 0.006), acao.base); return;
+    } else if (acao.tipo === "navMover") {
+      const d = E.nav.Ninv(x) - E.nav.Ninv(acao.x); g.ini = acao.ini + d; g.fim = acao.fim + d; limitar();
+    } else if (acao.tipo === "navEsq") {
+      g.ini = Math.min(E.nav.Ninv(x), g.fim - 10); g.escala = null; limitar();
+    } else if (acao.tipo === "navDir") {
+      g.fim = Math.max(E.nav.Ninv(x) + 1, g.ini + 10); g.escala = null; limitar();
+    } else if (acao.tipo === "medir") {
+      g.medida.b = { i: Math.max(0, Math.min(N - 1, indiceEm(x))), p: E.P(Math.min(Math.max(y, 0), E.hMain)) };
     }
     desenhar();
   });
-  const soltar = () => { arrasto = null; cv.style.cursor = "crosshair"; };
+  const soltar = (e) => {
+    dedos.delete(e.pointerId);
+    if (acao?.tipo === "medir" && g.medida && g.medida.a.i === g.medida.b.i && Math.abs(g.medida.a.p - g.medida.b.p) < 1e-9) g.medida = null;
+    if (!dedos.size) { acao = null; cursor(); desenhar(); }
+  };
   cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
-  cv.addEventListener("pointerleave", () => { if (!arrasto) { g.mouse = null; desenhar(); } });
-  cv.addEventListener("dblclick", () => g.aoDuploClique?.());
-  function limitar() {
-    const N = g.velas.length, vis = g.fim - g.ini;
-    if (g.ini < -2) { g.ini = -2; g.fim = g.ini + vis; }
-    if (g.fim > N + 8) { g.fim = N + 8; g.ini = g.fim - vis; }
-  }
-  new ResizeObserver(() => desenhar()).observe(caixa);
+  cv.addEventListener("pointerleave", () => { if (!acao) { g.mouse = null; desenhar(); } });
+  cv.addEventListener("dblclick", (e) => {
+    const r = cv.getBoundingClientRect(), reg = regiao(e.clientX - r.left, e.clientY - r.top);
+    if (reg === "eixo") { g.escala = null; desenhar(); } else if (reg === "grafico") g.aoDuploClique?.();
+  });
+  cv.addEventListener("keydown", (e) => {
+    const k = e.key;
+    if (k === "ArrowLeft") g.mover(-0.1); else if (k === "ArrowRight") g.mover(0.1);
+    else if (k === "+" || k === "=" || k === "ArrowUp") g.zoom(1 / 1.2); else if (k === "-" || k === "ArrowDown") g.zoom(1.2);
+    else if (k === "0") g.aoDuploClique?.(); else if (k === "Escape") { g.medida = null; desenhar(); }
+    else return;
+    e.preventDefault();
+  });
+  new ResizeObserver(() => desenhar()).observe(tela);
+  cursor();
   g.desenhar = desenhar;
   return g;
 }
@@ -2173,36 +2382,67 @@ async function velasDe(t) {
   if (!S.ohlc[t]) S.ohlc[t] = await j(`data/ohlc/${encodeURIComponent(t)}.json`);
   return S.ohlc[t];
 }
+const FERRAMENTAS_GRAFICO = [
+  ["mover", "Mover", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>'],
+  ["medir", "Medir", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg>'],
+  ["marcar", "Marcar preço", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 14h18" stroke-dasharray="3 3"/><path d="M12 4v6M9 7h6"/></svg>'],
+];
+const ICO_TELA_CHEIA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+const INDICADORES = [["vol", "Volume"], ["ops", "Minhas compras e vendas"], ["teto", "Preço teto"], ["mm9", "Média de 9"], ["mm21", "Média de 21"],
+  ["mm50", "Média de 50"], ["mm200", "Média de 200"], ["boll", "Bandas de Bollinger"], ["ifr", "IFR (força do movimento)"]];
+
 rotas.analise = async (el, alvo) => {
   const c = carteira();
   const abertas = c ? posicoes(c).filter((p) => p.qtd > 0 && S.porTicker[p.ticker]).sort((a, b) => (b.valor || 0) - (a.valor || 0)) : [];
   const t = String(alvo || S.analiseTicker || abertas[0]?.ticker || S.ativos[0]?.t || "").toUpperCase();
   S.analiseTicker = t;
   const a = S.porTicker[t];
-  const cfg = S.cfgAnalise ??= { tempo: "D", periodo: "1A", ind: { mm21: true, mm50: true, vol: true, ops: true } };
+  const cfg = S.cfgAnalise ??= { tipo: "velas", tempo: "D", periodo: innerWidth < 700 ? "3M" : "1A", ferramenta: "mover", ind: { vol: true, ops: true, teto: true, mm50: true } };
   const chips = [...new Set([...abertas.map((p) => p.ticker), ...(abertas.some((p) => p.ticker === t) ? [] : [t])])];
+  const seg = (attr, lista, atual, rotulo) => `<div class="segmentos" role="group" aria-label="${rotulo}">${lista.map(([k, n]) =>
+    `<button data-${attr}="${k}" aria-pressed="${atual === k}">${n}</button>`).join("")}</div>`;
   el.innerHTML = `<div class="cabeca"><div><h1>Análise</h1>
-      <p class="sutil" style="margin:6px 0 0">Gráfico de candles com as suas compras e vendas. Gire a roda do mouse para aproximar, arraste para os lados e dê dois cliques para voltar.</p></div></div>
+      <p class="sutil" style="margin:6px 0 0">Veja o histórico do preço, meça quanto subiu ou caiu e compare com o preço teto antes de comprar.</p></div></div>
     <div class="analise-ativos" role="group" aria-label="Escolher ativo">
       ${chips.map((x) => `<button data-tk="${x}" aria-pressed="${x === t}">${x}</button>`).join("")}
       <input type="search" id="outro-ativo" list="lista-tickers" placeholder="Analisar outro ativo" aria-label="Analisar outro ativo" autocomplete="off">
     </div>
-    <div class="painel analise-painel">
+    <div class="painel analise-painel" id="painel-grafico">
       <div class="analise-barra">
         <div class="analise-titulo"><a class="tk" href="#ativo-${t}">${esc(t)}</a><span>${esc(a?.n || "")}</span>
           <strong>${brl(a?.preco)}</strong><em class="${cls(a?.var_dia)}">${pct(a?.var_dia, 2, true)}</em></div>
-        <div class="analise-controles">
-          <div class="segmentos" role="group" aria-label="Tempo de cada candle">${[["D", "Diário"], ["S", "Semanal"], ["M", "Mensal"]].map(([k, n]) => `<button data-tempo="${k}" aria-pressed="${cfg.tempo === k}">${n}</button>`).join("")}</div>
-          <div class="segmentos" role="group" aria-label="Período">${Object.keys(PERIODOS).map((k) => `<button data-per="${k}" aria-pressed="${cfg.periodo === k}">${k}</button>`).join("")}</div>
-        </div>
+        <div class="decisao" id="decisao"></div>
       </div>
-      <div class="analise-ind">${[["mm9", "MM 9"], ["mm21", "MM 21"], ["mm50", "MM 50"], ["mm200", "MM 200"], ["boll", "Bollinger"], ["vol", "Volume"], ["ifr", "IFR"], ["ops", "Minhas operações"]]
-        .map(([k, n]) => `<label class="chip-check"${CORES_MM[k.slice(2)] ? ` style="--cor:${CORES_MM[k.slice(2)]}"` : ""}><input type="checkbox" data-ind="${k}" ${cfg.ind[k] ? "checked" : ""}>${n}</label>`).join("")}</div>
+      <div class="analise-controles">
+        ${seg("tipo", [["velas", "Candles"], ["linha", "Linha"]], cfg.tipo, "Tipo de gráfico")}
+        ${seg("tempo", [["D", "Diário"], ["S", "Semanal"], ["M", "Mensal"]], cfg.tempo, "Tempo de cada candle")}
+        ${seg("per", Object.keys(PERIODOS).map((k) => [k, k]), cfg.periodo, "Período")}
+        <div class="menu-ind"><button class="btn-ferr" id="btn-ind" aria-expanded="false" aria-controls="lista-ind">Indicadores <span class="contador" id="n-ind"></span></button>
+          <div class="lista-ind oculto" id="lista-ind">${INDICADORES.map(([k, n]) => `<label${CORES_MM[k.slice(2)] ? ` style="--cor:${CORES_MM[k.slice(2)]}"` : ""}>
+            <input type="checkbox" data-ind="${k}" ${cfg.ind[k] ? "checked" : ""}>${n}</label>`).join("")}</div></div>
+        <span class="espaco"></span>
+        <div class="segmentos ferramentas" role="group" aria-label="Ferramenta">${FERRAMENTAS_GRAFICO.map(([k, n, ico]) =>
+          `<button data-ferr="${k}" aria-pressed="${cfg.ferramenta === k}" title="${n}">${ico}<span>${n}</span></button>`).join("")}</div>
+        <button class="btn-ferr icone" id="limpar-marcas" title="Apagar as suas marcas e a medição" aria-label="Apagar as suas marcas e a medição">${ICO.lixo}</button>
+        <div class="segmentos" role="group" aria-label="Zoom"><button id="zoom-menos" title="Afastar" aria-label="Afastar">−</button><button id="zoom-mais" title="Aproximar" aria-label="Aproximar">+</button><button id="ajustar" title="Voltar ao período escolhido">Ajustar</button></div>
+        <button class="btn-ferr icone" id="tela-cheia" title="Tela cheia" aria-label="Tela cheia">${ICO_TELA_CHEIA}</button>
+      </div>
       <div class="velas-caixa" id="velas"><p class="fraco" style="padding:20px">Carregando os candles de ${esc(t)}…</p></div>
+      <p class="velas-dica">Roda do mouse aproxima. Arraste para os lados para andar no tempo. Arraste o eixo de preço para esticar. Na faixa de baixo, puxe a janela ou as bordas dela. Dois cliques voltam ao período.</p>
     </div>
     <div id="leitura"></div>`;
   $$("[data-tk]").forEach((b) => b.onclick = () => ir("#analise-" + b.dataset.tk));
   $("#outro-ativo").onchange = (e) => { const v = e.target.value.trim().toUpperCase(); if (S.porTicker[v]) ir("#analise-" + v); };
+  // menu de indicadores
+  const btnInd = $("#btn-ind"), listaInd = $("#lista-ind");
+  const contar = () => { $("#n-ind").textContent = INDICADORES.filter(([k]) => cfg.ind[k]).length; };
+  contar();
+  btnInd.onclick = (e) => { e.stopPropagation(); const abrir = listaInd.classList.contains("oculto"); listaInd.classList.toggle("oculto", !abrir); btnInd.setAttribute("aria-expanded", abrir); };
+  listaInd.onclick = (e) => e.stopPropagation();
+  if (!S.ouvinteInd) {   // um clique fora fecha o menu de indicadores
+    S.ouvinteInd = true;
+    document.addEventListener("click", () => { const l = $("#lista-ind"); if (l && !l.classList.contains("oculto")) { l.classList.add("oculto"); $("#btn-ind")?.setAttribute("aria-expanded", "false"); } });
+  }
   if (!t) return;
   let dados;
   try { dados = await velasDe(t); }
@@ -2212,25 +2452,47 @@ rotas.analise = async (el, alvo) => {
   }
   if (!$("#velas")) return;
   let d = null; try { d = a?.tipo === "acao" ? await detalhe(t) : null; } catch (e) { /* sem detalhe */ }
+  if (!$("#velas")) return;
   const pos = abertas.find((p) => p.ticker === t);
-  const teto = precoTeto(d);
+  const teto = precoTeto(d), justo = d ? precoJustoSugerido(d) : null, preco = a?.preco ?? dados.c.at(-1);
+  // o resumo para decidir: preço teto, preço justo e o seu preço médio
+  const dec = [];
+  if (teto) dec.push(`<div><span>Preço teto</span><b>${brl(teto)}</b><em class="${preco <= teto ? "alta" : "baixa"}">${preco <= teto ? `cotação ${pct(1 - preco / teto, 0)} abaixo` : `cotação ${pct(preco / teto - 1, 0)} acima`}</em></div>`);
+  if (justo) dec.push(`<div><span>Preço justo</span><b>${brl(justo)}</b><em class="${cls(justo / preco - 1)}">potencial ${pct(justo / preco - 1, 0, true)}</em></div>`);
+  if (pos) dec.push(`<div><span>Seu preço médio</span><b>${brl(pos.pm)}</b><em class="${cls(preco / pos.pm - 1)}">${pct(preco / pos.pm - 1, 1, true)}</em></div>`);
+  $("#decisao").innerHTML = dec.join("");
+
+  S.estado.marcasPreco ??= {};
   const gr = GraficoVelas($("#velas"));
+  gr.linhasUser = [...(S.estado.marcasPreco[t] || [])];
+  gr.aoMarcar = (lista) => { if (lista.length) S.estado.marcasPreco[t] = [...lista]; else delete S.estado.marcasPreco[t]; salvar(); };
+  gr.ferramenta = cfg.ferramenta; gr.tipo = cfg.tipo;
   const aplicar = () => {
     gr.config({
-      ind: cfg.ind,
-      linhas: cfg.ind.ops ? [pos && { v: pos.pm, rotulo: "Seu preço médio", cor: "#0B6E4F" }, teto && { v: teto, rotulo: "Preço teto", cor: "#A97A1C" }].filter(Boolean) : [],
+      ind: cfg.ind, tipo: cfg.tipo,
+      linhas: [cfg.ind.ops && pos && { v: pos.pm, rotulo: "Seu preço médio", cor: "#0B6E4F" }, cfg.ind.teto && teto && { v: teto, rotulo: "Preço teto", cor: "#A97A1C" }].filter(Boolean),
       marcas: cfg.ind.ops && c ? c.lancamentos.filter((l) => l.ticker === t && (l.tipo === "C" || l.tipo === "V")).map((l) => ({ t: l.data, tipo: l.tipo })) : [],
     });
   };
-  const mostrar = () => {
-    gr.dados(agruparVelas(dados, cfg.tempo), cfg.tempo);
-    aplicar();
-    gr.periodo(Math.max(12, Math.ceil(PERIODOS[cfg.periodo] / DIVISOR_TEMPO[cfg.tempo])));
+  const janela = () => Math.max(12, Math.ceil(PERIODOS[cfg.periodo] / DIVISOR_TEMPO[cfg.tempo]));
+  const mostrar = () => { gr.dados(agruparVelas(dados, cfg.tempo), cfg.tempo); aplicar(); gr.periodo(janela()); };
+  gr.aoDuploClique = () => gr.periodo(janela());
+  const marcarBotoes = (attr, b) => $$(`[data-${attr}]`).forEach((x) => x.setAttribute("aria-pressed", x === b));
+  $$("[data-tipo]").forEach((b) => b.onclick = () => { cfg.tipo = b.dataset.tipo; marcarBotoes("tipo", b); aplicar(); });
+  $$("[data-tempo]").forEach((b) => b.onclick = () => { cfg.tempo = b.dataset.tempo; marcarBotoes("tempo", b); mostrar(); });
+  $$("[data-per]").forEach((b) => b.onclick = () => { cfg.periodo = b.dataset.per; marcarBotoes("per", b); gr.periodo(janela()); });
+  $$("[data-ind]").forEach((x) => x.onchange = () => { cfg.ind[x.dataset.ind] = x.checked; contar(); aplicar(); });
+  $$("[data-ferr]").forEach((b) => b.onclick = () => { cfg.ferramenta = b.dataset.ferr; marcarBotoes("ferr", b); gr.usarFerramenta(cfg.ferramenta); });
+  $("#limpar-marcas").onclick = () => { gr.linhasUser = []; gr.medida = null; gr.aoMarcar([]); gr.desenhar(); };
+  $("#zoom-mais").onclick = () => gr.zoom(1 / 1.3);
+  $("#zoom-menos").onclick = () => gr.zoom(1.3);
+  $("#ajustar").onclick = () => gr.periodo(janela());
+  const painel = $("#painel-grafico"), btnTela = $("#tela-cheia");
+  btnTela.onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (painel.requestFullscreen) painel.requestFullscreen().catch(() => painel.classList.toggle("expandido"));
+    else painel.classList.toggle("expandido");
   };
-  gr.aoDuploClique = () => gr.periodo(Math.max(12, Math.ceil(PERIODOS[cfg.periodo] / DIVISOR_TEMPO[cfg.tempo])));
-  $$("[data-tempo]").forEach((b) => b.onclick = () => { cfg.tempo = b.dataset.tempo; $$("[data-tempo]").forEach((x) => x.setAttribute("aria-pressed", x === b)); mostrar(); });
-  $$("[data-per]").forEach((b) => b.onclick = () => { cfg.periodo = b.dataset.per; $$("[data-per]").forEach((x) => x.setAttribute("aria-pressed", x === b)); gr.aoDuploClique(); });
-  $$("[data-ind]").forEach((x) => x.onchange = () => { cfg.ind[x.dataset.ind] = x.checked; aplicar(); });
   mostrar();
   $("#leitura").innerHTML = leituraGrafico(dados, pos, teto, d);
 };
