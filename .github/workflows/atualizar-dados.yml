@@ -35,7 +35,7 @@ jobs:
           python-version: "3.12"
 
       - name: Instalar dependências
-        run: pip install pandas requests
+        run: pip install pandas requests pillow
 
       - name: Reaproveitar arquivos já baixados
         uses: actions/cache@v4
@@ -48,7 +48,7 @@ jobs:
         run: python etl/milhao_dados.py --saida site/data --cache .cache-dados
 
       - name: Montar o site
-        run: cp index.html site/ && touch site/.nojekyll
+        run: cp index.html site/ && python etl/icones.py --saida site && touch site/.nojekyll
 
       # o mesmo site também vai para milhao.pages.dev (Cloudflare Pages, plano gratuito)
       - uses: actions/setup-node@v4
