@@ -1,6 +1,7 @@
 // Assinatura do Milhão Ouro pelo Mercado Pago.
-// Ações (com login): "assinar" cria a assinatura e devolve o link de pagamento; "cancelar" cancela a
-// renovação; "excluir_conta" apaga a conta e os dados da pessoa (LGPD).
+// Ações (com login): "assinar" cria a assinatura no cartão e devolve o link de pagamento; "pix" gera um Pix
+// de 30 dias (QR Code); "conferir_pix" vê se o Pix caiu; "cancelar" cancela a renovação do cartão;
+// "excluir_conta" apaga a conta e os dados da pessoa (LGPD).
 // Sem login, com ?webhook=1: aviso do Mercado Pago. A função não confia no aviso: busca a assinatura
 // direto no Mercado Pago e só então atualiza a tabela "assinaturas".
 // Segredos: MP_ACCESS_TOKEN (Mercado Pago). Opcionais: PRECO_OURO (padrão 9.90), SITE_URL.
@@ -30,10 +31,10 @@ const servidor = () => {
   return { apikey: k, ...(k.startsWith("eyJ") ? { authorization: `Bearer ${k}` } : {}), "content-type": "application/json" } as Record<string, string>;
 };
 
-async function mp(caminho: string, metodo = "GET", corpo?: unknown) {
+async function mp(caminho: string, metodo = "GET", corpo?: unknown, extra: Record<string, string> = {}) {
   const r = await fetch(`https://api.mercadopago.com${caminho}`, {
     method: metodo,
-    headers: { authorization: `Bearer ${MP}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${MP}`, "content-type": "application/json", ...extra },
     body: corpo ? JSON.stringify(corpo) : undefined,
   });
   const d = await r.json().catch(() => ({}));
@@ -60,11 +61,34 @@ async function sincronizar(preId: string) {
   if (!ok || !d?.external_reference) return null;
   const status = ({ authorized: "ativa", paused: "pausada", cancelled: "cancelada", pending: "pendente" } as Record<string, string>)[d.status] ?? String(d.status);
   const linha: Record<string, unknown> = { user_id: d.external_reference, plano: "ouro", status, mp_assinatura: preId };
-  // ativa: vale até a próxima cobrança, com 3 dias de folga para o cartão passar.
+  // ativa: vale até a próxima cobrança, com 3 dias de folga para o cartão passar (sem encurtar dias de Pix já pagos).
   // cancelada ou pausada: continua valendo até o fim do que já foi pago (não mexe na data)
-  if (status === "ativa" && d.next_payment_date) linha.valido_ate = new Date(new Date(d.next_payment_date).getTime() + 3 * 864e5).toISOString();
+  if (status === "ativa" && d.next_payment_date) {
+    const atual = await lerAssinatura(String(d.external_reference));
+    const ate = new Date(d.next_payment_date).getTime() + 3 * 864e5;
+    linha.valido_ate = new Date(Math.max(ate, atual?.valido_ate ? new Date(atual.valido_ate).getTime() : 0)).toISOString();
+  }
   await gravarAssinatura(linha);
   return linha;
+}
+
+// Pix aprovado: soma 30 dias de Ouro, uma única vez por pagamento
+async function creditarPix(p: Record<string, any>) {
+  if (p?.status !== "approved" || !p.external_reference || p.currency_id !== "BRL" || Number(p.transaction_amount) < PRECO - 0.001) return false;
+  const uid = String(p.external_reference);
+  const r = await fetch(`${SB}/rest/v1/pagamentos_pix?on_conflict=id`, {
+    method: "POST",
+    headers: { ...servidor(), prefer: "resolution=ignore-duplicates,return=representation" },
+    body: JSON.stringify({ id: String(p.id), user_id: uid, valor: Number(p.transaction_amount) }),
+  });
+  if (!r.ok) throw new Error(`pagamentos_pix: ${r.status} ${await r.text()}`);
+  if (!(await r.json()).length) return true;   // esse pagamento já tinha sido creditado
+  const atual = await lerAssinatura(uid);
+  if (atual?.status === "criador") return true;
+  const base = Math.max(Date.now(), atual?.valido_ate ? new Date(atual.valido_ate).getTime() : 0);
+  const cartaoAtivo = atual?.status === "ativa" && ehOuro(atual);
+  await gravarAssinatura({ user_id: uid, plano: "ouro", status: cartaoAtivo ? "ativa" : "pix", valido_ate: new Date(base + 30 * 864e5).toISOString() });
+  return true;
 }
 
 async function quem(req: Request) {
@@ -89,13 +113,17 @@ Deno.serve(async (req) => {
         const p = await mp(`/authorized_payments/${id}`);
         if (p.ok && p.d?.preapproval_id) await sincronizar(String(p.d.preapproval_id));
       } else if (tipo.includes("preapproval")) await sincronizar(id);
+      else if (tipo === "payment") {
+        const p = await mp(`/v1/payments/${id}`);
+        if (p.ok && p.d?.payment_method_id === "pix") await creditarPix(p.d);
+      }
       return json({ ok: true });
     }
 
     if (req.method !== "POST") return json({ erro: "metodo" }, 405);
     const usuario = await quem(req);
     if (!usuario?.id) return json({ erro: "sem_login" }, 401);
-    const { acao } = await req.json().catch(() => ({}));
+    const { acao, id: pedidoId } = await req.json().catch(() => ({}));
 
     if (acao === "assinar") {
       if (!MP) return json({ erro: "pagamentos_em_breve" }, 503);
@@ -112,6 +140,35 @@ Deno.serve(async (req) => {
       if (!ok || !d?.init_point) return json({ erro: "mp", detalhe: d?.message ?? d?.error ?? "" }, 502);
       await gravarAssinatura({ user_id: usuario.id, plano: "ouro", status: ehOuro(atual) ? atual.status : "pendente", mp_assinatura: d.id });
       return json({ link: d.init_point });
+    }
+
+    if (acao === "pix") {
+      if (!MP) return json({ erro: "pagamentos_em_breve" }, 503);
+      const atual = await lerAssinatura(usuario.id);
+      if (ehOuro(atual) && (atual.status === "ativa" || atual.status === "criador")) return json({ erro: "ja_assinante" }, 409);
+      // o código vale 30 minutos (horário de Brasília no formato que o Mercado Pago pede)
+      const expira = new Date(Date.now() + 30 * 60e3 - 3 * 3600e3).toISOString().replace("Z", "-03:00");
+      const { ok, d } = await mp("/v1/payments", "POST", {
+        transaction_amount: PRECO,
+        description: "Milhão Ouro - 30 dias",
+        payment_method_id: "pix",
+        payer: { email: usuario.email },
+        external_reference: usuario.id,
+        notification_url: `${SB}/functions/v1/assinatura?webhook=1`,
+        date_of_expiration: expira,
+      }, { "X-Idempotency-Key": crypto.randomUUID() });
+      const t = d?.point_of_interaction?.transaction_data;
+      if (!ok || !t?.qr_code) return json({ erro: "mp", detalhe: d?.message ?? d?.error ?? "" }, 502);
+      return json({ id: String(d.id), copia_e_cola: t.qr_code, qr_base64: t.qr_code_base64 ?? "", valor: PRECO });
+    }
+
+    if (acao === "conferir_pix") {
+      if (!MP) return json({ erro: "pagamentos_em_breve" }, 503);
+      if (!/^\d+$/.test(String(pedidoId ?? ""))) return json({ erro: "id" }, 400);
+      const { ok, d } = await mp(`/v1/payments/${pedidoId}`);
+      if (!ok || String(d?.external_reference) !== usuario.id) return json({ erro: "nao_encontrado" }, 404);
+      if (d.status === "approved") await creditarPix(d);
+      return json({ status: d.status, assinatura: d.status === "approved" ? await lerAssinatura(usuario.id) : null });
     }
 
     if (acao === "cancelar") {
