@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try { if (localStorage.getItem("milhao:tema") === "escuro") document.documentElement.dataset.tema = "escuro"; } catch (e) {}</script>
 <title>Milhão.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +17,14 @@
   --ouro:#A97A1C; --ouro-claro:#F5ECD8;
   --fonte:"Archivo","Helvetica Neue",Arial,sans-serif;
   --r:10px;
+}
+:root[data-tema=escuro]{
+  --verde:#1E9E70; --verde-2:#2FCB8F; --verde-claro:#173A2D;
+  --tinta:#E6EEEA; --tinta-2:#AABAB2; --tinta-3:#7F9188;
+  --papel:#0E1613; --branco:#16211C; --linha:#2A3832; --linha-2:#212D28;
+  --queda:#F0806B; --queda-claro:#3B201B;
+  --ouro:#D9A642; --ouro-claro:#2F2617;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--papel);color:var(--tinta);font-family:var(--fonte);font-size:15px;line-height:1.45}
@@ -338,6 +347,22 @@ dialog.largo{width:min(720px,94vw)}
 .imp-cabeca{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:2px 0 -6px}
 .imp-cabeca h3{margin:0}
 .imp-tabela tr.excluido td{opacity:.4}
+/* modo escuro: o que usa cor fixa */
+[data-tema=escuro] .entrada-arte{background:#0A120F}
+[data-tema=escuro] .entrada-arte::after{background:linear-gradient(transparent,#0A120F 65%)}
+[data-tema=escuro] .chip[aria-pressed=true],[data-tema=escuro] .periodos button[aria-pressed=true],[data-tema=escuro] .analise-ativos button[aria-pressed=true],
+[data-tema=escuro] .dica,[data-tema=escuro] .aviso{color:var(--papel)}
+[data-tema=escuro] .aviso-acao{color:var(--verde)}
+[data-tema=escuro] .demo,[data-tema=escuro] .imp-nota{color:var(--ouro);border-color:var(--linha)}
+[data-tema=escuro] .selo.fii{color:var(--ouro)}
+[data-tema=escuro] tbody tr:hover{background:#1A2621}
+[data-tema=escuro] .painel.teto,[data-tema=escuro] .veredito{border-color:var(--linha)}
+[data-tema=escuro] dialog::backdrop{background:rgba(0,0,0,.55)}
+[data-tema=escuro] .velas-tela canvas,[data-tema=escuro] img{color-scheme:dark}
+.btn-tema{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;border:1px solid var(--linha);background:var(--branco);color:var(--tinta-2);cursor:pointer;padding:0;flex:none}
+.btn-tema:hover{color:var(--tinta);border-color:var(--tinta-3)}
+.btn-tema svg{width:17px;height:17px}
+.topo .usuario,.barra-topo .usuario{display:flex;align-items:center;gap:8px}
 .passos{margin:0;padding-left:20px;font-size:14px;color:var(--tinta-2)}
 .passos li{margin:3px 0}
 .aviso{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:50}
@@ -679,7 +704,7 @@ function graficoLinha(el, pontos, { altura = 280, cor = "var(--verde)", formato 
     ${segunda ? `<path d="${caminho(segunda)}" fill="none" stroke="var(--tinta-3)" stroke-width="1.5" stroke-dasharray="4 4"/>` : ""}
     <path d="${pathA}" fill="none" stroke="${cor}" stroke-width="2"/>
     <line class="mira" y1="${m.t}" y2="${A - m.b}" stroke="var(--tinta-3)" stroke-width="1" opacity="0"/>
-    <circle class="ponto" r="4" fill="${cor}" stroke="#fff" stroke-width="2" opacity="0"/>
+    <circle class="ponto" r="4" fill="${cor}" stroke="var(--branco)" stroke-width="2" opacity="0"/>
     <rect x="${m.e}" y="0" width="${L - m.e - m.d}" height="${A}" fill="transparent"/>
   </svg><div class="dica oculto"></div>`;
   const svg = $("svg", el), dica = $(".dica", el), mira = $(".mira", el), ponto = $(".ponto", el);
@@ -746,7 +771,25 @@ function indiceForcaRelativa(vals, n = 14) {
   }
   return out;
 }
-const CORES_MM = { 9: "#2E7BD6", 21: "#A97A1C", 50: "#8E44AD", 200: "#13241C" };
+const temaEscuro = () => document.documentElement.dataset.tema === "escuro";
+const CORES_MM = { 9: "#2E7BD6", 21: "#A97A1C", 50: "#8E44AD", get 200() { return temaEscuro() ? "#E6EEEA" : "#13241C"; } };
+const ICO_LUA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
+const ICO_SOL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>';
+/* modo escuro: vale para este aparelho e fica salvo na sua conta */
+function aplicarTema(t) {
+  if (t === "escuro") document.documentElement.dataset.tema = "escuro"; else delete document.documentElement.dataset.tema;
+  try { localStorage.setItem("milhao:tema", t === "escuro" ? "escuro" : "claro"); } catch (e) { /* sem armazenamento */ }
+}
+const botaoTema = () => `<button class="btn-tema" id="btn-tema" type="button" aria-label="${temaEscuro() ? "Usar modo claro" : "Usar modo escuro"}" title="${temaEscuro() ? "Modo claro" : "Modo escuro"}">${temaEscuro() ? ICO_SOL : ICO_LUA}</button>`;
+function ligarBotaoTema() {
+  const b = $("#btn-tema"); if (!b) return;
+  b.onclick = () => {
+    const novo = temaEscuro() ? "claro" : "escuro";
+    aplicarTema(novo);
+    if (S.estado) { S.estado.tema = novo; salvar(); }
+    render();
+  };
+}
 
 function GraficoVelas(caixa) {
   const g = { velas: [], tempo: "D", tipo: "velas", ind: {}, marcas: [], linhas: [], linhasUser: [], ini: 0, fim: 0,
@@ -754,7 +797,8 @@ function GraficoVelas(caixa) {
   caixa.innerHTML = `<div class="velas-info"></div><div class="velas-tela"><canvas tabindex="0" aria-label="Gráfico de preços. Setas movem, mais e menos aproximam, zero ajusta."></canvas></div>`;
   const tela = $(".velas-tela", caixa), cv = $("canvas", caixa), info = $(".velas-info", caixa), ctx = cv.getContext("2d");
   const DIR = 74, BAIXO = 24, ALTURA_IFR = 88, NAV = 54;
-  const UP = "#0F8A62", DOWN = "#C0432E", GRADE = "#EBF0ED", TEXTO = "#7B8C83", MARCA = "#2E7BD6", ESCURO = "#13241C";
+  const UP = "#0F8A62", DOWN = "#C0432E", MARCA = "#2E7BD6";
+  let GRADE, TEXTO, ESCURO, BORDA, FUNDO_NAV, MIRA;
   let calc = { mm: {} }, E = null;
 
   g.dados = (velas, tempo) => { g.velas = velas; g.tempo = tempo; g.medida = null; recalcular(); };
@@ -792,6 +836,9 @@ function GraficoVelas(caixa) {
   function desenhar() {
     const W = tela.clientWidth, H = tela.clientHeight, dpr = window.devicePixelRatio || 1;
     if (!W || !H) return;
+    const escuroG = temaEscuro();   // cores do gráfico acompanham o modo claro ou escuro
+    GRADE = escuroG ? "#1F2B26" : "#EBF0ED"; TEXTO = escuroG ? "#8DA097" : "#7B8C83"; ESCURO = escuroG ? "#3A4C43" : "#13241C";
+    BORDA = escuroG ? "#2A3832" : "#DCE4DF"; FUNDO_NAV = escuroG ? "#111C17" : "#F4F7F5"; MIRA = escuroG ? "#5E7068" : "#9AA9A1";
     cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const N = g.velas.length; if (!N) return;
@@ -827,7 +874,7 @@ function GraficoVelas(caixa) {
       ctx.strokeStyle = GRADE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(pw, y); ctx.stroke();
       ctx.fillStyle = TEXTO; ctx.textAlign = "left"; ctx.fillText(fmtP(v), pw + 8, y);
     }
-    ctx.strokeStyle = "#DCE4DF"; ctx.beginPath(); ctx.moveTo(pw + 0.5, 0); ctx.lineTo(pw + 0.5, hMain + hIfr); ctx.stroke();
+    ctx.strokeStyle = BORDA; ctx.beginPath(); ctx.moveTo(pw + 0.5, 0); ctx.lineTo(pw + 0.5, hMain + hIfr); ctx.stroke();
     // eixo de datas
     const yDatas = hMain + hIfr + BAIXO / 2;
     const cada = Math.max(1, Math.ceil(96 / esp));
@@ -937,7 +984,7 @@ function GraficoVelas(caixa) {
     // IFR
     if (calc.ifr) {
       const top = hMain + 6, h = hIfr - 12, Yi = (v) => top + (1 - v / 100) * h;
-      ctx.strokeStyle = "#DCE4DF"; ctx.beginPath(); ctx.moveTo(0, hMain + 0.5); ctx.lineTo(W, hMain + 0.5); ctx.stroke();
+      ctx.strokeStyle = BORDA; ctx.beginPath(); ctx.moveTo(0, hMain + 0.5); ctx.lineTo(W, hMain + 0.5); ctx.stroke();
       ctx.fillStyle = "rgba(169,122,28,.06)"; ctx.fillRect(0, Yi(70), pw, Yi(30) - Yi(70));
       ctx.setLineDash([3, 3]); ctx.strokeStyle = "#C9B58A";
       for (const n of [30, 70]) { ctx.beginPath(); ctx.moveTo(0, Yi(n) + 0.5); ctx.lineTo(pw, Yi(n) + 0.5); ctx.stroke(); }
@@ -956,15 +1003,15 @@ function GraficoVelas(caixa) {
     for (const e of visiveis) etiqueta(e.txt, Math.min(e.y, hMain - 10), e.cor);
     if (g.escala) {
       ctx.font = "600 11px Archivo, Arial, sans-serif"; ctx.textAlign = "center";
-      ctx.fillStyle = "#E4EFE9"; ctx.beginPath(); ctx.roundRect(pw + 8, hMain - 24, DIR - 16, 18, 9); ctx.fill();
-      ctx.fillStyle = "#0B6E4F"; ctx.fillText("Auto", pw + DIR / 2, hMain - 15);
+      ctx.fillStyle = escuroG ? "#173A2D" : "#E4EFE9"; ctx.beginPath(); ctx.roundRect(pw + 8, hMain - 24, DIR - 16, 18, 9); ctx.fill();
+      ctx.fillStyle = escuroG ? "#2FCB8F" : "#0B6E4F"; ctx.fillText("Auto", pw + DIR / 2, hMain - 15);
     }
     // mira
     let alvo = N - 1, precoCursor = null;
     if (g.mouse && g.mouse.y < navTop - 10) {
       const { x, y } = g.mouse;
       alvo = Math.max(i0, Math.min(i1, Math.round(x / esp + g.ini - 0.5)));
-      ctx.setLineDash([4, 4]); ctx.strokeStyle = "#9AA9A1"; ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = MIRA; ctx.lineWidth = 1;
       const xa = Math.round(X(alvo)) + 0.5;
       ctx.beginPath(); ctx.moveTo(xa, 0); ctx.lineTo(xa, hMain + hIfr); ctx.stroke();
       if (y < hMain) { ctx.beginPath(); ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(pw, Math.round(y) + 0.5); ctx.stroke(); }
@@ -983,7 +1030,7 @@ function GraficoVelas(caixa) {
       const top = navTop, h = NAV - 14, NX = (i) => (N > 1 ? (i / (N - 1)) * pw : 0);
       let a = Infinity, b = -Infinity; for (const v of g.velas) { a = Math.min(a, v.c); b = Math.max(b, v.c); }
       const NY = (v) => top + 3 + (1 - (v - a) / ((b - a) || 1)) * (h - 6);
-      ctx.fillStyle = "#F4F7F5"; ctx.fillRect(0, top, pw, h);
+      ctx.fillStyle = FUNDO_NAV; ctx.fillRect(0, top, pw, h);
       ctx.beginPath(); ctx.moveTo(0, top + h);
       const passoN = Math.max(1, Math.floor(N / pw));
       for (let i = 0; i < N; i += passoN) ctx.lineTo(NX(i), NY(g.velas[i].c));
@@ -992,7 +1039,7 @@ function GraficoVelas(caixa) {
       ctx.beginPath(); for (let i = 0; i < N; i += passoN) i ? ctx.lineTo(NX(i), NY(g.velas[i].c)) : ctx.moveTo(NX(i), NY(g.velas[i].c));
       ctx.strokeStyle = "rgba(15,138,98,.7)"; ctx.lineWidth = 1; ctx.stroke();
       const wa = Math.max(0, NX(g.ini)), wb = Math.min(pw, NX(g.fim - 1));
-      ctx.fillStyle = "rgba(19,36,28,.08)"; ctx.fillRect(0, top, wa, h); ctx.fillRect(wb, top, pw - wb, h);
+      ctx.fillStyle = escuroG ? "rgba(0,0,0,.35)" : "rgba(19,36,28,.08)"; ctx.fillRect(0, top, wa, h); ctx.fillRect(wb, top, pw - wb, h);
       ctx.strokeStyle = "#0B6E4F"; ctx.lineWidth = 1.5; ctx.strokeRect(wa + 0.75, top + 0.75, Math.max(wb - wa - 1.5, 2), h - 1.5);
       ctx.fillStyle = "#0B6E4F";
       for (const x of [wa, wb]) { ctx.beginPath(); ctx.roundRect(x - 3.5, top + h / 2 - 10, 7, 20, 3); ctx.fill(); }
@@ -1163,6 +1210,8 @@ function ir(h) { if (location.hash === h) render(); else location.hash = h; }
 window.addEventListener("hashchange", () => render());
 
 function render() {
+  // a preferência salva na conta vale em qualquer aparelho
+  if (S.estado?.tema && (S.estado.tema === "escuro") !== temaEscuro()) aplicarTema(S.estado.tema);
   const h = location.hash.replace(/^#\/?/, "") || "";
   const rota = h.split("-")[0], args = h.includes("-") ? [h.slice(rota.length + 1)] : [];
   if (!S.estado.perfil) return telaEntrada();
@@ -1365,7 +1414,7 @@ function telaCarteiras() {
         <input type="search" id="busca" placeholder="Buscar ação ou FII" aria-label="Buscar ativo" autocomplete="off">
         <div class="sugestoes oculto" id="sugestoes" role="listbox"></div>
       </div>
-      <span class="usuario"><span class="nome">${esc(S.estado.perfil.nome)}</span><button class="btn texto" id="sair" style="padding:4px 8px">Sair</button></span>
+      <span class="usuario"><span class="nome">${esc(S.estado.perfil.nome)}</span>${botaoTema()}<button class="btn texto" id="sair" style="padding:4px 8px">Sair</button></span>
     </div></header>
     <main class="conteudo" style="margin:0 auto;padding-top:34px">
     <div class="cabeca"><div><h1>Olá, ${esc(S.estado.perfil.nome.split(" ")[0])}. Qual carteira vamos abrir?</h1></div></div>
@@ -1412,7 +1461,7 @@ function telaCarteiras() {
     if (r === "importar") { ir("#carteira"); setTimeout(abrirImportacao, 0); }
     else ir("#" + r);
   });
-  ligarBusca();
+  ligarBusca(); ligarBotaoTema();
   $("#sair").onclick = async () => {
     if (S.nuvem && S.usuario) {
       if (await perguntar({ titulo: "Sair da sua conta?", texto: "Suas carteiras continuam salvas na conta. É só entrar de novo.", botao: "Sair" })) sairDaConta();
@@ -1429,7 +1478,7 @@ function moldura(rota) {
   const item = (r, nome) => `<a href="#${r}" class="${rota === r || (r === "explorar" && rota === "ativo") ? "ativo" : ""}">${ICO[r]}${nome}</a>`;
   $("#raiz").innerHTML = `<div class="app">
     <aside class="lateral">
-      <a href="#carteira" class="marca-link" aria-label="Milhão, ir para a carteira">${logoHTML("pequena")}</a>
+      <a href="#carteiras" class="marca-link" aria-label="Milhão, voltar para a tela inicial">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
         ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("explorar", "Ações e FIIs")}${item("ferramentas", "Ferramentas")}
@@ -1448,7 +1497,7 @@ function moldura(rota) {
           <input type="search" id="busca" placeholder="Buscar ação ou FII pelo código ou nome" aria-label="Buscar ativo" autocomplete="off">
           <div class="sugestoes oculto" id="sugestoes" role="listbox"></div>
         </div>
-        <span class="usuario">${esc(S.estado.perfil.nome)}${S.usuario ? ` <button class="btn texto" id="sair-topo" style="padding:4px 8px">Sair</button>` : ""}</span>
+        <span class="usuario">${esc(S.estado.perfil.nome)}${botaoTema()}${S.usuario ? ` <button class="btn texto" id="sair-topo" style="padding:4px 8px">Sair</button>` : ""}</span>
       </header>
       <main class="conteudo" id="conteudo"></main>
     </div></div>`;
@@ -1458,7 +1507,7 @@ function moldura(rota) {
   };
   $("#exportar").onclick = exportarBackup;
   $("#importar-backup").onclick = () => $("#arquivo-backup").click();
-  ligarBusca();
+  ligarBusca(); ligarBotaoTema();
 }
 
 function ligarBusca() {
