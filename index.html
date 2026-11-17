@@ -38,7 +38,7 @@ h3{font-size:15px;font-weight:650}
 .btn.primario:hover{background:var(--verde-2)}
 .btn.texto{border:none;background:none;padding:6px 8px;color:var(--verde)}
 .btn.perigo{color:var(--queda)}
-input[type=text],input[type=email],input[type=number],input[type=date],input[type=search],select{
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],input[type=search],select{
   border:1px solid var(--linha);background:var(--branco);border-radius:8px;padding:8px 10px;width:100%}
 label.campo{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--tinta-2);font-weight:550}
 .oculto{display:none!important}
@@ -53,6 +53,9 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(
 .entrada-form{display:flex;align-items:center;justify-content:center;padding:40px}
 .entrada-form form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:16px}
 .entrada-form .nota{font-size:13px;color:var(--tinta-3)}
+.entrada-form .esqueci{font-size:14px;color:var(--verde);font-weight:600;margin-top:-6px;align-self:flex-start}
+.entrada-form .sutil a{color:var(--verde);font-weight:600}
+.erro-login{margin:0;background:var(--queda-claro);color:var(--queda);border-radius:8px;padding:10px 12px;font-size:14px}
 
 /* ---------- moldura ---------- */
 .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh;background:linear-gradient(to right,var(--branco) 247px,var(--linha) 247px,var(--linha) 248px,transparent 248px)}
@@ -287,6 +290,7 @@ details.ajustar .painel{border:none;padding:0}
 <input type="file" id="arquivo-importar" accept=".xlsx,.csv,.txt" multiple class="oculto">
 <input type="file" id="arquivo-backup" accept=".json" class="oculto">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
 /* =====================================================================
@@ -337,6 +341,18 @@ function perguntar({ titulo, texto = "", rotulo = "", valor = null, botao = "Con
   return new Promise((ok) => { dlg.onclose = () => ok(dlg.returnValue === "ok" ? (comCampo ? campo.value.trim() : true) : null); });
 }
 
+/* ---------- contas e nuvem (Supabase, plano gratuito) ----------
+   A chave abaixo é a chave pública do projeto: ela só abre o que as regras do banco permitem
+   (cada pessoa lê e grava apenas a própria linha). Sem ela preenchida, o Milhão funciona só no navegador. */
+const NUVEM = { url: "https://gyxftcpycrnjryfwpslt.supabase.co", chave: "sb_publishable_TgiTzZYWxVaPZ0H6S17d1g_4-rAnuWG" };
+const SITE = location.origin + location.pathname;
+S.nuvem = null; S.usuario = null;
+function iniciarNuvem() {
+  if (!NUVEM.url || !NUVEM.chave || !window.supabase?.createClient) return null;
+  return window.supabase.createClient(NUVEM.url, NUVEM.chave, { auth: { flowType: "pkce", persistSession: true, detectSessionInUrl: true } });
+}
+const nomeDoUsuario = (u) => (u?.user_metadata?.nome || u?.email?.split("@")[0] || "Investidor").trim();
+
 /* ---------- estado salvo no navegador ---------- */
 function carregarEstado() {
   try { const s = JSON.parse(localStorage.getItem(CHAVE)); if (s) return s; } catch (e) { /* sem storage */ }
@@ -344,6 +360,35 @@ function carregarEstado() {
 }
 function salvar() {
   try { localStorage.setItem(CHAVE, JSON.stringify(S.estado)); } catch (e) { S.memoria = S.estado; }
+  if (S.nuvem && S.usuario) { clearTimeout(salvar.t); salvar.t = setTimeout(enviarNuvem, 700); }
+}
+async function enviarNuvem() {
+  const { error } = await S.nuvem.from("perfis").upsert({
+    id: S.usuario.id, nome: S.estado.perfil?.nome || nomeDoUsuario(S.usuario), estado: S.estado, atualizado_em: new Date().toISOString(),
+  });
+  if (error) { aviso("Não deu para salvar na nuvem. Suas mudanças estão guardadas aqui e vão de novo na próxima alteração."); console.warn(error); }
+}
+/* depois de entrar: a carteira da nuvem vale; se a nuvem estiver vazia, sobe o que já existia neste navegador */
+async function abrirConta(usuario) {
+  S.usuario = usuario;
+  const perfil = { nome: nomeDoUsuario(usuario), email: usuario.email };
+  const { data, error } = await S.nuvem.from("perfis").select("estado").eq("id", usuario.id).maybeSingle();
+  if (error) { aviso("Não deu para buscar suas carteiras na nuvem agora. Tente recarregar a página."); console.warn(error); }
+  const local = carregarEstado();
+  if (data?.estado?.carteiras) {
+    S.estado = { ...data.estado, perfil };
+  } else {
+    const temLocal = local.carteiras?.some((c) => c.lancamentos?.length);
+    S.estado = { carteiras: temLocal ? local.carteiras : [], ativa: temLocal ? local.ativa : null, perfil };
+    if (!error) { await enviarNuvem(); if (temLocal) aviso("Trouxemos para a sua conta as carteiras que estavam neste navegador"); }
+  }
+  try { localStorage.setItem(CHAVE, JSON.stringify(S.estado)); } catch (e) { /* sem storage */ }
+}
+async function sairDaConta() {
+  if (S.nuvem) await S.nuvem.auth.signOut();
+  S.usuario = null; S.estado = { perfil: null, carteiras: [], ativa: null };
+  try { localStorage.removeItem(CHAVE); } catch (e) { /* sem storage */ }
+  ir("#entrada");
 }
 const carteira = () => S.estado.carteiras.find((c) => c.id === S.estado.ativa) || null;
 const novoId = () => Math.random().toString(36).slice(2, 10);
@@ -523,11 +568,13 @@ function render() {
 }
 
 /* ---------- entrada ---------- */
+const curvaEntrada = () => Array.from({ length: 60 }, (_, i) => {
+  const x = i / 59, y = 0.85 - 0.75 * Math.pow(x, 1.6) + 0.04 * Math.sin(i * 1.3);
+  return `${(x * 100).toFixed(2)},${(y * 100).toFixed(2)}`;
+}).join(" ");
 function telaEntrada() {
-  const curva = Array.from({ length: 60 }, (_, i) => {
-    const x = i / 59, y = 0.85 - 0.75 * Math.pow(x, 1.6) + 0.04 * Math.sin(i * 1.3);
-    return `${(x * 100).toFixed(2)},${(y * 100).toFixed(2)}`;
-  }).join(" ");
+  const curva = curvaEntrada();
+  if (S.nuvem) return telaLogin(curva);
   $("#raiz").innerHTML = `<main class="entrada">
     <section class="entrada-arte">
       <div class="marca">Milhão<span>.</span></div>
@@ -554,6 +601,73 @@ function telaEntrada() {
   });
 }
 
+function telaLogin(curva, modo = "entrar") {
+  const textos = {
+    entrar: { titulo: "Entrar", botao: "Entrar", troca: `Ainda não tem conta? <a href="#" data-modo="criar">Criar conta grátis</a>` },
+    criar: { titulo: "Criar conta", botao: "Criar conta", troca: `Já tem conta? <a href="#" data-modo="entrar">Entrar</a>` },
+    esqueci: { titulo: "Recuperar senha", botao: "Enviar link", troca: `<a href="#" data-modo="entrar">Voltar para entrar</a>` },
+    nova: { titulo: "Criar nova senha", botao: "Salvar nova senha", troca: "" },
+  }[modo];
+  $("#raiz").innerHTML = `<main class="entrada">
+    <section class="entrada-arte">
+      <div class="marca">Milhão<span>.</span></div>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="${curva}" fill="none" stroke="#2FCB8F" stroke-width=".6" vector-effect="non-scaling-stroke" style="stroke-width:3px"/>
+      </svg>
+      <p>Sua carteira da B3 num lugar só: o que você tem, quanto rende e quanto pinga de dividendos.</p>
+    </section>
+    <section class="entrada-form">
+      <form id="form-login" novalidate>
+        <h1>${textos.titulo}</h1>
+        ${modo === "esqueci" ? `<p class="sutil" style="margin:-6px 0 0">Digite o e-mail da sua conta. Mandamos um link para você criar uma senha nova.</p>` : ""}
+        ${modo === "criar" ? `<label class="campo">Seu nome<input type="text" name="nome" required autocomplete="given-name"></label>` : ""}
+        ${modo !== "nova" ? `<label class="campo">E-mail<input type="email" name="email" required autocomplete="email"></label>` : ""}
+        ${modo !== "esqueci" ? `<label class="campo">${modo === "nova" ? "Nova senha" : "Senha"}<input type="password" name="senha" required minlength="6"
+            autocomplete="${modo === "entrar" ? "current-password" : "new-password"}">${modo !== "entrar" ? `<small class="fraco">No mínimo 6 caracteres</small>` : ""}</label>` : ""}
+        ${modo === "entrar" ? `<a href="#" data-modo="esqueci" class="esqueci">Esqueci minha senha</a>` : ""}
+        <p class="erro-login oculto" id="erro-login" role="alert"></p>
+        <button class="btn primario" type="submit">${textos.botao}</button>
+        ${textos.troca ? `<p class="sutil" style="margin:0;text-align:center">${textos.troca}</p>` : ""}
+        <p class="nota">Suas carteiras ficam salvas na sua conta e abrem em qualquer computador ou celular.</p>
+      </form>
+    </section>
+  </main>`;
+  $$("[data-modo]").forEach((a) => a.onclick = (e) => { e.preventDefault(); telaLogin(curva, a.dataset.modo); });
+  const form = $("#form-login"), botao = form.querySelector("button[type=submit]");
+  const erro = (msg) => { const el = $("#erro-login"); el.textContent = msg; el.classList.toggle("oculto", !msg); };
+  form.querySelector("input")?.focus();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); erro("");
+    const f = new FormData(form), email = String(f.get("email") || "").trim(), senha = String(f.get("senha") || "");
+    if (modo === "criar" && !String(f.get("nome") || "").trim()) return erro("Conte como você quer ser chamado.");
+    if (modo !== "nova" && !/^\S+@\S+\.\S+$/.test(email)) return erro("Confira o e-mail: falta alguma coisa nele.");
+    if (modo !== "esqueci" && senha.length < 6) return erro("A senha precisa ter pelo menos 6 caracteres.");
+    botao.disabled = true; const rotulo = botao.textContent; botao.textContent = "Aguarde…";
+    try {
+      const a = S.nuvem.auth;
+      let r;
+      if (modo === "entrar") r = await a.signInWithPassword({ email, password: senha });
+      if (modo === "criar") r = await a.signUp({ email, password: senha, options: { data: { nome: String(f.get("nome")).trim() }, emailRedirectTo: SITE } });
+      if (modo === "esqueci") r = await a.resetPasswordForEmail(email, { redirectTo: SITE });
+      if (modo === "nova") r = await a.updateUser({ password: senha });
+      if (r.error) throw r.error;
+      if (modo === "esqueci") { telaLogin(curva, "entrar"); aviso("Se esse e-mail tiver conta, o link já está a caminho. Confira também o spam."); return; }
+      if (modo === "criar" && !r.data.session) { telaLogin(curva, "entrar"); aviso("Conta criada. Confirme pelo link que mandamos no seu e-mail e depois entre."); return; }
+      if (modo === "nova") aviso("Senha nova salva");
+      await abrirConta(r.data.user || r.data.session.user);
+      ir("#carteiras");
+    } catch (err) {
+      const m = String(err?.message || err).toLowerCase();
+      erro(m.includes("invalid login") ? "E-mail ou senha não conferem." :
+        m.includes("already registered") || m.includes("already been registered") ? "Esse e-mail já tem conta. Use Entrar, ou Esqueci minha senha." :
+        m.includes("rate limit") || m.includes("security purposes") ? "Muitas tentativas seguidas. Espere um minuto e tente de novo." :
+        m.includes("password") ? "Essa senha não foi aceita. Use pelo menos 6 caracteres, misturando letras e números." :
+        m.includes("fetch") || m.includes("network") ? "Sem conexão com o servidor. Confira sua internet." :
+        "Não deu certo: " + (err?.message || err));
+    } finally { botao.disabled = false; botao.textContent = rotulo; }
+  });
+}
+
 /* ---------- seletor de carteiras ---------- */
 function telaCarteiras() {
   const cs = S.estado.carteiras;
@@ -577,6 +691,10 @@ function telaCarteiras() {
     S.estado.carteiras.push(c); S.estado.ativa = c.id; salvar(); ir("#carteira");
   };
   $("#sair").onclick = async () => {
+    if (S.nuvem && S.usuario) {
+      if (await perguntar({ titulo: "Sair da sua conta?", texto: "Suas carteiras continuam salvas na conta. É só entrar de novo.", botao: "Sair" })) sairDaConta();
+      return;
+    }
     if (await perguntar({ titulo: "Sair do Milhão?", texto: "Suas carteiras continuam salvas neste navegador.", botao: "Sair" })) {
       S.estado.perfil = null; salvar(); ir("#entrada"); }
   };
@@ -607,11 +725,14 @@ function moldura(rota) {
           <input type="search" id="busca" placeholder="Buscar ação ou FII pelo código ou nome" aria-label="Buscar ativo" autocomplete="off">
           <div class="sugestoes oculto" id="sugestoes" role="listbox"></div>
         </div>
-        <span class="usuario">${esc(S.estado.perfil.nome)}</span>
+        <span class="usuario">${esc(S.estado.perfil.nome)}${S.usuario ? ` <button class="btn texto" id="sair-topo" style="padding:4px 8px">Sair</button>` : ""}</span>
       </header>
       <main class="conteudo" id="conteudo"></main>
     </div></div>`;
   $("#trocar-carteira").onclick = () => ir("#carteiras");
+  if ($("#sair-topo")) $("#sair-topo").onclick = async () => {
+    if (await perguntar({ titulo: "Sair da sua conta?", texto: "Suas carteiras continuam salvas na conta. É só entrar de novo.", botao: "Sair" })) sairDaConta();
+  };
   $("#exportar").onclick = exportarBackup;
   $("#importar-backup").onclick = () => $("#arquivo-backup").click();
   ligarBusca();
@@ -1544,6 +1665,19 @@ rotas.ferramentas = (el) => {
 /* ---------- início ---------- */
 async function iniciar() {
   S.estado = carregarEstado();
+  S.nuvem = iniciarNuvem();
+  if (S.nuvem) {
+    // link de "esqueci minha senha": o Supabase avisa com PASSWORD_RECOVERY e a pessoa cria a senha nova
+    S.nuvem.auth.onAuthStateChange((evento) => {
+      if (evento !== "PASSWORD_RECOVERY") return;
+      S.recuperando = true;
+      if (S.ativos.length) setTimeout(() => telaLogin(curvaEntrada(), "nova"), 0);
+    });
+    const { data } = await S.nuvem.auth.getSession();
+    if (data.session) await abrirConta(data.session.user);
+    else S.estado = { perfil: null, carteiras: [], ativa: null };
+    if (/[?&]code=/.test(location.search)) history.replaceState(null, "", SITE + location.hash);
+  }
   try {
     [S.meta, S.ativos] = await Promise.all([j("data/meta.json"), j("data/ativos.json")]);
   } catch (e) {
@@ -1552,6 +1686,7 @@ async function iniciar() {
   }
   S.porTicker = Object.fromEntries(S.ativos.map((a) => [a.t, a]));
   $("#lista-tickers").innerHTML = S.ativos.map((a) => `<option value="${a.t}">${esc(a.n)}</option>`).join("");
+  if (S.recuperando) return telaLogin(curvaEntrada(), "nova");
   render();
 }
 iniciar();
