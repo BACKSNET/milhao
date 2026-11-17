@@ -184,6 +184,35 @@ dialog.largo{width:min(720px,94vw)}
 /* ---------- ferramentas ---------- */
 .calc{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
 .calc form{display:flex;flex-direction:column;gap:12px}
+.veredito{display:grid;grid-template-columns:minmax(180px,240px) 1fr;gap:20px;align-items:center;border-radius:var(--r);padding:20px 22px;margin-bottom:18px;background:var(--branco);border:1px solid var(--linha)}
+.veredito .rotulo{display:block;font-size:13px;color:var(--tinta-2)}
+.veredito strong{display:block;font-size:34px;font-weight:800;font-stretch:112%;letter-spacing:-.02em;margin-top:2px}
+.veredito p{margin:6px 0 0;color:var(--tinta-2)}
+.veredito a{display:inline-block;margin-top:6px;color:var(--verde);font-weight:600}
+.selo-v{display:inline-block;font-weight:700;font-size:15px;padding:4px 10px;border-radius:999px;background:var(--linha-2)}
+.veredito.barata{background:var(--verde-claro);border-color:#C3DFD1}.veredito.barata .selo-v{background:var(--verde);color:#fff}
+.veredito.cara{background:var(--queda-claro);border-color:#EBC7BF}.veredito.cara .selo-v{background:var(--queda);color:#fff}
+.veredito.nopreco{background:var(--ouro-claro);border-color:#E8D8B0}.veredito.nopreco .selo-v{background:var(--ouro);color:#fff}
+.veredito.grande strong{font-size:44px}
+.cartoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.cartoes > div{background:var(--branco);border:1px solid var(--linha);border-radius:var(--r);padding:16px 18px}
+.cartoes span{font-size:13px;color:var(--tinta-2)}
+.cartoes strong{display:block;font-size:24px;font-weight:750;margin:2px 0 4px;letter-spacing:-.01em}
+.cartoes p{margin:0;font-size:13.5px;color:var(--tinta-2)}
+.cartoes p a{color:var(--verde);font-weight:600}
+.cartoes em{display:block;font-style:normal;font-size:13px;font-weight:600;margin-bottom:4px}
+.cartoes.c3{margin-bottom:0}.cartoes.c3 > div{background:var(--papel);border-color:var(--linha-2)}
+.pares{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.pares a{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--linha-2);border-radius:8px;text-decoration:none}
+.pares a:hover{border-color:var(--verde)}
+.pares span{font-size:12.5px;color:var(--tinta-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pares em{font-style:normal;font-size:12.5px}
+details.ajustar summary{cursor:pointer;list-style:none}
+details.ajustar summary::-webkit-details-marker{display:none}
+details.ajustar summary::before{content:"+ ";font-weight:700;color:var(--verde)}
+details.ajustar[open] summary::before{content:"− "}
+details.ajustar .painel{border:none;padding:0}
+@media (max-width:700px){.veredito{grid-template-columns:1fr}}
 .fcd{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr);gap:26px;align-items:start}
 .fcd form{display:flex;flex-direction:column;gap:12px}
 .fcd h3{margin:18px 0 6px}
@@ -1122,65 +1151,6 @@ rotas.explorar = (el) => {
 };
 
 /* ---------- tela: ativo ---------- */
-rotas.ativo = async (el, t) => {
-  el.innerHTML = `<p class="fraco">Carregando ${esc(t)}…</p>`;
-  let d;
-  try { d = await detalhe(t); } catch (e) {
-    el.innerHTML = `<div class="painel vazio"><h3>${esc(t)} não está na base</h3><p>Confira o código. A base traz as ações e FIIs negociados no último pregão.</p><div class="acoes"><a class="btn" href="#explorar">Ver todos os ativos</a></div></div>`; return;
-  }
-  const fii = d.tipo === "fii", ind = d.ind || {}, med = d.setor_mediana || {};
-  const pos = posicoes(carteira()).find((p) => p.ticker === t && p.qtd > 0);
-  const numeros = fii
-    ? [["DY 12 meses", pct(ind.dy)], ["P/VP", xv(ind.pvp)], ["Último rendimento", brl(ind.ultimo_rendimento, 2)], ["Liquidez diária", compacto(d.liquidez)], ["Variação 12 meses", `<span class="${cls(d.var_12m)}">${pct(d.var_12m, 1, true)}</span>`]]
-    : [["P/L", xv(ind.pl)], ["P/VP", xv(ind.pvp)], ["Dividend yield", pct(ind.dy)], ["ROE", pct(ind.roe)], ["Variação 12 meses", `<span class="${cls(d.var_12m)}">${pct(d.var_12m, 1, true)}</span>`]];
-  el.innerHTML = `
-    <div class="cabeca ativo-cab">
-      <div><span class="selo ${fii ? "fii" : ""}">${fii ? "Fundo imobiliário" : "Ação"}</span>
-        <h1 style="margin-top:8px">${esc(d.ticker)}</h1>
-        <p class="sutil" style="margin:4px 0 0">${esc(d.nome)}, ${esc(d.setor)}</p></div>
-      <div><div class="preco">${brl(d.preco)}</div>
-        <p style="margin:2px 0 10px;text-align:right" class="${cls(d.var_dia)}">${pct(d.var_dia, 2, true)} no dia, fechamento de ${dataBR(d.data)}</p>
-        <div class="acoes" style="justify-content:flex-end"><button class="btn primario" id="add">Adicionar à carteira</button></div></div>
-    </div>
-    ${pos ? `<p class="sutil" style="margin:-8px 0 16px">Você tem ${F.n0.format(pos.qtd)} ${fii ? "cotas" : "ações"} a ${brl(pos.pm)} de preço médio: <b class="${cls(pos.resultado)}">${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}</b>.</p>` : ""}
-    <div class="numeros">${numeros.map(([n, v]) => `<div><span>${n}</span><strong>${v}</strong></div>`).join("")}</div>
-    <div class="painel"><div class="cabeca" style="margin-bottom:6px"><h2 style="margin:0">Cotação</h2>
-      <div class="periodos">${[["1M", 31], ["6M", 183], ["1A", 366], ["5A", 1830]].map(([n, dd], i) => `<button aria-pressed="${i === 2}" data-dias="${dd}">${n}</button>`).join("")}</div></div>
-      <div class="grafico" id="g-preco"></div><p class="fraco" id="rent-periodo" style="margin:6px 0 0"></p></div>
-    ${fii ? blocoFii(d) : blocoAcao(d, ind, med)}
-    <div class="painel"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">${fii ? "Rendimentos" : "Dividendos e JCP"}</h2>
-      ${d.proventos_estimados ? `<span class="fraco">Estimados pelo informe mensal da CVM</span>` : ""}</div>
-      <div class="grade g-2"><div><h3 style="margin-bottom:8px">Pago por ${fii ? "cota" : "ação"}, por ano</h3><div id="g-div"></div></div>
-      <div class="rolagem" style="max-height:260px"><table><thead><tr><th class="esq">Tipo</th><th>Data com</th><th>Pagamento</th><th>Valor</th></tr></thead>
-      <tbody>${(d.proventos || []).slice(0, 40).map((p) => `<tr><td class="esq">${esc(p.tipo)}</td><td>${dataBR(p.data_com)}</td><td>${dataBR(p.pagamento)}</td><td>${brl(p.valor, 4)}</td></tr>`).join("") || `<tr><td colspan="4" class="vazio">Sem proventos registrados.</td></tr>`}</tbody></table></div></div></div>
-    ${d.pares?.length ? `<div class="painel"><h2>Comparando com o mesmo ${fii ? "segmento" : "setor"}</h2><div style="overflow:auto"><table>
-      <thead><tr><th>Ativo</th><th>Cotação</th><th>12 meses</th><th>DY</th>${fii ? "<th>P/VP</th><th>Liquidez</th>" : "<th>P/L</th><th>P/VP</th><th>ROE</th><th>Margem líq.</th>"}</tr></thead>
-      <tbody>${[d.ticker, ...d.pares].map((p) => S.porTicker[p]).filter(Boolean).map((a) => `<tr style="${a.t === d.ticker ? "background:var(--verde-claro)" : ""}"><td><a class="tk" href="#ativo-${a.t}">${a.t}</a><small>${esc(a.n)}</small></td>
-        <td>${brl(a.preco)}</td><td class="${cls(a.var_12m)}">${pct(a.var_12m, 1, true)}</td><td>${pct(a.dy)}</td>
-        ${fii ? `<td>${xv(a.pvp)}</td><td>${compacto(a.liq)}</td>` : `<td>${xv(a.pl)}</td><td>${xv(a.pvp)}</td><td>${pct(a.roe)}</td><td>${pct(a.m_liq)}</td>`}</tr>`).join("")}</tbody></table></div></div>` : ""}
-    <p class="fraco" style="margin-top:18px">Indicadores calculados pelo Milhão com demonstrações da CVM (últimos 12 meses${d.base?.referencia ? ", até " + dataBR(d.base.referencia) : ""}) e cotações da B3. Não é recomendação de investimento.</p>`;
-  $("#add").onclick = () => abrirLancamento(d.ticker);
-  if (!fii) {
-    ligarValuation(d); graficoFluxo($("#g-fluxo"), d);
-    const card = $("#card-fcd");
-    if (card) card.onclick = (e) => { e.preventDefault(); $("#valuation").scrollIntoView({ behavior: "smooth", block: "start" }); };
-  }
-  const todos = d.precos.map(([dd, v]) => ({ d: dd, v }));
-  const periodo = (dias) => {
-    const corte = new Date(new Date(d.data).getTime() - dias * 864e5).toISOString().slice(0, 10);
-    const pts = todos.filter((p) => p.d >= corte);
-    graficoLinha($("#g-preco"), pts, { altura: 300, cor: pts.at(-1).v >= pts[0].v ? "var(--verde)" : "var(--queda)" });
-    const r = pts.length > 1 ? pts.at(-1).v / pts[0].v - 1 : null;
-    $("#rent-periodo").innerHTML = `Variação no período: <b class="${cls(r)}">${pct(r, 1, true)}</b> (sem contar ${fii ? "rendimentos" : "dividendos"})`;
-  };
-  $$(".periodos button").forEach((b) => b.onclick = () => { $$(".periodos button").forEach((x) => x.setAttribute("aria-pressed", x === b)); periodo(+b.dataset.dias); });
-  periodo(366);
-  const porAno = {};
-  for (const p of d.proventos || []) if (p.data_com) { const a = p.data_com.slice(0, 4); porAno[a] = (porAno[a] || 0) + p.valor; }
-  const anoAtual = String(new Date().getFullYear());
-  graficoBarras($("#g-div"), Object.entries(porAno).sort().slice(-6).map(([r, v]) => ({ r, v, parcial: r === anoAtual })), { formato: (v) => brl(v, 2) });
-};
-
 /* ---------- valuation: fluxo de caixa descontado e modelo de dividendos ---------- */
 const TAXA_PADRAO = 14, PERPETUO_PADRAO = 4; // % ao ano; o usuário ajusta na tela
 const arred = (v, passo = 0.5) => Math.round(v / passo) * passo;
@@ -1327,55 +1297,207 @@ function ligarValuation(d) {
   mostrar();
 }
 
-function blocoAcao(d, ind, med) {
-  const grupos = {};
-  for (const m of S.meta.indicadores) (grupos[m.grupo] ??= []).push(m);
-  const up = (v) => v && d.preco ? v / d.preco - 1 : null;
-  const hist = Object.entries(d.historico || {}).sort().slice(-6);
-  const fcdSug = precoJustoSugerido(d);
-  return `<div class="grade g-ativo">
-    <div class="painel"><div class="cabeca" style="margin-bottom:10px"><h2 style="margin:0">Indicadores</h2><span class="fraco">Mediana do setor à direita</span></div>
-      ${Object.entries(grupos).map(([g, itens]) => `<div class="ind-grupo"><h3>${g}</h3>${itens.map((m) => `<div class="ind-linha"><span>${m.nome}</span><strong>${fmtInd(ind[m.chave], m.formato)}</strong><span class="cmp">${fmtInd(med[m.chave], m.formato)}</span></div>`).join("")}</div>`).join("")}
+rotas.ativo = async (el, t) => {
+  el.innerHTML = `<p class="fraco">Carregando ${esc(t)}…</p>`;
+  let d;
+  try { d = await detalhe(t); } catch (e) {
+    el.innerHTML = `<div class="painel vazio"><h3>${esc(t)} não está na base</h3><p>Confira o código. A base traz as ações e FIIs negociados no último pregão.</p><div class="acoes"><a class="btn" href="#explorar">Ver todos os ativos</a></div></div>`; return;
+  }
+  const fii = d.tipo === "fii", ind = d.ind || {}, med = d.setor_mediana || {};
+  const pos = posicoes(carteira()).find((p) => p.ticker === t && p.qtd > 0);
+  const abas = fii
+    ? [["resumo", "Resumo"], ["rendimentos", "Rendimentos"], ["fundo", "Sobre o fundo"]]
+    : [["resumo", "Resumo"], ["dividendos", "Dividendos"], ["preco", "Preço justo"], ["numeros", "Números da empresa"]];
+  el.innerHTML = `
+    <div class="cabeca ativo-cab">
+      <div><span class="selo ${fii ? "fii" : ""}">${fii ? "Fundo imobiliário" : "Ação"}</span>
+        <h1 style="margin-top:8px">${esc(d.ticker)}</h1>
+        <p class="sutil" style="margin:4px 0 0">${esc(d.nome)}, ${esc(d.setor)}</p></div>
+      <div><div class="preco">${brl(d.preco)}</div>
+        <p style="margin:2px 0 10px;text-align:right" class="${cls(d.var_dia)}">${pct(d.var_dia, 2, true)} no dia, fechamento de ${dataBR(d.data)}</p>
+        <div class="acoes" style="justify-content:flex-end"><button class="btn primario" id="add">Adicionar à carteira</button></div></div>
     </div>
-    <div>
-      <div class="painel"><h2>Preço justo e preço-teto</h2>
-        <div class="valor-justo">
-          <div><span>Graham</span><strong>${brl(d.graham)}</strong><span class="${cls(up(d.graham))}">${d.graham ? pct(up(d.graham), 0, true) + " de upside" : "Não se aplica (lucro ou patrimônio negativo)"}</span></div>
-          <div><span>Bazin (DY de 6%)</span><strong>${brl(d.bazin)}</strong><span class="${cls(up(d.bazin))}">${d.bazin ? pct(up(d.bazin), 0, true) + " de upside" : "Sem dividendos em 5 anos"}</span></div>
-          <a href="#valuation" style="grid-column:1/-1;text-decoration:none;border:1px solid var(--linha-2);border-radius:8px;padding:12px;display:block" id="card-fcd">
-            <span>${d.banco ? "Modelo de dividendos" : "Fluxo de caixa descontado"}</span><strong>${brl(fcdSug)}</strong>
-            <span class="${cls(up(fcdSug))}">${fcdSug ? pct(up(fcdSug), 0, true) + " de upside com as premissas sugeridas" : "Não se aplica agora"}</span></a>
-        </div>
-        <p class="fraco" style="margin:10px 0 0">Graham: √(22,5 × LPA × VPA). Bazin: média de proventos de 5 anos ÷ 6%. ${d.banco ? "Modelo de dividendos" : "Fluxo de caixa descontado"}: veja e ajuste as premissas abaixo.</p></div>
-      <div class="painel"><h2>Checklist buy and hold</h2><p class="placar"><b>${d.pontos ?? 0}</b> de ${d.checklist?.length || 8} critérios</p>
+    ${pos ? `<p class="sutil" style="margin:-8px 0 16px">Você tem ${qtdF(pos.qtd)} ${fii ? "cotas" : "ações"} a ${brl(pos.pm)} de preço médio: <b class="${cls(pos.resultado)}">${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}</b>.</p>` : ""}
+    <div class="abas" role="tablist">${abas.map(([k, n], i) => `<button role="tab" aria-selected="${i === 0}" data-aba="${k}">${n}</button>`).join("")}</div>
+    ${abas.map(([k], i) => `<section data-painel="${k}" class="${i ? "oculto" : ""}">${(fii ? PAINEIS_FII : PAINEIS_ACAO)[k](d, ind, med)}</section>`).join("")}
+    <p class="fraco" style="margin-top:18px">Calculado pelo Milhão com dados da CVM${d.base?.referencia ? " até " + dataBR(d.base.referencia) : ""} e cotações da B3. Não é recomendação de investimento.</p>`;
+  $("#add").onclick = () => abrirLancamento(d.ticker);
+  // gráficos só são desenhados quando a aba aparece (escondidos, eles ficariam sem largura)
+  const desenhado = new Set();
+  const desenhar = (k) => {
+    if (desenhado.has(k)) return; desenhado.add(k);
+    if (k === "resumo") ligarCotacao(d);
+    if (k === "dividendos" || k === "rendimentos") graficoProventos(d);
+    if (k === "preco") ligarValuation(d);
+    if (k === "numeros") graficoFluxo($("#g-fluxo"), d);
+  };
+  const abrir = (k) => {
+    $$("[data-aba]").forEach((b) => b.setAttribute("aria-selected", b.dataset.aba === k));
+    $$("[data-painel]").forEach((p) => p.classList.toggle("oculto", p.dataset.painel !== k));
+    desenhar(k);
+  };
+  $$("[data-aba]").forEach((b) => b.onclick = () => abrir(b.dataset.aba));
+  $$("[data-ir-aba]").forEach((b) => b.onclick = (e) => { e.preventDefault(); abrir(b.dataset.irAba); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  desenhar("resumo");
+};
+
+/* ---------- página do ativo: peças ---------- */
+function blocoCotacao(d) {
+  return `<div class="painel"><div class="cabeca" style="margin-bottom:6px"><h2 style="margin:0">Cotação</h2>
+      <div class="periodos">${[["1M", 31], ["6M", 183], ["1A", 366], ["5A", 1830]].map(([n, dd], i) => `<button aria-pressed="${i === 2}" data-dias="${dd}">${n}</button>`).join("")}</div></div>
+    <div class="grafico" id="g-preco"></div><p class="fraco" id="rent-periodo" style="margin:6px 0 0"></p></div>`;
+}
+function ligarCotacao(d) {
+  const fii = d.tipo === "fii", todos = d.precos.map(([dd, v]) => ({ d: dd, v }));
+  const periodo = (dias) => {
+    const corte = new Date(new Date(d.data).getTime() - dias * 864e5).toISOString().slice(0, 10);
+    const pts = todos.filter((p) => p.d >= corte);
+    graficoLinha($("#g-preco"), pts, { altura: 280, cor: pts.at(-1).v >= pts[0].v ? "var(--verde)" : "var(--queda)" });
+    const r = pts.length > 1 ? pts.at(-1).v / pts[0].v - 1 : null;
+    $("#rent-periodo").innerHTML = `Variação no período: <b class="${cls(r)}">${pct(r, 1, true)}</b> (sem contar ${fii ? "rendimentos" : "dividendos"})`;
+  };
+  $$(".periodos button").forEach((b) => b.onclick = () => { $$(".periodos button").forEach((x) => x.setAttribute("aria-pressed", x === b)); periodo(+b.dataset.dias); });
+  periodo(366);
+}
+function blocoProventos(d) {
+  const fii = d.tipo === "fii";
+  return `<div class="painel"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">${fii ? "Rendimentos" : "Dividendos e JCP"}</h2>
+      ${d.proventos_estimados ? `<span class="fraco">Estimados pelo informe mensal da CVM</span>` : ""}</div>
+    <div class="grade g-2"><div><h3 style="margin-bottom:8px">Pago por ${fii ? "cota" : "ação"}, por ano</h3><div id="g-div"></div></div>
+    <div class="rolagem" style="max-height:260px"><table><thead><tr><th class="esq">Tipo</th><th>Data com</th><th>Pagamento</th><th>Valor</th></tr></thead>
+    <tbody>${(d.proventos || []).slice(0, 40).map((p) => `<tr><td class="esq">${esc(p.tipo)}</td><td>${dataBR(p.data_com)}</td><td>${dataBR(p.pagamento)}</td><td>${brl(p.valor, 4)}</td></tr>`).join("") || `<tr><td colspan="4" class="vazio">Sem proventos registrados.</td></tr>`}</tbody></table></div></div>
+    <p class="fraco" style="margin:10px 0 0">Data com: quem tem a ${fii ? "cota" : "ação"} no fim desse dia recebe o pagamento.</p></div>`;
+}
+function graficoProventos(d) {
+  const porAno = {};
+  for (const p of d.proventos || []) if (p.data_com) { const a = p.data_com.slice(0, 4); porAno[a] = (porAno[a] || 0) + p.valor; }
+  const anoAtual = String(new Date().getFullYear());
+  graficoBarras($("#g-div"), Object.entries(porAno).sort().slice(-6).map(([r, v]) => ({ r, v, parcial: r === anoAtual })), { formato: (v) => brl(v, 2) });
+}
+
+/* veredito em português claro: barata, no preço ou cara */
+function veredito(d) {
+  const fcd = precoJustoSugerido(d);
+  const metodo = fcd ? (d.banco ? "pelos dividendos que o banco paga" : "pelo caixa que a empresa gera") : d.graham ? "pela fórmula de Graham (lucro e patrimônio)" : null;
+  const justo = fcd || d.graham || null;
+  if (!justo) return { justo: null, classe: "", titulo: "Sem dados para estimar", texto: "A empresa está com prejuízo ou sem histórico suficiente, então não dá para calcular um preço justo agora." };
+  const up = justo / d.preco - 1;
+  if (up > 0.15) return { justo, up, metodo, classe: "barata", titulo: "Parece barata", texto: `O preço justo estimado ${metodo} é ${brl(justo)}, ${pct(up, 0)} acima da cotação de hoje.` };
+  if (up < -0.10) return { justo, up, metodo, classe: "cara", titulo: "Parece cara", texto: `O preço justo estimado ${metodo} é ${brl(justo)}, ${pct(-up, 0)} abaixo da cotação de hoje.` };
+  return { justo, up, metodo, classe: "nopreco", titulo: "Perto do preço justo", texto: `O preço justo estimado ${metodo} é ${brl(justo)}, bem perto da cotação de hoje.` };
+}
+function blocoVeredito(d, grande = false) {
+  const v = veredito(d);
+  return `<div class="veredito ${v.classe}${grande ? " grande" : ""}">
+      <div><span class="rotulo">${v.justo ? "Preço justo estimado" : "Preço justo"}</span><strong>${v.justo ? brl(v.justo) : "–"}</strong></div>
+      <div><span class="selo-v">${v.titulo}</span><p>${v.texto}</p>
+        ${grande ? "" : `<a href="#" data-ir-aba="preco">Entender a conta</a>`}</div></div>`;
+}
+function nivelDivida(d) {
+  const dl = d.base?.divida_liquida, eb = d.ind?.dl_ebitda;
+  if (d.banco) return null;
+  if (vazio(dl)) return { nivel: "–", texto: "Sem dados de dívida." };
+  if (dl <= 0) return { nivel: "Sem dívida", texto: "Tem mais dinheiro em caixa do que dívidas." };
+  if (vazio(eb) || eb < 0) return { nivel: "Atenção", texto: `Deve ${compacto(dl)} e o resultado operacional não cobre com folga.` };
+  if (eb < 1.5) return { nivel: "Baixa", texto: `Pagaria a dívida em ${xv(eb, 1)} ano${eb >= 2 ? "s" : ""} de geração de caixa.` };
+  if (eb < 3) return { nivel: "Moderada", texto: `Pagaria a dívida em ${xv(eb, 1)} anos de geração de caixa.` };
+  return { nivel: "Alta", texto: `Precisaria de ${xv(eb, 1)} anos de geração de caixa para pagar a dívida.` };
+}
+
+const PAINEIS_ACAO = {
+  resumo: (d, ind) => {
+    const dpa = (ind.dy || 0) * d.preco, luc = d.base?.lucro_12m, cl = ind.cagr_luc, div = nivelDivida(d);
+    const cartoes = [
+      ["Dividendos", ind.dy ? pct(ind.dy) + " ao ano" : "Não pagou",
+        ind.dy ? `Pagou ${brl(dpa)} por ação nos últimos 12 meses. Com 100 ações, seriam ${brl(dpa * 100)}.` : "Nada pago nos últimos 12 meses."],
+      ["Lucro", vazio(luc) ? "–" : compacto(luc),
+        vazio(luc) ? "Sem dados de lucro." : luc < 0 ? "Teve prejuízo nos últimos 12 meses." :
+        vazio(cl) ? "Lucro dos últimos 12 meses." : cl >= 0 ? `Lucro dos últimos 12 meses. Cresceu ${pct(cl, 0)} ao ano em 5 anos.` : `Lucro dos últimos 12 meses. Caiu ${pct(-cl, 0)} ao ano em 5 anos.`],
+      div ? ["Dívida", div.nivel, div.texto]
+          : ["Rentabilidade", pct(ind.roe, 0) + " ao ano", "Quanto o banco lucra sobre o próprio patrimônio. Acima de 15% é bom."],
+      ["Nota do Milhão", `${d.pontos ?? 0} de ${d.checklist?.length || 8}`, `Critérios de empresa sólida que ela cumpre. <a href="#" data-ir-aba="numeros">Ver quais</a>`],
+    ];
+    return `${blocoVeredito(d)}
+      <div class="cartoes">${cartoes.map(([n, v, tx]) => `<div><span>${n}</span><strong>${v}</strong><p>${tx}</p></div>`).join("")}</div>
+      ${blocoCotacao(d)}
+      ${d.pares?.length ? `<div class="painel"><h2>Empresas parecidas</h2><div class="pares">${d.pares.slice(0, 6).map((p) => S.porTicker[p]).filter(Boolean).map((a) =>
+        `<a href="#ativo-${a.t}"><b>${a.t}</b><span>${esc(a.n)}</span><em class="${cls(a.var_12m)}">${pct(a.var_12m, 0, true)} em 12 meses</em></a>`).join("")}</div></div>` : ""}`;
+  },
+  dividendos: (d) => blocoProventos(d),
+  preco: (d) => {
+    const up = (v) => v && d.preco ? v / d.preco - 1 : null;
+    const fcd = precoJustoSugerido(d);
+    const metodos = [
+      [d.banco ? "Pelos dividendos" : "Pelo caixa que a empresa gera", fcd, d.banco ? "Quanto valem hoje os dividendos que o banco deve pagar daqui para a frente." : "Quanto vale hoje todo o dinheiro que a empresa deve gerar nos próximos anos. É o método mais completo."],
+      ["Graham", d.graham, "Fórmula clássica que usa só o lucro e o patrimônio por ação."],
+      ["Bazin", d.bazin, "Preço máximo para a ação render 6% ao ano em dividendos."],
+    ];
+    return `${blocoVeredito(d, true)}
+      <div class="painel"><h2>Três jeitos de calcular</h2><div class="cartoes c3">${metodos.map(([n, v, tx]) => `<div><span>${n}</span><strong>${v ? brl(v) : "Não se aplica"}</strong>
+        ${v ? `<em class="${cls(up(v))}">${pct(up(v), 0, true)} em relação à cotação</em>` : ""}<p>${tx}</p></div>`).join("")}</div></div>
+      <details class="painel ajustar"><summary><h2 style="display:inline">Ajustar as contas</h2> <span class="fraco">para quem quer mudar crescimento e taxa</span></summary>
+        <div style="margin-top:16px">${blocoValuation(d)}</div></details>`;
+  },
+  numeros: (d, ind, med) => {
+    const grupos = {};
+    for (const m of S.meta.indicadores) (grupos[m.grupo] ??= []).push(m);
+    const hist = Object.entries(d.historico || {}).sort().slice(-6);
+    return `<div class="grade g-ativo">
+      <div class="painel"><div class="cabeca" style="margin-bottom:10px"><h2 style="margin:0">Indicadores</h2><span class="fraco">Mediana do setor à direita</span></div>
+        ${Object.entries(grupos).map(([g, itens]) => `<div class="ind-grupo"><h3>${g}</h3>${itens.map((m) => `<div class="ind-linha"><span>${m.nome}</span><strong>${fmtInd(ind[m.chave], m.formato)}</strong><span class="cmp">${fmtInd(med[m.chave], m.formato)}</span></div>`).join("")}</div>`).join("")}
+      </div>
+      <div class="painel"><h2>Nota do Milhão</h2><p class="placar"><b>${d.pontos ?? 0}</b> de ${d.checklist?.length || 8} critérios</p>
         <ul class="checklist">${(d.checklist || []).map((c) => `<li class="${c.ok ? "sim" : "nao"}"><i aria-hidden="true">${c.ok ? "✓" : "×"}</i><span>${esc(c.item)}<span class="oculto">: ${c.ok ? "sim" : "não"}</span></span></li>`).join("")}</ul></div>
-    </div></div>
-    ${blocoValuation(d)}
-    ${blocoFluxo(d)}
+    </div>
     ${hist.length ? `<div class="painel"><h2>Resultados por ano</h2><div style="overflow:auto"><table>
       <thead><tr><th>Ano</th><th>Receita líquida</th><th>Lucro líquido</th><th>Margem líquida</th><th>ROE</th><th>P/L no fim do ano</th><th>Proventos por ação</th><th>DY no ano</th></tr></thead>
       <tbody>${hist.reverse().map(([a, h]) => `<tr><td>${a}</td><td>${compacto(h.receita)}</td><td class="${cls(h.lucro)}">${compacto(h.lucro)}</td><td>${pct(h.m_liq)}</td><td>${pct(h.roe)}</td><td>${xv(h.pl)}</td><td>${brl(h.proventos)}</td><td>${pct(h.dy)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
+    ${blocoFluxo(d)}
+    ${d.pares?.length ? `<div class="painel"><h2>Comparando com o mesmo setor</h2><div style="overflow:auto"><table>
+      <thead><tr><th>Ativo</th><th>Cotação</th><th>12 meses</th><th>DY</th><th>P/L</th><th>P/VP</th><th>ROE</th><th>Margem líq.</th></tr></thead>
+      <tbody>${[d.ticker, ...d.pares].map((p) => S.porTicker[p]).filter(Boolean).map((a) => `<tr style="${a.t === d.ticker ? "background:var(--verde-claro)" : ""}"><td><a class="tk" href="#ativo-${a.t}">${a.t}</a><small>${esc(a.n)}</small></td>
+        <td>${brl(a.preco)}</td><td class="${cls(a.var_12m)}">${pct(a.var_12m, 1, true)}</td><td>${pct(a.dy)}</td><td>${xv(a.pl)}</td><td>${xv(a.pvp)}</td><td>${pct(a.roe)}</td><td>${pct(a.m_liq)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
     <div class="painel"><h2>Sobre a empresa</h2><div class="info">
       ${[["Valor de mercado", compacto(d.base?.valor_mercado)], ["Valor da firma", compacto(d.base?.valor_firma)], ["Patrimônio líquido", compacto(d.base?.patrimonio)],
          ["Ativos", compacto(d.base?.ativo)], ["Dívida bruta", compacto(d.base?.divida_bruta)], ["Dívida líquida", compacto(d.base?.divida_liquida)],
          ["Receita 12 meses", compacto(d.base?.receita_12m)], ["Lucro 12 meses", compacto(d.base?.lucro_12m)], ["Ações", vazio(d.base?.acoes) ? "–" : F.n0.format(d.base.acoes)],
          ["Liquidez média diária", compacto(d.liquidez)]].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div></div>`;
-}
+  },
+};
 
-function blocoFii(d) {
-  const ind = d.ind || {}, f = d.fundo || {}, y = d.yields || {};
-  return `<div class="grade g-ativo">
-    <div class="painel"><h2>Rendimento</h2>
-      <div class="numeros" style="margin-bottom:16px">${[["1 mês", y["1m"]], ["3 meses", y["3m"]], ["6 meses", y["6m"]], ["12 meses", y["12m"]]].map(([n, v]) => `<div><span>Yield ${n}</span><strong>${pct(v, 2)}</strong></div>`).join("")}</div>
-      <div class="info">${[["Valor patrimonial por cota", brl(ind.vp_cota)], ["P/VP", xv(ind.pvp)], ["Último rendimento", brl(ind.ultimo_rendimento, 2)], ["DY 12 meses", pct(ind.dy)]].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div></div>
-    <div class="painel"><h2>Magic number</h2>
-      <p class="resultado-grande">${vazio(ind.magic_number) ? "–" : F.n0.format(ind.magic_number) + " cotas"}</p>
-      <p class="sutil">Com essa quantidade, o rendimento de um mês compra uma cota nova sozinho${ind.magic_number ? `, um investimento de ${brl(ind.magic_number * d.preco)} hoje` : ""}.</p></div></div>
-    <div class="painel"><h2>Sobre o fundo</h2><div class="info">
+const PAINEIS_FII = {
+  resumo: (d, ind) => {
+    const pvp = ind.pvp, ult = ind.ultimo_rendimento;
+    const leitura = vazio(pvp) ? null : pvp < 0.95 ? ["barata", "Abaixo do valor patrimonial", `Cada R$ 1,00 de imóveis e títulos do fundo sai por ${brl(pvp)} na bolsa.`]
+      : pvp > 1.05 ? ["cara", "Acima do valor patrimonial", `Cada R$ 1,00 de imóveis e títulos do fundo sai por ${brl(pvp)} na bolsa.`]
+      : ["nopreco", "Perto do valor patrimonial", "A cota na bolsa custa quase o mesmo que os imóveis e títulos do fundo valem."];
+    const cartoes = [
+      ["Rendimento", ind.dy ? pct(ind.dy) + " ao ano" : "–", ult ? `Último pagamento: ${brl(ult)} por cota. Com 100 cotas, ${brl(ult * 100)} por mês.` : "Sem pagamentos registrados."],
+      ["Preço x patrimônio", vazio(pvp) ? "–" : xv(pvp), "Abaixo de 1, a cota está mais barata que o patrimônio do fundo."],
+      ["Magic number", vazio(ind.magic_number) ? "–" : F.n0.format(ind.magic_number) + " cotas", ind.magic_number ? `Com essa quantidade, o rendimento do mês compra uma cota nova sozinho (${brl(ind.magic_number * d.preco)} hoje).` : "Sem rendimento para calcular."],
+      ["Liquidez", compacto(d.liquidez), "Negociado por dia, em média. Quanto mais, mais fácil comprar e vender."],
+    ];
+    return `${leitura ? `<div class="veredito ${leitura[0]}"><div><span class="rotulo">Valor patrimonial por cota</span><strong>${brl(ind.vp_cota)}</strong></div>
+        <div><span class="selo-v">${leitura[1]}</span><p>${leitura[2]}</p></div></div>` : ""}
+      <div class="cartoes">${cartoes.map(([n, v, tx]) => `<div><span>${n}</span><strong>${v}</strong><p>${tx}</p></div>`).join("")}</div>
+      ${blocoCotacao(d)}`;
+  },
+  rendimentos: (d) => {
+    const y = d.yields || {};
+    return `<div class="numeros" style="margin-bottom:18px">${[["1 mês", y["1m"]], ["3 meses", y["3m"]], ["6 meses", y["6m"]], ["12 meses", y["12m"]]].map(([n, v]) => `<div><span>Rendeu em ${n}</span><strong>${pct(v, 2)}</strong></div>`).join("")}</div>${blocoProventos(d)}`;
+  },
+  fundo: (d) => {
+    const ind = d.ind || {}, f = d.fundo || {};
+    return `<div class="painel"><h2>Sobre o fundo</h2><div class="info">
       ${[["CNPJ", esc(f.cnpj || "–")], ["Segmento", esc(f.segmento || d.setor)], ["Mandato", esc(f.mandato || "–")], ["Gestão", esc(f.gestao || "–")],
          ["Público-alvo", esc(f.publico || "–")], ["Cotistas", vazio(f.cotistas) ? "–" : F.n0.format(f.cotistas)], ["Cotas emitidas", vazio(f.cotas) ? "–" : F.n0.format(f.cotas)],
-         ["Patrimônio", compacto(f.patrimonio)], ["Liquidez média diária", compacto(d.liquidez)]].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div></div>`;
-}
+         ["Patrimônio", compacto(f.patrimonio)], ["Valor patrimonial por cota", brl(ind.vp_cota)], ["P/VP", xv(ind.pvp)], ["Liquidez média diária", compacto(d.liquidez)]].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div></div>
+      ${d.pares?.length ? `<div class="painel"><h2>Fundos do mesmo segmento</h2><div style="overflow:auto"><table>
+        <thead><tr><th>Fundo</th><th>Cotação</th><th>12 meses</th><th>DY</th><th>P/VP</th><th>Liquidez</th></tr></thead>
+        <tbody>${[d.ticker, ...d.pares].map((p) => S.porTicker[p]).filter(Boolean).map((a) => `<tr style="${a.t === d.ticker ? "background:var(--verde-claro)" : ""}"><td><a class="tk" href="#ativo-${a.t}">${a.t}</a><small>${esc(a.n)}</small></td>
+          <td>${brl(a.preco)}</td><td class="${cls(a.var_12m)}">${pct(a.var_12m, 1, true)}</td><td>${pct(a.dy)}</td><td>${xv(a.pvp)}</td><td>${compacto(a.liq)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}`;
+  },
+};
 
 /* ---------- tela: ferramentas ---------- */
 rotas.ferramentas = (el) => {
