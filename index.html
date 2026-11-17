@@ -45,13 +45,48 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(
 
 /* ---------- entrada ---------- */
 .entrada{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr}
-.entrada-arte{background:var(--tinta);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.entrada-arte .marca{font-size:clamp(64px,8vw,128px);color:#fff}
-.entrada-arte .marca span{color:#2FCB8F}
-.entrada-arte p{max-width:420px;color:#C9D6CF;font-size:17px}
-.entrada-arte svg{position:absolute;left:0;right:0;bottom:120px;width:100%;height:220px;opacity:.9}
-.entrada-form{display:flex;align-items:center;justify-content:center;padding:40px}
-.entrada-form form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:16px}
+.entrada-arte{background:var(--tinta);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;isolation:isolate}
+.entrada-arte p{max-width:420px;color:#C9D6CF;font-size:17px;position:relative;margin:0;z-index:2}
+.entrada-arte::after{content:"";position:absolute;left:0;right:0;bottom:0;height:130px;background:linear-gradient(transparent,var(--tinta) 65%);z-index:1;pointer-events:none}
+/* marca */
+.logo{display:inline-flex;align-items:center;gap:.22em;line-height:1;white-space:nowrap}
+.logo .logo-m{width:1.05em;height:1.05em;flex:none}
+.logo-nome{font-weight:850;font-stretch:125%;font-variation-settings:"wdth" 125;letter-spacing:-.025em;color:var(--verde)}
+.logo-nome i{font-style:normal;color:#2FCB8F}
+.logo.grande{font-size:clamp(60px,7.4vw,118px)}
+.logo.grande .logo-nome{color:#fff}
+.logo.media{font-size:38px}
+.logo.pequena{font-size:27px}
+.marca-link{text-decoration:none;padding:0 8px;display:inline-block}
+/* lupa sobre a marca */
+.lupa-area{position:relative;align-self:flex-start;cursor:none;z-index:2;padding:6px}
+.lupa{position:absolute;left:0;top:0;width:150px;height:150px;border-radius:50%;overflow:hidden;pointer-events:none;
+  background:var(--tinta);border:3px solid #E9F7F0;box-shadow:0 14px 40px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.25);
+  opacity:0;scale:.6;transition:opacity .18s,scale .18s}
+.lupa::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.28),transparent 46%)}
+.lupa-conteudo{position:absolute;left:0;top:0;transform-origin:0 0;padding:6px}
+.lupa-area.com-lupa .lupa{opacity:1;scale:1}
+/* velas */
+.velas{position:absolute;left:0;right:0;bottom:118px;width:100%;height:230px;z-index:1}
+.velas .vela{transform-box:fill-box;transform-origin:50% 100%;animation:vela-sobe .5s cubic-bezier(.2,.8,.3,1) both;animation-delay:calc(var(--i) * 22ms)}
+@keyframes vela-sobe{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+/* telão de cotações ao fundo */
+.telao{position:absolute;inset:-25% -20%;z-index:0;opacity:.17;transform:perspective(1100px) rotateX(24deg) rotateZ(-9deg);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 45%,#000 30%,transparent 72%);mask-image:radial-gradient(ellipse at 50% 45%,#000 30%,transparent 72%);pointer-events:none}
+.telao-rolo{animation:telao-rola 90s linear infinite}
+.telao-grade{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding-bottom:2px}
+.telao-grade div{background:rgba(47,203,143,.07);border:1px solid rgba(47,203,143,.18);padding:10px 12px;display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
+.telao-grade b{font-size:15px;letter-spacing:.02em;color:#E9F7F0}
+.telao-grade span{font-size:13px;color:#C9D6CF}
+.telao-grade em{font-style:normal;font-size:13px;font-weight:700}
+.telao-grade .sobe{color:#2FCB8F}.telao-grade .desce{color:#F08A75}
+@keyframes telao-rola{to{transform:translateY(-50%)}}
+@media (prefers-reduced-motion:reduce){.telao-rolo,.velas .vela{animation:none}.lupa{transition:none}}
+@media (hover:none){.lupa{display:none}.lupa-area{cursor:auto}}
+.entrada-form{display:flex;align-items:center;justify-content:center;padding:28px}
+.entrada-form form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:11px}
+.entrada-form h1{margin-bottom:4px}
+.entrada-form label.campo{gap:3px}
 .entrada-form .nota{font-size:13px;color:var(--tinta-3)}
 .entrada-form .esqueci{font-size:14px;color:var(--verde);font-weight:600;margin-top:-6px;align-self:flex-start}
 .entrada-form .sutil a{color:var(--verde);font-weight:600}
@@ -61,6 +96,7 @@ label.campo{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(
 .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh;background:linear-gradient(to right,var(--branco) 247px,var(--linha) 247px,var(--linha) 248px,transparent 248px)}
 .lateral{padding:22px 16px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh}
 .lateral .marca{font-size:30px;padding:0 8px}
+.lateral .marca-link{margin-bottom:2px}
 .carteira-atual{border:1px solid var(--linha);border-radius:var(--r);padding:10px 12px;cursor:pointer;background:var(--papel);text-align:left;width:100%}
 .carteira-atual small{display:block;color:var(--tinta-3);font-size:12px}
 .carteira-atual strong{font-weight:650}
@@ -567,6 +603,72 @@ function render() {
   window.scrollTo(0, 0);
 }
 
+/* ---------- marca: o "M" feito de três candles + o nome ---------- */
+function logoMarca(tam = 64, cor = "#2FCB8F") {
+  return `<svg class="logo-m" viewBox="0 0 64 64" width="${tam}" height="${tam}" aria-hidden="true">
+    <g fill="${cor}" stroke="${cor}" stroke-linecap="round">
+      <line x1="14" y1="9" x2="14" y2="57" stroke-width="3"/><rect x="7" y="17" width="14" height="34" rx="2.5"/>
+      <line x1="32" y1="25" x2="32" y2="52" stroke-width="3"/><rect x="25" y="31" width="14" height="14" rx="2.5"/>
+      <line x1="50" y1="3" x2="50" y2="55" stroke-width="3"/><rect x="43" y="9" width="14" height="40" rx="2.5"/>
+    </g></svg>`;
+}
+const logoHTML = (cls = "") => `<span class="logo ${cls}" role="img" aria-label="Milhão">${logoMarca()}<span class="logo-nome">Milhão<i>.</i></span></span>`;
+
+/* ---------- tela de entrada: arte da esquerda ---------- */
+function velasEntrada() {
+  // série sorteada com semente fixa: sobe no geral, com quedas no caminho
+  let s = 7, preco = 40;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const velas = Array.from({ length: 46 }, (_, i) => {
+    const abre = preco, tendencia = 0.9 + i * 0.012;
+    const fecha = Math.max(8, abre + (rnd() - 0.42) * 6 * tendencia);
+    const max = Math.max(abre, fecha) + rnd() * 3, min = Math.min(abre, fecha) - rnd() * 3;
+    preco = fecha;
+    return { abre, fecha, max, min };
+  });
+  const topo = Math.max(...velas.map((v) => v.max)), base = Math.min(...velas.map((v) => v.min));
+  const Y = (v) => 6 + (topo - v) / (topo - base) * 188, L = 1000 / velas.length;
+  return `<svg class="velas" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">${velas.map((v, i) => {
+    const sobe = v.fecha >= v.abre, cor = sobe ? "#2FCB8F" : "#E46A55", x = i * L + L / 2;
+    const y1 = Y(Math.max(v.abre, v.fecha)), y2 = Y(Math.min(v.abre, v.fecha));
+    return `<g class="vela" style="--i:${i}" fill="${cor}" stroke="${cor}">
+      <line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${Y(v.max).toFixed(1)}" y2="${Y(v.min).toFixed(1)}" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      <rect x="${(x - L * 0.32).toFixed(1)}" y="${y1.toFixed(1)}" width="${(L * 0.64).toFixed(1)}" height="${Math.max(y2 - y1, 1.5).toFixed(1)}" rx="1.5" ${sobe ? "" : 'fill-opacity=".85"'}/></g>`;
+  }).join("")}</svg>`;
+}
+function telaoEntrada() {
+  // painel gigante de cotações ao fundo, feito com os ativos mais negociados de verdade
+  const base = (S.ativos || []).filter((a) => a.preco).slice(0, 112);
+  if (!base.length) return "";
+  const ativos = Array.from({ length: 112 }, (_, i) => base[i % base.length]); // enche o telão mesmo com poucos ativos
+  const cel = (a) => `<div><b>${esc(a.t)}</b><span>${brl(a.preco)}</span><em class="${(a.var_dia || 0) >= 0 ? "sobe" : "desce"}">${pct(a.var_dia, 2, true)}</em></div>`;
+  const grade = ativos.map(cel).join("");
+  return `<div class="telao" aria-hidden="true"><div class="telao-rolo"><div class="telao-grade">${grade}</div><div class="telao-grade">${grade}</div></div></div>`;
+}
+function arteEntrada() {
+  return `<section class="entrada-arte" id="entrada-arte">
+      ${telaoEntrada()}
+      <div class="lupa-area" id="lupa-area">${logoHTML("grande")}<div class="lupa" id="lupa" aria-hidden="true"><div class="lupa-conteudo">${logoHTML("grande")}</div></div></div>
+      ${velasEntrada()}
+      <p>Sua carteira da B3 num lugar só: o que você tem, quanto rende e quanto pinga de dividendos.</p>
+    </section>`;
+}
+/* lupa: ao passar o cursor, um círculo amplia o pedaço da marca que está embaixo dele */
+function ligarLupa() {
+  const area = $("#lupa-area"), lupa = $("#lupa");
+  if (!area || !lupa || area.dataset.ligada) return;
+  area.dataset.ligada = "1";
+  const ZOOM = 2.2, conteudo = lupa.firstElementChild;
+  const mover = (e) => {
+    const r = area.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, R = lupa.offsetWidth / 2;
+    lupa.style.transform = `translate(${x - R}px, ${y - R}px)`;
+    conteudo.style.transform = `translate(${R - x * ZOOM}px, ${R - y * ZOOM}px) scale(${ZOOM})`;
+  };
+  area.addEventListener("pointerenter", (e) => { mover(e); area.classList.add("com-lupa"); });
+  area.addEventListener("pointermove", mover);
+  area.addEventListener("pointerleave", () => area.classList.remove("com-lupa"));
+}
+
 /* ---------- entrada ---------- */
 const curvaEntrada = () => Array.from({ length: 60 }, (_, i) => {
   const x = i / 59, y = 0.85 - 0.75 * Math.pow(x, 1.6) + 0.04 * Math.sin(i * 1.3);
@@ -576,13 +678,7 @@ function telaEntrada() {
   const curva = curvaEntrada();
   if (S.nuvem) return telaLogin(curva);
   $("#raiz").innerHTML = `<main class="entrada">
-    <section class="entrada-arte">
-      <div class="marca">Milhão<span>.</span></div>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${curva}" fill="none" stroke="#2FCB8F" stroke-width=".6" vector-effect="non-scaling-stroke" style="stroke-width:3px"/>
-      </svg>
-      <p>Sua carteira da B3 num lugar só: o que você tem, quanto rende e quanto pinga de dividendos.</p>
-    </section>
+    ${arteEntrada()}
     <section class="entrada-form">
       <form id="form-entrada">
         <h1>Entrar</h1>
@@ -599,6 +695,7 @@ function telaEntrada() {
     S.estado.perfil = { nome: f.get("nome").trim(), email: f.get("email").trim() };
     salvar(); ir("#carteiras");
   });
+  ligarLupa();
 }
 
 function telaLogin(curva, modo = "entrar") {
@@ -608,15 +705,8 @@ function telaLogin(curva, modo = "entrar") {
     esqueci: { titulo: "Recuperar senha", botao: "Enviar link", troca: `<a href="#" data-modo="entrar">Voltar para entrar</a>` },
     nova: { titulo: "Criar nova senha", botao: "Salvar nova senha", troca: "" },
   }[modo];
-  $("#raiz").innerHTML = `<main class="entrada">
-    <section class="entrada-arte">
-      <div class="marca">Milhão<span>.</span></div>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${curva}" fill="none" stroke="#2FCB8F" stroke-width=".6" vector-effect="non-scaling-stroke" style="stroke-width:3px"/>
-      </svg>
-      <p>Sua carteira da B3 num lugar só: o que você tem, quanto rende e quanto pinga de dividendos.</p>
-    </section>
-    <section class="entrada-form">
+  const ja = $("#entrada-arte") && $("#entrada-form");
+  const formulario = `
       <form id="form-login" novalidate>
         <h1>${textos.titulo}</h1>
         ${modo === "esqueci" ? `<p class="sutil" style="margin:-6px 0 0">Digite o e-mail da sua conta. Mandamos um link para você criar uma senha nova.</p>` : ""}
@@ -629,9 +719,10 @@ function telaLogin(curva, modo = "entrar") {
         <button class="btn primario" type="submit">${textos.botao}</button>
         ${textos.troca ? `<p class="sutil" style="margin:0;text-align:center">${textos.troca}</p>` : ""}
         <p class="nota">Suas carteiras ficam salvas na sua conta e abrem em qualquer computador ou celular.</p>
-      </form>
-    </section>
-  </main>`;
+      </form>`;
+  if (ja) $("#entrada-form").innerHTML = formulario;
+  else $("#raiz").innerHTML = `<main class="entrada">${arteEntrada()}<section class="entrada-form" id="entrada-form">${formulario}</section></main>`;
+  ligarLupa();
   $$("[data-modo]").forEach((a) => a.onclick = (e) => { e.preventDefault(); telaLogin(curva, a.dataset.modo); });
   const form = $("#form-login"), botao = form.querySelector("button[type=submit]");
   const erro = (msg) => { const el = $("#erro-login"); el.textContent = msg; el.classList.toggle("oculto", !msg); };
@@ -672,7 +763,7 @@ function telaLogin(curva, modo = "entrar") {
 function telaCarteiras() {
   const cs = S.estado.carteiras;
   $("#raiz").innerHTML = `<main class="conteudo" style="margin:0 auto;padding-top:48px">
-    <div class="cabeca"><div><div class="marca" style="font-size:36px;margin-bottom:22px">Milhão.</div>
+    <div class="cabeca"><div><div style="margin-bottom:22px">${logoHTML("media")}</div>
       <h1>Olá, ${esc(S.estado.perfil.nome.split(" ")[0])}. Qual carteira vamos abrir?</h1></div>
       <button class="btn texto" id="sair">Sair</button></div>
     <div class="lista-carteiras">
@@ -706,7 +797,7 @@ function moldura(rota) {
   const item = (r, nome) => `<a href="#${r}" class="${rota === r || (r === "explorar" && rota === "ativo") ? "ativo" : ""}">${ICO[r]}${nome}</a>`;
   $("#raiz").innerHTML = `<div class="app">
     <aside class="lateral">
-      <a href="#carteira" class="marca" style="text-decoration:none">Milhão.</a>
+      <a href="#carteira" class="marca-link" aria-label="Milhão, ir para a carteira">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
         ${item("carteira", "Carteira")}${item("proventos", "Proventos")}${item("explorar", "Ações e FIIs")}${item("ferramentas", "Ferramentas")}
