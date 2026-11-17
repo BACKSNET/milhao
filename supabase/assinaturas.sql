@@ -55,3 +55,13 @@ create policy "foto: troca a propria" on storage.objects for update to authentic
   using (bucket_id = 'avatares' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "foto: apaga a propria" on storage.objects for delete to authenticated
   using (bucket_id = 'avatares' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- 4) Pagamentos no Pix (30 dias de Ouro cada). Só o servidor lê e escreve.
+--    Guarda o registro mesmo se a conta for excluída (a lei pede para manter registros de pagamento).
+create table if not exists public.pagamentos_pix (
+  id        text primary key,                                   -- número do pagamento no Mercado Pago
+  user_id   uuid references auth.users(id) on delete set null,
+  valor     numeric(10,2) not null,
+  criado_em timestamptz not null default now()
+);
+alter table public.pagamentos_pix enable row level security;   -- sem políticas: ninguém lê pelo site
