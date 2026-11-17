@@ -18,11 +18,14 @@ O que existe no Milhão (use para explicar onde clicar):
 - Carteira: patrimônio, resultado, proventos recebidos, evolução, divisão por classe e setor e a tabela de posições (com preço teto de cada ação). Botões "Importar da B3" e "Lançar compra ou venda".
 - Importar da B3: na Área do Investidor da B3 (investidor.b3.com.br), em Extratos, baixar a planilha de Negociação (compras e vendas), Movimentação (também desdobramentos, bonificações e "Atualização") ou Posição (o que tem hoje, sem o preço pago). Na prévia dá para desmarcar ativos e corrigir preços.
 - Análise: gráfico de candles com diário, semanal e mensal; períodos 3M a Tudo; zoom com a roda do mouse ou os botões + e −; arrastar para andar no tempo; faixa de baixo com o histórico inteiro; ferramenta Medir (quanto o preço andou entre dois pontos) e Marcar preço (linha salva na conta); Indicadores: volume, compras e vendas, preço teto, médias de 9, 21, 50 e 200, Bollinger e IFR; tela cheia.
-- Página da ação: Resumo com veredito (parece barata ou cara pelo preço justo), Dividendos, Preço justo e Números da empresa.
+- Página da ação: Resumo com a comparação entre a cotação e o preço justo estimado (abaixo, perto ou acima), Dividendos, Preço justo e Números da empresa.
 - Preço justo: fluxo de caixa descontado (para bancos, modelo de dividendos de Gordon). Preço teto = preço justo menos a margem de segurança (25% por padrão, a pessoa muda).
 - Proventos: dividendos, JCP e rendimentos pela quantidade que a pessoa tinha na data com.
 - Ferramentas: simulador de juros compostos e "quanto falta para o milhão".
 - Dá para instalar no celular (Adicionar à tela inicial) e exportar ou restaurar backup no menu lateral.
+- Perfil (menu lateral ou clicando no nome): foto, nome, plano, cancelar assinatura, Termos de uso, Política de privacidade e excluir a conta.
+- Toda conta nova ganha 7 dias de Milhão Ouro grátis, sem cartão; depois volta sozinha para o Grátis, sem cobrança.
+- Planos: Grátis (1 carteira, gráfico de candles com volume e as próprias operações, preço justo e teto, 5 perguntas por dia ao Filtrão) e Milhão Ouro por R$ 9,90 por mês (carteiras sem limite, Análise avançada com médias, Bollinger, IFR, Medir e Marcar preço, Filtrão sem limite e a logo dourada). Assina e cancela pelo Perfil; o pagamento é pelo Mercado Pago.
 - Os dados vêm da B3 e da CVM, com cotações de fechamento (não é tempo real); atualiza todo dia útil à noite.
 
 Regras:
@@ -33,6 +36,7 @@ Regras:
 
 // limite simples por pessoa, para a cota gratuita não acabar com um só usuário
 const uso = new Map<string, number[]>();
+const LIMITE_GRATIS = 5;   // perguntas por dia no plano grátis
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -46,7 +50,22 @@ Deno.serve(async (req) => {
     const apikey = req.headers.get("apikey") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const quem = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/user`, { headers: { authorization: `Bearer ${token}`, apikey } });
     if (!quem.ok) return json({ erro: "sem_login" }, 401);
-    const { id } = await quem.json();
+    const { id, created_at } = await quem.json();
+    const comoUsuario = { authorization: `Bearer ${token}`, apikey };
+
+    // plano grátis: poucas perguntas por dia; Milhão Ouro: sem limite (só o freio contra abuso abaixo)
+    const ass = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/assinaturas?select=plano,valido_ate&user_id=eq.${id}`, { headers: comoUsuario })
+      .then((r) => (r.ok ? r.json() : [])).catch(() => []);
+    // 7 dias de Ouro grátis para toda conta (contas antigas contam a partir do lançamento dos planos)
+    const inicioTeste = Math.max(Date.parse(created_at ?? "") || 0, Date.parse("2026-11-17T00:00:00-03:00"));
+    const emTeste = Date.now() < inicioTeste + 7 * 864e5;
+    const ouro = emTeste || (ass[0]?.plano === "ouro" && ass[0]?.valido_ate && new Date(ass[0].valido_ate) > new Date());
+    if (!ouro) {
+      const n = await fetch(`${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/usar_filtrao`, {
+        method: "POST", headers: { ...comoUsuario, "content-type": "application/json" }, body: "{}",
+      }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (typeof n === "number" && n > LIMITE_GRATIS) return json({ erro: "limite_gratis", limite: LIMITE_GRATIS }, 429);
+    }
 
     const agora = Date.now(), recentes = (uso.get(id) ?? []).filter((t) => agora - t < 10 * 60_000);
     if (recentes.length >= 20) return json({ erro: "limite_pessoa" }, 429);
