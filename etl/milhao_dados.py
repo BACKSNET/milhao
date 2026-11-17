@@ -392,6 +392,31 @@ def serie_preco(df_t: pd.DataFrame, eventos_isin: list) -> list[list]:
     return [[d.strftime("%Y-%m-%d"), round(v, 2)] for d, v in s.items()]
 
 
+def serie_ohlc(df_t: pd.DataFrame, eventos_isin: list) -> dict:
+    """Candles diários (abertura, máxima, mínima, fechamento e volume financeiro), ajustados por desdobramento."""
+    d = df_t.set_index("data")[["abertura", "maxima", "minima", "fechamento", "volume", "fatcot"]].copy()
+    for c in ("abertura", "maxima", "minima"):
+        d[c] = d[c] / d["fatcot"]  # o fechamento já vem dividido pelo fator de cotação
+    for e in eventos_isin:
+        f, dia = fator_ajuste(e), e.get("data_com")
+        if f and dia:
+            m = d.index <= pd.Timestamp(dia)
+            d.loc[m, ["abertura", "maxima", "minima", "fechamento"]] = d.loc[m, ["abertura", "maxima", "minima", "fechamento"]] / f
+    d = d[d["fechamento"] > 0]
+    # alguns pregões vêm sem abertura/máxima/mínima: usa o fechamento para não desenhar candle quebrado
+    for c in ("abertura", "maxima", "minima"):
+        d.loc[d[c] <= 0, c] = d["fechamento"]
+    d["maxima"] = d[["maxima", "abertura", "fechamento"]].max(axis=1)
+    d["minima"] = d[["minima", "abertura", "fechamento"]].min(axis=1)
+    casas = 2 if d["fechamento"].median() >= 1 else 4
+    return {
+        "t": [x.strftime("%Y-%m-%d") for x in d.index],
+        "o": [round(v, casas) for v in d["abertura"]], "h": [round(v, casas) for v in d["maxima"]],
+        "l": [round(v, casas) for v in d["minima"]], "c": [round(v, casas) for v in d["fechamento"]],
+        "v": [int(v) for v in d["volume"]],
+    }
+
+
 def variacao(pontos, dias):
     if len(pontos) < 2:
         return None
@@ -729,6 +754,7 @@ def main() -> None:
     fonte = Fonte(a.fonte_local, None if a.fonte_local else a.cache)
     saida = Path(a.saida)
     (saida / "ativo").mkdir(parents=True, exist_ok=True)
+    (saida / "ohlc").mkdir(parents=True, exist_ok=True)
 
     print("1/5 cotações", flush=True)
     cot = carregar_cotacoes(fonte, a.anos)
@@ -801,6 +827,9 @@ def main() -> None:
         u = grupo.iloc[-1]
         isin, tipo = u["isin"], ("fii" if u["bdi"] == "12" else "acao")
         pontos = serie_preco(grupo, eventos.get(isin, []))
+        if len(pontos) >= 5:
+            (saida / "ohlc" / f"{tk}.json").write_text(json.dumps(
+                limpar(serie_ohlc(grupo, eventos.get(isin, []))), separators=(",", ":")), encoding="utf-8")
         if len(pontos) < 5:
             continue
         preco = pontos[-1][1]
