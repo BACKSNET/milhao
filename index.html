@@ -116,6 +116,20 @@ nav.menu svg{width:18px;height:18px;flex:none}
 .sugestoes button:hover,.sugestoes button.sel{background:var(--papel)}
 .sugestoes b{width:64px;flex:none}
 .topo .usuario{margin-left:auto;font-size:13px;color:var(--tinta-2)}
+/* barra de serviços da tela inicial */
+.barra-topo{position:sticky;top:0;z-index:6;background:var(--branco);border-bottom:1px solid var(--linha)}
+.barra-dentro{max-width:1280px;margin:0 auto;padding:10px 36px;display:flex;align-items:center;gap:20px}
+.barra-topo .marca-link{padding:0}
+.barra-topo .logo.pequena{font-size:24px}
+.servicos{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:none}
+.servicos::-webkit-scrollbar{display:none}
+.servicos a{display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;color:var(--tinta-2);white-space:nowrap}
+.servicos a:hover{background:var(--verde-claro);color:var(--verde)}
+.servicos svg{width:17px;height:17px;flex:none}
+.barra-topo .busca{margin-left:auto;max-width:280px;min-width:214px}
+.barra-topo .usuario{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--tinta-2);white-space:nowrap}
+@media (max-width:1320px){.barra-dentro{flex-wrap:wrap;row-gap:6px}.servicos{order:5;width:100%;flex:auto;margin:0 -11px}}
+@media (max-width:700px){.barra-topo{position:static}.barra-dentro{padding:10px 18px;gap:12px}.barra-topo .busca{order:6;max-width:none;width:100%;margin-left:0}.barra-topo .usuario{margin-left:auto}.barra-topo .usuario .nome{display:none}}
 .demo{background:var(--ouro-claro);color:#6B4D10;padding:9px 36px;font-size:13px;border-bottom:1px solid #E8D8B0}
 .conteudo{padding:28px 36px 64px;max-width:1280px}
 
@@ -918,6 +932,7 @@ const ICO = {
   ferramentas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h4"/></svg>',
   busca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
   analise: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 3v18M12 6v14M18 2v16"/><rect x="4" y="7" width="4" height="8" rx="1" fill="currentColor" stroke="none"/><rect x="10" y="10" width="4" height="5" rx="1"/><rect x="16" y="5" width="4" height="9" rx="1" fill="currentColor" stroke="none"/></svg>',
+  importar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
   lixo: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
 };
 
@@ -1119,10 +1134,20 @@ async function excluirCarteira(id) {
 /* ---------- seletor de carteiras ---------- */
 function telaCarteiras() {
   const cs = S.estado.carteiras;
-  $("#raiz").innerHTML = `<main class="conteudo" style="margin:0 auto;padding-top:48px">
-    <div class="cabeca"><div><div style="margin-bottom:22px">${logoHTML("media")}</div>
-      <h1>Olá, ${esc(S.estado.perfil.nome.split(" ")[0])}. Qual carteira vamos abrir?</h1></div>
-      <button class="btn texto" id="sair">Sair</button></div>
+  const servico = (r, nome) => `<a href="#${r}" data-servico="${r}">${ICO[r]}${nome}</a>`;
+  $("#raiz").innerHTML = `<header class="barra-topo"><div class="barra-dentro">
+      <a href="#carteiras" class="marca-link" aria-label="Milhão, tela inicial">${logoHTML("pequena")}</a>
+      <nav class="servicos" aria-label="Serviços do Milhão">
+        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("explorar", "Ações e FIIs")}${servico("ferramentas", "Ferramentas")}${servico("importar", "Importar da B3")}
+      </nav>
+      <div class="busca">${ICO.busca}
+        <input type="search" id="busca" placeholder="Buscar ação ou FII" aria-label="Buscar ativo" autocomplete="off">
+        <div class="sugestoes oculto" id="sugestoes" role="listbox"></div>
+      </div>
+      <span class="usuario"><span class="nome">${esc(S.estado.perfil.nome)}</span><button class="btn texto" id="sair" style="padding:4px 8px">Sair</button></span>
+    </div></header>
+    <main class="conteudo" style="margin:0 auto;padding-top:34px">
+    <div class="cabeca"><div><h1>Olá, ${esc(S.estado.perfil.nome.split(" ")[0])}. Qual carteira vamos abrir?</h1></div></div>
     <div class="lista-carteiras">
       ${cs.map((c) => { const r = resumoCarteira(c);
         return `<div class="cartao-carteira"><button data-id="${c.id}"><strong>${esc(c.nome)}</strong>
@@ -1146,13 +1171,27 @@ function telaCarteiras() {
   }
   $$(".lista-carteiras button[data-id]").forEach((b) => b.onclick = () => { S.estado.ativa = b.dataset.id; salvar(); ir("#carteira"); });
   $$("[data-excluir]").forEach((b) => b.onclick = async () => { if (await excluirCarteira(b.dataset.excluir)) telaCarteiras(); });
-  $("#nova-carteira").onclick = async () => {
+  const criarCarteira = async () => {
     const nome = await perguntar({ titulo: "Criar carteira", rotulo: "Nome da carteira", botao: "Criar carteira",
       valor: cs.length ? "Carteira " + (cs.length + 1) : "Minha carteira" });
-    if (!nome) return;
+    if (!nome) return false;
     const c = { id: novoId(), nome: nome.trim(), lancamentos: [], criada: hojeISO() };
-    S.estado.carteiras.push(c); S.estado.ativa = c.id; salvar(); ir("#carteira");
+    S.estado.carteiras.push(c); S.estado.ativa = c.id; salvar(); return true;
   };
+  $("#nova-carteira").onclick = async () => { if (await criarCarteira()) ir("#carteira"); };
+  // serviços da barra: os que dependem de uma carteira usam a última aberta (ou a primeira)
+  $$("[data-servico]").forEach((a) => a.onclick = async (e) => {
+    const r = a.dataset.servico;
+    if (!["carteira", "proventos", "importar", "analise"].includes(r)) return;
+    e.preventDefault();
+    if (!carteira()) {
+      if (cs.length) { S.estado.ativa = cs[0].id; salvar(); }
+      else if (r !== "analise" && !(await criarCarteira())) return;
+    }
+    if (r === "importar") { ir("#carteira"); setTimeout(abrirImportacao, 0); }
+    else ir("#" + r);
+  });
+  ligarBusca();
   $("#sair").onclick = async () => {
     if (S.nuvem && S.usuario) {
       if (await perguntar({ titulo: "Sair da sua conta?", texto: "Suas carteiras continuam salvas na conta. É só entrar de novo.", botao: "Sair" })) sairDaConta();
