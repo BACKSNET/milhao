@@ -474,7 +474,26 @@ details.ajustar .painel{border:none;padding:0}
 .doc-texto{line-height:1.6}.doc-texto h1{margin-top:0}.doc-texto h2{font-size:17px;margin:22px 0 6px}.doc-texto p,.doc-texto ul{margin:0 0 8px}
 .link-voltar{color:var(--verde);font-weight:650;text-decoration:none}
 .filtrao-cta{display:inline-block;margin-top:8px;font-weight:700;color:#8A6416;background:linear-gradient(120deg,#F3E3B5,#FFF6DB);padding:5px 10px;border-radius:999px;text-decoration:none}
-@media (max-width:900px){.perfil-grade{grid-template-columns:1fr}.btn.texto.perigo{margin-left:0}}
+.plano-botoes{display:flex;flex-wrap:wrap;gap:10px}
+.btn.pix{background:#32BCAD;border-color:#2AA597;color:#04302B;font-weight:800}
+.btn.pix:hover{background:#2AA597}
+.pix-caixa{display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+.pix-caixa img{background:#fff;padding:8px;border-radius:12px;border:1px solid var(--linha)}
+.pix-codigo{flex:1;min-width:220px;display:grid;gap:10px;justify-items:start}
+.pix-codigo .campo{width:100%}
+.pix-codigo textarea{width:100%;font:12px/1.4 ui-monospace,Consolas,monospace;word-break:break-all;resize:none;padding:8px 10px;border:1px solid var(--linha);border-radius:10px;background:var(--papel);color:var(--tinta)}
+.pix-status{display:flex;align-items:center;gap:10px;font-weight:650;color:var(--tinta-2)}
+.girando{width:16px;height:16px;border:2.5px solid var(--linha);border-top-color:#32BCAD;border-radius:50%;animation:girar .9s linear infinite;flex:none}
+@keyframes girar{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.girando{animation-duration:3s}}
+.rodape-site{max-width:1280px;margin:0 auto;padding:26px 36px 112px;border-top:1px solid var(--linha);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;font-size:13px;line-height:1.55;color:var(--tinta-3)}
+.rodape-site strong{display:block;color:var(--tinta-2);font-size:13.5px;margin-bottom:4px}
+.rodape-site p{margin:0}
+.rodape-site a{color:var(--tinta-2)}
+.rodape-base{grid-column:1 / -1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;padding-top:12px;border-top:1px solid var(--linha-2)}
+.rodape-base nav{display:flex;gap:16px}
+.documento + .rodape-site{max-width:820px;padding-left:0;padding-right:0}
+@media (max-width:900px){.perfil-grade{grid-template-columns:1fr}.btn.texto.perigo{margin-left:0}.rodape-site{grid-template-columns:1fr;padding:22px 18px 96px}}
 /* Filtrão: fica quieto no canto até ser chamado */
 .filtrao{display:none}
 body.com-filtrao .filtrao{display:block}
@@ -1479,7 +1498,7 @@ function telaLogin(curva, modo = "entrar") {
         ${textos.troca ? `<p class="sutil" style="margin:0;text-align:center">${textos.troca}</p>` : ""}
         ${modo === "criar" ? `<p class="nota">Ao criar a conta, você concorda com os <a href="#termos">Termos de uso</a> e a <a href="#privacidade">Política de privacidade</a>.</p>` : ""}
         <p class="nota">Suas carteiras ficam salvas na sua conta e abrem em qualquer computador ou celular.</p>
-        <p class="nota links-legais"><a href="#termos">Termos de uso</a><a href="#privacidade">Privacidade</a></p>
+        <p class="nota links-legais"><a href="#termos">Termos de uso</a><a href="#privacidade">Privacidade</a><span>Desenvolvido pela PontoClique</span></p>
       </form>`;
   if (ja) $("#entrada-form").innerHTML = formulario;
   else $("#raiz").innerHTML = `<main class="entrada">${arteEntrada()}<section class="entrada-form" id="entrada-form">${formulario}</section></main>`;
@@ -1572,7 +1591,7 @@ function telaCarteiras() {
           <button class="excluir-carteira" data-excluir="${c.id}" aria-label="Excluir a carteira ${esc(c.nome)}" title="Excluir carteira">${ICO.lixo}</button></div>`; }).join("")}
       <button class="nova" id="nova-carteira">Criar carteira</button>
     </div>
-    ${S.ativos.length ? blocoMercado() : ""}</main>`;
+    ${S.ativos.length ? blocoMercado() : ""}</main>${rodapeSite()}`;
   // mini gráfico da evolução de cada carteira nos últimos 3 meses
   for (const c of cs) {
     if (!c.lancamentos.length) continue;
@@ -1643,6 +1662,7 @@ function moldura(rota) {
         <span class="usuario">${usuarioTopo()}${botaoTema()}${S.usuario ? ` <button class="btn texto" id="sair-topo" style="padding:4px 8px">Sair</button>` : ""}</span>
       </header>
       <main class="conteudo" id="conteudo"></main>
+      ${rodapeSite()}
     </div></div>`;
   $("#trocar-carteira").onclick = () => ir("#carteiras");
   if ($("#sair-topo")) $("#sair-topo").onclick = async () => {
@@ -2933,31 +2953,37 @@ async function salvarMetadados(dados) {
 }
 
 /* ---------- tela: Perfil ---------- */
-async function chamarAssinatura(acao) {
-  const { data, error } = await S.nuvem.functions.invoke("assinatura", { body: { acao } });
+async function chamarAssinatura(acao, extra = {}) {
+  const { data, error } = await S.nuvem.functions.invoke("assinatura", { body: { acao, ...extra } });
   if (error) { let c = "falha"; try { c = (await error.context.json()).erro || c; } catch (e) { /* sem corpo */ } throw Object.assign(new Error(c), { codigo: c }); }
   return data;
 }
+// cartão renova sozinho todo mês; Pix paga 30 dias por vez
+const aceiteTermos = () => `<label class="imp-check"><input type="checkbox" id="aceite-termos"><span>Li e aceito os <a href="#termos" target="_blank">Termos de uso e assinatura</a>.</span></label>`;
+const botoesCompra = (soPix = false) => vendasAbertas()
+  ? `${aceiteTermos()}<div class="plano-botoes">${soPix ? "" : `<button class="btn dourado" id="assinar-ouro">Assinar no cartão</button>`}<button class="btn pix" id="pagar-pix">${soPix ? "Pagar mais 30 dias no Pix" : "Pagar 30 dias no Pix"}</button></div>
+    ${soPix ? "" : `<p class="fraco">No cartão, renova sozinho todo mês até você cancelar. No Pix, você paga 30 dias por vez, sem renovação automática.</p>`}`
+  : `<button class="btn dourado" disabled>Assinaturas abrem em breve</button>`;
 function planoHTML() {
   const p = S.plano || { plano: "gratis" }, ouro = assinante(), ate = p.valido_ate ? dataBR(p.valido_ate.slice(0, 10)) : "";
   if (ouro) {
     const linha = p.status === "criador" ? "Conta do criador do Milhão: o Ouro é vitalício e nunca é cobrado."
       : p.status === "ativa" ? `Renova sozinho todo mês. Próxima cobrança perto de ${ate}.`
       : p.status === "cancelada" ? `Renovação cancelada. Você continua com o Ouro até ${ate}.`
-      : p.status === "pausada" ? `O pagamento está pausado no Mercado Pago. O Ouro vale até ${ate}.` : `Vale até ${ate}.`;
-    return `<div class="plano-topo"><span class="selo-ouro">Milhão Ouro</span><strong>${p.status === "criador" ? "Vitalício" : `${brl(PLANO_OURO.preco)} por mês`}</strong></div>
+      : p.status === "pausada" ? `O pagamento está pausado no Mercado Pago. O Ouro vale até ${ate}.`
+      : p.status === "pix" ? `Pago no Pix. O Ouro vale até ${ate} e não renova sozinho: para continuar, pague mais 30 dias antes de acabar.` : `Vale até ${ate}.`;
+    return `<div class="plano-topo"><span class="selo-ouro">Milhão Ouro</span><strong>${p.status === "criador" ? "Vitalício" : p.status === "pix" ? `${brl(PLANO_OURO.preco)} por 30 dias` : `${brl(PLANO_OURO.preco)} por mês`}</strong></div>
       <p>${linha}</p>
       <ul class="plano-lista">${["Carteiras sem limite", "Análise avançada: médias, Bollinger, IFR, Medir e Marcar preço", "Filtrão sem limite de perguntas", "Logo dourada"].map((t) => `<li>${t}</li>`).join("")}</ul>
-      ${p.status === "ativa" ? `<button class="btn" id="cancelar-ouro">Cancelar assinatura</button>` : ""}`;
+      ${p.status === "ativa" ? `<button class="btn" id="cancelar-ouro">Cancelar assinatura</button>` : p.status === "pix" ? botoesCompra(true) : ""}`;
   }
   if (emTeste()) {
     const fim = fimDoTeste(), dias = Math.max(1, Math.ceil((fim - new Date()) / 864e5));
     return `<div class="plano-topo"><span class="selo-ouro">Teste grátis do Ouro</span><strong>${dias === 1 ? "Último dia" : `Faltam ${dias} dias`}</strong></div>
       <p>Você está usando o <b>Milhão Ouro</b> de graça até ${dataBR(fim.toISOString().slice(0, 10))}. Depois a conta volta sozinha para o plano Grátis, <b>sem nenhuma cobrança</b>.</p>
       <ul class="plano-lista">${["Carteiras sem limite", "Análise avançada: médias, Bollinger, IFR, Medir e Marcar preço", "Filtrão sem limite de perguntas", "Logo dourada"].map((t) => `<li>${t}</li>`).join("")}</ul>
-      <p class="plano-preco">Para continuar com o Ouro depois do teste: <strong>${brl(PLANO_OURO.preco)}</strong> por mês, cancele quando quiser.</p>
-      ${vendasAbertas() ? `<label class="imp-check"><input type="checkbox" id="aceite-termos"><span>Li e aceito os <a href="#termos" target="_blank">Termos de uso e assinatura</a>, inclusive a renovação mensal automática.</span></label>
-        <button class="btn dourado" id="assinar-ouro">Assinar o Milhão Ouro</button>` : `<button class="btn dourado" disabled>Assinaturas abrem em breve</button>`}`;
+      <p class="plano-preco">Para continuar com o Ouro depois do teste: <strong>${brl(PLANO_OURO.preco)}</strong> por mês, no cartão ou no Pix.</p>
+      ${botoesCompra()}`;
   }
   const pendente = p.plano === "ouro" && p.status === "pendente";
   const linhas = [["Carteiras", "1", "Sem limite"], ["Gráfico de candles, volume e suas operações", true, true], ["Preço justo e preço teto", true, true],
@@ -2967,11 +2993,50 @@ function planoHTML() {
     <p>${fimDoTeste() ? "Seu teste grátis de 7 dias do Ouro acabou e a conta voltou para o Grátis, sem cobrança." : "Você usa o Milhão de graça."} Com o <b>Milhão Ouro</b> a logo fica dourada e você libera tudo:</p>
     <table class="plano-tabela"><thead><tr><th></th><th>Grátis</th><th>Ouro</th></tr></thead>
       <tbody>${linhas.map(([n, g, o]) => `<tr><td>${n}</td><td>${cel(g)}</td><td>${cel(o)}</td></tr>`).join("")}</tbody></table>
-    <p class="plano-preco"><strong>${brl(PLANO_OURO.preco)}</strong> por mês, no cartão pelo Mercado Pago. Cancele quando quiser, aqui mesmo no Perfil.</p>
+    <p class="plano-preco"><strong>${brl(PLANO_OURO.preco)}</strong> por mês, no cartão ou no Pix, pelo Mercado Pago.</p>
     ${pendente ? `<p class="imp-nota">Esperando o Mercado Pago confirmar o pagamento. Pode levar alguns minutos. <a href="#" id="atualizar-plano">Atualizar</a></p>` : ""}
-    ${vendasAbertas() ? `<label class="imp-check"><input type="checkbox" id="aceite-termos"><span>Li e aceito os <a href="#termos" target="_blank">Termos de uso e assinatura</a>, inclusive a renovação mensal automática.</span></label>
-      <button class="btn dourado" id="assinar-ouro">Assinar o Milhão Ouro</button>`
-      : `<button class="btn dourado" disabled>Assinaturas abrem em breve</button>`}`;
+    ${botoesCompra()}`;
+}
+/* Pix: mostra o QR Code e confere sozinho até o pagamento cair */
+async function abrirPix(botao) {
+  const cartao = $("#plano-cartao"), texto = botao.textContent;
+  botao.disabled = true; botao.textContent = "Gerando o Pix…";
+  let d;
+  try { d = await chamarAssinatura("pix"); }
+  catch (err) {
+    botao.disabled = false; botao.textContent = texto;
+    aviso({ pagamentos_em_breve: "As assinaturas abrem em breve.", ja_assinante: "Você já é Milhão Ouro." }[err.codigo] || "Não deu para gerar o Pix agora. Tente de novo em instantes.");
+    return;
+  }
+  cartao.innerHTML = `<div class="plano-topo"><span class="selo-ouro">Pagar no Pix</span><strong>${brl(d.valor)}</strong></div>
+    <p>Abra o app do seu banco, escolha <b>Pix</b> e leia o QR Code ou cole o código. O Milhão Ouro é liberado sozinho assim que o pagamento cair, por 30 dias.</p>
+    <div class="pix-caixa">
+      ${d.qr_base64 ? `<img src="data:image/png;base64,${esc(d.qr_base64)}" alt="QR Code do Pix de ${brl(d.valor)}" width="196" height="196">` : ""}
+      <div class="pix-codigo"><label class="campo">Pix copia e cola<textarea readonly rows="4" id="pix-codigo">${esc(d.copia_e_cola)}</textarea></label>
+        <button class="btn primario" id="pix-copiar">Copiar código</button></div>
+    </div>
+    <p class="pix-status" id="pix-status" role="status"><span class="girando" aria-hidden="true"></span>Esperando o pagamento. O código vale por 30 minutos.</p>
+    <button class="btn texto" id="pix-voltar">Voltar</button>`;
+  $("#pix-copiar").onclick = async () => {
+    try { await navigator.clipboard.writeText(d.copia_e_cola); } catch (e) { $("#pix-codigo").select(); document.execCommand("copy"); }
+    aviso("Código Pix copiado. Agora é só colar no app do banco.");
+  };
+  $("#pix-voltar").onclick = () => render();
+  const status = $("#pix-status"), fim = Date.now() + 31 * 60e3;
+  const conferir = async () => {
+    if (!document.body.contains(status)) return;   // saiu da tela
+    if (Date.now() > fim) { status.textContent = "Esse código expirou. Volte e gere outro Pix."; return; }
+    try {
+      const r = await chamarAssinatura("conferir_pix", { id: d.id });
+      if (r?.status === "approved") {
+        if (r.assinatura) S.plano = r.assinatura; else await carregarPlano();
+        aviso("Pagamento confirmado! Bem-vindo ao Milhão Ouro."); if (location.hash === "#perfil") render(); return;
+      }
+      if (["rejected", "cancelled", "expired"].includes(r?.status)) { status.textContent = "Esse Pix não foi concluído. Volte e gere outro."; return; }
+    } catch (e) { /* tenta de novo */ }
+    setTimeout(conferir, 5000);
+  };
+  setTimeout(conferir, 5000);
 }
 rotas.perfil = async (el) => {
   const desenhar = () => {
@@ -3029,9 +3094,13 @@ rotas.perfil = async (el) => {
       ocupado(e.target, true, "Abrindo o Mercado Pago…");
       try { const d = await chamarAssinatura("assinar"); location.href = d.link; }
       catch (err) {
-        ocupado(e.target, false, "Assinar o Milhão Ouro");
+        ocupado(e.target, false, "Assinar no cartão");
         aviso({ pagamentos_em_breve: "As assinaturas abrem em breve.", ja_assinante: "Você já é Milhão Ouro." }[err.codigo] || "Não deu para abrir o pagamento agora. Tente de novo em instantes.");
       }
+    };
+    if ($("#pagar-pix")) $("#pagar-pix").onclick = (e) => {
+      if (!$("#aceite-termos").checked) { aviso("Para pagar, marque que leu e aceita os Termos."); $("#aceite-termos").focus(); return; }
+      abrirPix(e.currentTarget);
     };
     if ($("#atualizar-plano")) $("#atualizar-plano").onclick = async (e) => {
       e.preventDefault();
@@ -3062,35 +3131,44 @@ rotas.perfil = async (el) => {
   if (JSON.stringify(S.plano) !== antes && location.hash === "#perfil") render();
 };
 
+/* ---------- rodapé: quem faz, segurança e diretrizes ---------- */
+const DESENVOLVEDORA = "PontoClique";
+const rodapeSite = () => `<footer class="rodape-site">
+    <div><strong>Quem faz o Milhão</strong><p>O Milhão foi desenvolvido pela <b>${DESENVOLVEDORA}</b>, empresa de ${esc(VENDEDOR.nome || "Luiz Henrique Santos Barboza")}.${VENDEDOR.email ? ` Fale com a gente: <a href="mailto:${esc(VENDEDOR.email)}">${esc(VENDEDOR.email)}</a>.` : ""}</p></div>
+    <div><strong>Ambiente seguro</strong><p>A conexão é criptografada (HTTPS) e cada conta só acessa os próprios dados, protegidos por regras no banco de dados. Os pagamentos, no cartão ou no Pix, são feitos pelo Mercado Pago: o Milhão não vê nem guarda dados do seu cartão ou do seu banco.</p></div>
+    <div><strong>Diretrizes</strong><p>Cotações de fechamento da B3 e dados públicos da CVM, atualizados todo dia útil. Preço justo, indicadores e o Filtrão são ferramentas de estudo, não recomendação de investimento: a decisão é sempre sua.</p></div>
+    <div class="rodape-base"><span>© ${new Date().getFullYear()} Milhão. Desenvolvido pela ${DESENVOLVEDORA}.</span><nav aria-label="Documentos"><a href="#termos">Termos de uso</a><a href="#privacidade">Política de privacidade</a></nav></div>
+  </footer>`;
+
 /* ---------- Termos de uso e Política de privacidade ---------- */
 function telaDocumento(qual) {
   const quem = vendasAbertas() ? `${esc(VENDEDOR.nome)}, ${esc(VENDEDOR.documento)}, contato: <a href="mailto:${esc(VENDEDOR.email)}">${esc(VENDEDOR.email)}</a>` : "";
   const contato = VENDEDOR.email ? `pelo e-mail <a href="mailto:${esc(VENDEDOR.email)}">${esc(VENDEDOR.email)}</a>` : "pelo e-mail de contato informado nesta página";
   const termos = `<h1>Termos de uso e assinatura</h1><p class="fraco">Última atualização: 17/11/2026</p>
     ${quem ? `<p><b>Quem oferece o Milhão:</b> ${quem}.</p>` : ""}
-    <h2>1. O que é o Milhão</h2><p>O Milhão é uma ferramenta para organizar carteiras de ações e FIIs da B3, ver cotações, proventos, números das empresas e gráficos. Os dados vêm de fontes públicas da B3 e da CVM, com cotações de fechamento, e podem ter atrasos ou erros.</p>
+    <h2>1. O que é o Milhão</h2><p>O Milhão é uma ferramenta para organizar carteiras de ações e FIIs da B3, ver cotações, proventos, números das empresas e gráficos. Os dados vêm de fontes públicas da B3 e da CVM, com cotações de fechamento, e podem ter atrasos ou erros. O site foi desenvolvido pela ${DESENVOLVEDORA}, empresa de propriedade de ${esc(VENDEDOR.nome || "Luiz Henrique Santos Barboza")}.</p>
     <h2>2. Não é recomendação de investimento</h2><p>Nada no Milhão é recomendação de compra ou venda nem consultoria. Preço justo, preço teto e indicadores são cálculos automáticos feitos com dados públicos e premissas que você pode mudar. As respostas do Filtrão são geradas por inteligência artificial e podem conter erros. As decisões de investimento são suas.</p>
     <h2>3. Sua conta</h2><p>Você é responsável pelo seu e-mail e pela sua senha. Você pode excluir a conta a qualquer momento no Perfil.</p>
     <h2>4. Planos</h2><p>O plano <b>Grátis</b> não tem custo. O <b>Milhão Ouro</b> custa ${brl(PLANO_OURO.preco)} por mês e libera: carteiras sem limite, Análise avançada (médias móveis, Bollinger, IFR, Medir e Marcar preço), perguntas sem limite ao Filtrão e a logo dourada.</p>
     <h2>5. Teste grátis</h2><p>Toda conta ganha <b>7 dias de Milhão Ouro de graça</b>, sem cartão. Quando o teste acaba, a conta volta sozinha para o plano Grátis, sem nenhuma cobrança. Só é cobrado quem assinar.</p>
-    <h2>6. Cobrança e renovação</h2><p>O pagamento é feito pelo Mercado Pago, no cartão, e <b>renova automaticamente todo mês</b> até você cancelar. O Milhão não recebe nem guarda os dados do seu cartão. Se o preço mudar, você é avisado com pelo menos 30 dias de antecedência e pode cancelar antes.</p>
-    <h2>7. Cancelamento</h2><p>Você cancela quando quiser no Perfil, em "Cancelar assinatura", ou no app do Mercado Pago. A renovação para na hora e você continua com o Ouro até o fim do período já pago. Não há multa.</p>
+    <h2>6. Formas de pagamento e renovação</h2><p>Os pagamentos são feitos pelo Mercado Pago, de duas formas:</p><ul><li><b>Cartão:</b> a assinatura <b>renova automaticamente todo mês</b> até você cancelar.</li><li><b>Pix:</b> cada pagamento libera <b>30 dias</b> de Milhão Ouro, sem renovação automática. Se pagar de novo antes de acabar, os dias se somam. Quando os dias acabam, a conta volta sozinha para o plano Grátis.</li></ul><p>O Milhão não recebe nem guarda os dados do seu cartão ou da sua conta bancária. Se o preço mudar, você é avisado com pelo menos 30 dias de antecedência.</p>
+    <h2>7. Cancelamento</h2><p>No cartão, você cancela quando quiser no Perfil, em "Cancelar assinatura", ou no app do Mercado Pago. A renovação para na hora e você continua com o Ouro até o fim do período já pago. No Pix não há o que cancelar: basta não pagar de novo. Não há multa.</p>
     <h2>8. Direito de arrependimento</h2><p>Pelo artigo 49 do Código de Defesa do Consumidor, você pode desistir da assinatura em até 7 dias depois da primeira contratação e receber o valor pago de volta, ${contato}.</p>
     <h2>9. Uso correto</h2><p>Não é permitido tentar burlar os limites do plano, copiar o site ou os dados em massa, ou usar o Filtrão para outros fins. Contas que fizerem isso podem ser suspensas.</p>
     <h2>10. Mudanças nestes termos</h2><p>Se estes termos mudarem, a data acima é atualizada e mudanças importantes são avisadas no site.</p>
     <h2>11. Lei e foro</h2><p>Valem as leis do Brasil. Fica eleito o foro do seu domicílio, como prevê o Código de Defesa do Consumidor.</p>`;
   const privacidade = `<h1>Política de privacidade</h1><p class="fraco">Última atualização: 17/11/2026</p>
     ${quem ? `<p><b>Responsável pelos dados:</b> ${quem}.</p>` : ""}
-    <h2>1. O que guardamos</h2><ul><li>Nome, e-mail e foto de perfil (se você colocar).</li><li>Suas carteiras, lançamentos e preferências (como modo escuro e marcas de preço).</li><li>Situação do seu plano (grátis ou Ouro) e a contagem diária de perguntas ao Filtrão.</li></ul>
+    <h2>1. O que guardamos</h2><ul><li>Nome, e-mail e foto de perfil (se você colocar).</li><li>Suas carteiras, lançamentos e preferências (como modo escuro e marcas de preço).</li><li>Situação do seu plano (grátis ou Ouro), o registro dos pagamentos (valor, data e número do pagamento no Mercado Pago) e a contagem diária de perguntas ao Filtrão.</li></ul>
     <h2>2. Para que usamos</h2><p>Só para fazer o Milhão funcionar: entrar na conta, mostrar suas carteiras em qualquer aparelho, liberar os recursos do seu plano e responder suas perguntas. Não vendemos seus dados e não mostramos anúncios.</p>
-    <h2>3. Com quem os dados passam</h2><ul><li><b>Supabase</b>: login e banco de dados onde ficam sua conta e carteiras.</li><li><b>Google (Gemini)</b>: quando você pergunta ao Filtrão, a pergunta e um resumo da carteira e da tela vão para a IA do Google. Na camada gratuita, o Google pode usar esse conteúdo para melhorar os produtos dele. Não envie dados pessoais nas perguntas.</li><li><b>Mercado Pago</b>: processa o pagamento do Milhão Ouro. Os dados do cartão ficam só com ele.</li><li><b>Cloudflare e GitHub</b>: hospedam o site.</li></ul>
+    <h2>3. Com quem os dados passam</h2><ul><li><b>Supabase</b>: login e banco de dados onde ficam sua conta e carteiras.</li><li><b>Google (Gemini)</b>: quando você pergunta ao Filtrão, a pergunta e um resumo da carteira e da tela vão para a IA do Google. Na camada gratuita, o Google pode usar esse conteúdo para melhorar os produtos dele. Não envie dados pessoais nas perguntas.</li><li><b>Mercado Pago</b>: processa os pagamentos do Milhão Ouro, no cartão ou no Pix. Os dados do cartão e da sua conta bancária ficam só com ele.</li><li><b>Cloudflare e GitHub</b>: hospedam o site.</li></ul>
     <h2>4. Seus direitos (LGPD)</h2><p>Você pode ver e corrigir seus dados no Perfil, baixar suas carteiras em "Exportar backup" e excluir tudo em "Excluir minha conta". Para qualquer outro pedido sobre seus dados, fale ${contato}.</p>
     <h2>5. Quanto tempo guardamos</h2><p>Enquanto sua conta existir. Ao excluir a conta, apagamos seus dados, exceto o que a lei mandar guardar (como registros de pagamento).</p>
-    <h2>6. Segurança</h2><p>A conexão é criptografada e cada pessoa só acessa os próprios dados, por regras no banco de dados.</p>`;
+    <h2>6. Segurança</h2><p>A conexão é criptografada (HTTPS) e cada pessoa só acessa os próprios dados, por regras no banco de dados. As senhas são guardadas cifradas pelo Supabase, e o Milhão nunca tem acesso a elas.</p>`;
   $("#raiz").innerHTML = `<main class="conteudo documento">
       <p><a href="#" id="doc-voltar" class="link-voltar">← Voltar</a></p>
       <article class="painel doc-texto">${qual === "termos" ? termos : privacidade}
-        <p class="fraco" style="margin-top:24px">Veja também: ${qual === "termos" ? '<a href="#privacidade">Política de privacidade</a>' : '<a href="#termos">Termos de uso e assinatura</a>'}.</p></article></main>`;
+        <p class="fraco" style="margin-top:24px">Veja também: ${qual === "termos" ? '<a href="#privacidade">Política de privacidade</a>' : '<a href="#termos">Termos de uso e assinatura</a>'}.</p></article></main>${rodapeSite()}`;
   $("#doc-voltar").onclick = (e) => { e.preventDefault(); if (history.length > 1) history.back(); else ir("#carteiras"); };
   window.scrollTo(0, 0);
 }
