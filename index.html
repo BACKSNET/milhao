@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>try { if (localStorage.getItem("milhao:tema") === "escuro") document.documentElement.dataset.tema = "escuro"; } catch (e) {}</script>
 <title>Milhão.</title>
+<!-- ícone "M." para o atalho na tela inicial do celular (gerado por etl/icones.py) -->
+<meta name="theme-color" content="#13241C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Milhão">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
@@ -359,6 +368,11 @@ dialog.largo{width:min(720px,94vw)}
 [data-tema=escuro] .painel.teto,[data-tema=escuro] .veredito{border-color:var(--linha)}
 [data-tema=escuro] dialog::backdrop{background:rgba(0,0,0,.55)}
 [data-tema=escuro] .velas-tela canvas,[data-tema=escuro] img{color-scheme:dark}
+/* troca suave entre claro e escuro */
+html.vt-tema::view-transition-old(root),html.vt-tema::view-transition-new(root){animation-duration:.55s;animation-timing-function:ease-in-out}
+html.tema-suave,html.tema-suave *,html.tema-suave *::before,html.tema-suave *::after{transition:background-color .5s ease,color .5s ease,border-color .5s ease,fill .5s ease,stroke .5s ease!important}
+.btn-tema svg{transition:transform .5s ease}
+.btn-tema:active svg{transform:rotate(-30deg)}
 .btn-tema{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;border:1px solid var(--linha);background:var(--branco);color:var(--tinta-2);cursor:pointer;padding:0;flex:none}
 .btn-tema:hover{color:var(--tinta);border-color:var(--tinta-3)}
 .btn-tema svg{width:17px;height:17px}
@@ -782,13 +796,25 @@ function aplicarTema(t) {
 }
 const botaoTema = () => `<button class="btn-tema" id="btn-tema" type="button" aria-label="${temaEscuro() ? "Usar modo claro" : "Usar modo escuro"}" title="${temaEscuro() ? "Modo claro" : "Modo escuro"}">${temaEscuro() ? ICO_SOL : ICO_LUA}</button>`;
 function ligarBotaoTema() {
-  const b = $("#btn-tema"); if (!b) return;
-  b.onclick = () => {
-    const novo = temaEscuro() ? "claro" : "escuro";
+  const b = $("#btn-tema"); if (b) b.onclick = trocarTema;
+}
+/* troca o tema sem redesenhar a tela: as cores mudam devagar, num esmaecer */
+function trocarTema() {
+  const novo = temaEscuro() ? "claro" : "escuro", html = document.documentElement;
+  const aplicar = () => {
     aplicarTema(novo);
     if (S.estado) { S.estado.tema = novo; salvar(); }
-    render();
+    const b = $("#btn-tema"); if (b) { b.outerHTML = botaoTema(); ligarBotaoTema(); }
+    window.dispatchEvent(new Event("milhao:tema"));   // os gráficos em canvas se redesenham com as cores novas
   };
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return aplicar();
+  if (document.startViewTransition) {
+    html.classList.add("vt-tema");
+    document.startViewTransition(aplicar).finished.finally(() => html.classList.remove("vt-tema"));
+    return;
+  }
+  html.classList.add("tema-suave"); aplicar();
+  setTimeout(() => html.classList.remove("tema-suave"), 600);
 }
 
 function GraficoVelas(caixa) {
@@ -1187,6 +1213,8 @@ function GraficoVelas(caixa) {
     e.preventDefault();
   });
   new ResizeObserver(() => desenhar()).observe(tela);
+  const aoTrocarTema = () => { if (caixa.isConnected) desenhar(); else window.removeEventListener("milhao:tema", aoTrocarTema); };
+  window.addEventListener("milhao:tema", aoTrocarTema);
   cursor();
   g.desenhar = desenhar;
   return g;
