@@ -1701,6 +1701,16 @@ function interpretarAba(linhas, nomeAba) {
       const t = tickerDe(l[cProd]);
       if (PROVENTO.test(mov)) { r.proventos++; continue; }
       if (!t) { r.foraBolsa++; continue; }
+      if (/^atualizacao/.test(mov)) {
+        // "Atualização" é quando ativos entram na conta por um evento (a subscrição que vira cota, a troca de código).
+        // A entrada vira compra; o preço vem da planilha ou você confirma na prévia
+        if (!cred) { outro("Atualização de saída (ativo que trocou de código)"); continue; }
+        const preco = numeroBR(l[cPreco]), q = Math.round(Math.abs(numeroBR(l[cQtd]))), data = dataImport(l[cData]);
+        if (data && q > 0) r.lancs.push({ id: novoId(), ticker: t, tipo: "C", data, qtd: q, preco: preco > 0 ? preco : null,
+          origem: "b3-movimentacao", evento: "Atualização na B3", semPreco: !(preco > 0) });
+        else outro("Linha sem data ou quantidade");
+        continue;
+      }
       const regra = LANC_MOV.find(([re]) => re.test(mov));
       const tipo = regra ? regra[1](cred) : null;
       if (!tipo) { outro(String(l[cMov]).trim() || "Sem nome"); continue; }
@@ -1768,9 +1778,15 @@ async function lerArquivosImportacao(arquivos) {
   if (!tudo.arquivos.some((a) => a.usou))
     throw new Error("não reconheci a planilha. Use as planilhas de Negociação, Movimentação ou Posição da Área do Investidor da B3, ou um CSV com data; ativo; operação; quantidade; preço");
   tudo.posicao = Object.values(tudo.posicao).sort((a, b) => a.ticker.localeCompare(b.ticker));
+  // entradas sem preço: sugere o fechamento daquele dia (ou a cotação de hoje)
+  await Promise.all(tudo.lancs.filter((l) => l.semPreco).map(async (l) => {
+    let p = null;
+    try { const d = await velasDe(l.ticker); const k = d.t.findLastIndex((t) => t <= l.data); if (k >= 0) p = d.c[k]; } catch (e) { /* sem candles */ }
+    l.preco = +(p ?? precoAtual(l.ticker) ?? 0).toFixed(2);
+  }));
   return tudo;
 }
-const chaveLanc = (l) => [l.data, l.ticker, l.tipo, l.qtd, (+l.preco || 0).toFixed(2)].join("|");
+const chaveLanc = (l) => [l.data, l.ticker, l.tipo, l.qtd, l.evento === "Atualização na B3" ? "atualizacao" : (+l.preco || 0).toFixed(2)].join("|");
 const plural = (n, um, varios) => `${F.n0.format(n)} ${n === 1 ? um : varios}`;
 
 /* passo 1: explica de onde baixar; passo 2: mostra o que vai entrar e pede confirmação */
@@ -1816,7 +1832,9 @@ function previaImportacao(tudo) {
   novos = entra.map(({ arq, ...l }) => l);
   const repetidos = tudo.lancs.length - pulados - novos.length;
   const conta = (f) => novos.filter(f).length;
-  const nC = conta((l) => l.tipo === "C"), nV = conta((l) => l.tipo === "V"), nE = conta((l) => l.tipo === "B" || l.tipo === "G");
+  const nAt = conta((l) => l.evento === "Atualização na B3");
+  const nC = conta((l) => l.tipo === "C") - nAt, nV = conta((l) => l.tipo === "V"), nE = conta((l) => l.tipo === "B" || l.tipo === "G");
+  const semPreco = novos.filter((l) => l.semPreco);
 
   // Posição: entra só o que a carteira ainda não tem
   const atual = Object.fromEntries(posicoes(c).map((p) => [p.ticker, p.qtd]));
@@ -1826,6 +1844,7 @@ function previaImportacao(tudo) {
   const itens = [];
   if (nC) itens.push(["Compras", nC]); if (nV) itens.push(["Vendas", nV]);
   if (nE) itens.push(["Desdobramentos, bonificações e grupamentos", nE]);
+  if (nAt) itens.push(["Ativos que entraram na conta (Atualização)", nAt]);
   if (posNovas.length) itens.push(["Ativos da planilha de posição", posNovas.length]);
   const fora = [];
   if (repetidos > 0) fora.push(["Repetidos (já na carteira ou em mais de um arquivo)", repetidos]);
@@ -1839,6 +1858,15 @@ function previaImportacao(tudo) {
   $("#imp-titulo").textContent = total ? `Importar ${plural(total, "item", "itens")} para ${c.nome}` : "Nada novo para importar";
   $("#imp-corpo").innerHTML = `
     ${itens.length ? `<ul class="imp-resumo">${itens.map(([k, v]) => `<li><span>${esc(k)}</span><b>${F.n0.format(v)}</b></li>`).join("")}</ul>` : ""}
+    ${!total ? `<p class="imp-nota">${repetidos > 0 ? "Tudo o que dá para importar dessa planilha já está na carteira."
+        : tudo.tipos.has("movimentacao") && !tudo.tipos.has("negociacao") && !tudo.tipos.has("posicao")
+        ? "A planilha de Movimentação só mostra o que aconteceu no período que você escolheu na B3, e nesse período não houve compra nem venda. Para trazer o que você já tem, baixe a planilha de <b>Posição</b> (o retrato de hoje) ou a de <b>Negociação</b> com um período maior, desde a sua primeira compra."
+        : "Nada nessa planilha é compra, venda ou ativo que a carteira ainda não tenha. Confira o período escolhido na B3 ou tente a planilha de <b>Posição</b>, que traz o que você tem hoje."}</p>` : ""}
+    ${semPreco.length ? `<p class="imp-nota">A B3 não informa o preço destas entradas. Sugerimos o fechamento do dia; se você pagou outro valor (numa subscrição, por exemplo), troque aqui.</p>
+      <div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Data</th><th>Quantidade</th><th>Preço (R$)</th></tr></thead><tbody>
+      ${semPreco.map((l, k) => `<tr><td><b>${esc(l.ticker)}</b></td><td>${dataBR(l.data)}</td><td>${F.n0.format(l.qtd)}</td>
+        <td><input type="number" step="0.01" min="0" data-sp="${k}" value="${(+l.preco || 0).toFixed(2)}" aria-label="Preço de ${esc(l.ticker)} em ${dataBR(l.data)}"></td></tr>`).join("")}
+      </tbody></table></div>` : ""}
     ${posNovas.length ? `<p class="imp-nota">A planilha de posição não traz o preço que você pagou. Coloque o preço médio de cada ativo (veja na sua corretora) para o resultado da carteira sair certo. Se deixar como está, o Milhão usa a cotação da planilha e a carteira começa em zero a zero.</p>
       <div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Quantidade</th><th>Preço médio (R$)</th></tr></thead><tbody>
       ${posNovas.map((p, k) => `<tr><td><b>${esc(p.ticker)}</b></td><td>${F.n0.format(p.qtd)}</td>
@@ -1849,10 +1877,13 @@ function previaImportacao(tudo) {
     ${posDif.length ? `<p class="imp-nota">A quantidade na B3 é diferente da carteira em ${posDif.map((p) => `${esc(p.ticker)} (B3: ${qtdF(p.qtd)}, carteira: ${qtdF(atual[p.ticker])})`).slice(0, 6).join(", ")}. Confira se falta algum lançamento.</p>` : ""}
     ${fora.length ? `<h3 style="margin:2px 0 -6px">Fica de fora</h3><ul class="imp-resumo">${fora.map(([k, v]) => `<li class="fora"><span>${esc(k)}</span><span>${F.n0.format(v)}</span></li>`).join("")}</ul>` : ""}
     ${semCot.length ? `<p class="fraco" style="margin:0">Sem cotação na base do Milhão: ${esc(semCot.slice(0, 8).join(", "))}${semCot.length > 8 ? "…" : ""}. Eles entram na carteira, mas sem valor atual.</p>` : ""}`;
-  $("#imp-ok").textContent = total ? `Importar ${plural(total, "item", "itens")}` : "Fechar";
+  $("#imp-ok").textContent = total ? `Importar ${plural(total, "item", "itens")}` : "Escolher outra planilha";
   dlg.returnValue = ""; if (!dlg.open) dlg.showModal();
   dlg.onclose = () => {
+    if (dlg.returnValue === "ok" && !total) { $("#arquivo-importar").click(); return; }
     if (dlg.returnValue !== "ok" || !total) return;
+    $$("[data-sp]").forEach((inp) => { const v = numeroBR(inp.value); if (Number.isFinite(v) && v >= 0) semPreco[+inp.dataset.sp].preco = v; });
+    for (const l of novos) delete l.semPreco;
     if ($("#imp-trocar")?.checked) {
       const sai = new Set(movTrocavel.map((l) => l.id));
       c.lancamentos = c.lancamentos.filter((l) => !sai.has(l.id));
