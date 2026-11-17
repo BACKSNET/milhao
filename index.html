@@ -631,7 +631,7 @@ function logoMarca(tam = 64, cor = "#2FCB8F") {
       <line x1="50" y1="3" x2="50" y2="55" stroke-width="3"/><rect x="43" y="9" width="14" height="40" rx="2.5"/>
     </g></svg>`;
 }
-const logoHTML = (cls = "") => `<span class="logo ${cls}" role="img" aria-label="Milhão">${logoMarca()}<span class="logo-nome">Milhão<i>.</i></span></span>`;
+const logoHTML = (cls = "", comMarca = true) => `<span class="logo ${cls}" role="img" aria-label="Milhão">${comMarca ? logoMarca() : ""}<span class="logo-nome">Milhão<i>.</i></span></span>`;
 
 /* ---------- tela de entrada: arte da esquerda ---------- */
 function velasEntrada() {
@@ -667,7 +667,7 @@ function telaoEntrada() {
 function arteEntrada() {
   return `<section class="entrada-arte" id="entrada-arte">
       ${telaoEntrada()}
-      <div class="lupa-area" id="lupa-area">${logoHTML("grande")}<div class="lupa" id="lupa" aria-hidden="true"><div class="lupa-conteudo">${logoHTML("grande")}</div></div></div>
+      <div class="lupa-area" id="lupa-area">${logoHTML("grande", false)}<div class="lupa" id="lupa" aria-hidden="true"><div class="lupa-conteudo">${logoHTML("grande", false)}</div></div></div>
       ${velasEntrada()}
       <p>Sua carteira da B3 num lugar só: o que você tem, quanto rende e quanto pinga de dividendos.</p>
     </section>`;
