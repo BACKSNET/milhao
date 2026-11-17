@@ -221,7 +221,10 @@ details.ajustar .painel{border:none;padding:0}
 .resultado-grande{font-size:34px;font-weight:800;font-stretch:112%;letter-spacing:-.02em;color:var(--verde)}
 
 @media (max-width:980px){
-  .app{grid-template-columns:1fr}
+  .app{grid-template-columns:1fr;background:var(--papel)}
+  .lateral{background:var(--branco);border-bottom:1px solid var(--linha)}
+  .ativo-cab .preco,.ativo-cab p{text-align:left!important}
+  .ativo-cab .acoes{justify-content:flex-start!important}
   .lateral{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}
   .lateral .rodape{display:none}
   nav.menu{flex-direction:row;flex-wrap:wrap}
