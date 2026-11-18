@@ -326,25 +326,31 @@ th.ordena[aria-sort=descending]::after{content:" ▾"} th.ordena[aria-sort=ascen
 .mercado-num{text-align:right;font-size:13.5px}
 .topo-carteiras{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
 @media (max-width:980px){.topo-carteiras{grid-template-columns:1fr}}
-.aloc{padding:18px;position:sticky;top:90px}
+.aloc{padding:18px}
 .aloc-chips{margin:0 0 12px}
 .aloc-grafico{display:flex;justify-content:center;margin-bottom:10px}
 .aloc-grafico svg{width:188px;height:188px}
 .aloc-fatia{transition:opacity .15s}
 .aloc-fatia[data-aloc-t],.aloc-fatia[data-aloc-classe]{cursor:pointer}
-.aloc-grafico svg:hover .aloc-fatia{opacity:.45}
-.aloc-grafico svg .aloc-fatia:hover{opacity:1}
-.aloc-centro{font-size:21px;font-weight:800;fill:var(--tinta)}
+.aloc-foco .aloc-fatia{opacity:.28}
+.aloc-foco .aloc-fatia.on{opacity:1}
+.aloc-centro{font-size:20px;font-weight:800;fill:var(--tinta)}
 .aloc-centro-sub{font-size:11px;fill:var(--tinta-3)}
+.aloc-centro-topo{font-size:10.5px;font-weight:700;fill:var(--tinta-2)}
+.aloc-grafico text{pointer-events:none}
 .aloc-leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
-.aloc-item{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;padding:6px;border-radius:7px;text-align:left;font:inherit;color:var(--tinta-2);cursor:pointer}
-.aloc-item:hover:not([disabled]){background:var(--papel);color:var(--tinta)}
+.aloc-item{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;background:none;border:0;padding:7px 8px;border-radius:8px;text-align:left;font:inherit;color:var(--tinta);cursor:pointer;transition:background .15s}
+.aloc-item.on{background:var(--papel)}
 .aloc-item[disabled]{cursor:default}
 .aloc-item i{width:10px;height:10px;border-radius:3px;flex:none}
-.aloc-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}
-.aloc-nome small{font-weight:500;color:var(--tinta-3);font-size:11.5px;margin-left:6px}
-.aloc-val{text-align:right;font-size:13px;white-space:nowrap;line-height:1.2}
-.aloc-val em{display:block;font-style:normal;font-size:11.5px;color:var(--tinta-3)}
+.aloc-nome{min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.aloc-nome b{font-size:13.5px;font-weight:700}
+.aloc-nome small{font-size:11px;color:var(--tinta-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aloc-val{text-align:right;white-space:nowrap;line-height:1.3;font-variant-numeric:tabular-nums}
+.aloc-val b{display:block;font-size:13.5px;font-weight:700}
+.aloc-val em{display:block;font-style:normal;font-size:11px;color:var(--tinta-3)}
+.aloc-barra{grid-column:2/4;height:3px;border-radius:2px;background:var(--linha-2);margin-top:6px;overflow:hidden}
+.aloc-barra span{display:block;height:100%;border-radius:2px}
 .mercado-num em{display:block;font-style:normal;font-weight:700;font-size:12.5px}
 .ir-grafico{color:var(--tinta-3);display:flex;padding:6px;border-radius:6px}
 .ir-grafico:hover{color:var(--verde);background:var(--verde-claro)}
@@ -1672,6 +1678,8 @@ async function excluirCarteira(id) {
 /* ---------- gráfico de pizza: onde está o dinheiro ---------- */
 const PALETA_ALOC = ["#0F8A62", "#C9971C", "#2F6FB3", "#C2453D", "#7B57B8", "#1CA39A", "#D97A2B", "#5B8C2A", "#B3458F"];
 let alocModo = "ativo";
+const valorAloc = (v, total) => total >= 100000 ? compacto(v) : brl(v);
+const centroAloc = (v) => v >= 10000 ? compacto(v) : brl(v);
 function arcoDonut(c, rO, rI, a0, a1, gap) {
   if (gap && a1 - a0 > gap * 2.5) { a0 += gap; a1 -= gap; }
   const p = (r, a) => [(c + r * Math.cos(a)).toFixed(2), (c + r * Math.sin(a)).toFixed(2)];
@@ -1701,14 +1709,15 @@ function donutSVG(itens, total) {
   const attr = (it) => it.t ? `data-aloc-t="${it.t}"` : it.classe ? `data-aloc-classe="${it.classe}"` : "";
   if (itens.length === 1) {
     const it = itens[0];
-    seg.push(`<circle cx="${c}" cy="${c}" r="${(rO + rI) / 2}" fill="none" stroke="${it.cor}" stroke-width="${rO - rI}" ${attr(it)} class="aloc-fatia"/>`);
+    seg.push(`<circle cx="${c}" cy="${c}" r="${(rO + rI) / 2}" fill="none" stroke="${it.cor}" stroke-width="${rO - rI}" ${attr(it)} data-i="0" class="aloc-fatia"/>`);
   } else {
-    for (const it of itens) { const a1 = a + (it.v / total) * 2 * Math.PI;
-      seg.push(`<path d="${arcoDonut(c, rO, rI, a, a1, 0.018)}" fill="${it.cor}" ${attr(it)} class="aloc-fatia"/>`); a = a1; }
+    itens.forEach((it, i) => { const a1 = a + (it.v / total) * 2 * Math.PI;
+      seg.push(`<path d="${arcoDonut(c, rO, rI, a, a1, 0.018)}" fill="${it.cor}" ${attr(it)} data-i="${i}" class="aloc-fatia"/>`); a = a1; });
   }
   return `<div class="aloc-grafico"><svg viewBox="0 0 ${S} ${S}" role="img" aria-label="Onde está o dinheiro">${seg.join("")}
-    <text x="${c}" y="${c - 3}" text-anchor="middle" class="aloc-centro">${compacto(total)}</text>
-    <text x="${c}" y="${c + 15}" text-anchor="middle" class="aloc-centro-sub">investido</text></svg></div>`;
+    <text x="${c}" y="${c - 17}" text-anchor="middle" class="aloc-centro-topo" id="aloc-c1">Total</text>
+    <text x="${c}" y="${c + 5}" text-anchor="middle" class="aloc-centro" id="aloc-c2">${esc(centroAloc(total))}</text>
+    <text x="${c}" y="${c + 22}" text-anchor="middle" class="aloc-centro-sub" id="aloc-c3">investido</text></svg></div>`;
 }
 function blocoAlocacao() {
   const temAlgo = S.estado.carteiras.some((c) => posicoes(c).some((p) => p.qtd > 0 && p.valor));
@@ -1734,9 +1743,37 @@ function pintarAlocacao() {
     classe: alocModo === "classe" && !x.outros ? x.k : null,
   }));
   el.innerHTML = `${donutSVG(itens, total)}
-    <ul class="aloc-leg">${itens.map((it) => `<li><button class="aloc-item" ${it.t ? `data-aloc-t="${it.t}"` : it.classe ? `data-aloc-classe="${it.classe}"` : "disabled"}>
-      <i style="background:${it.cor}"></i><span class="aloc-nome">${esc(it.rotulo)}${it.sub ? `<small>${esc(it.sub)}</small>` : ""}</span>
-      <span class="aloc-val">${brl(it.v, 0)}<em>${pct(it.v / total, 1)}</em></span></button></li>`).join("")}</ul>`;
+    <ul class="aloc-leg">${itens.map((it, i) => `<li><button class="aloc-item" data-i="${i}" ${it.t ? `data-aloc-t="${it.t}"` : it.classe ? `data-aloc-classe="${it.classe}"` : "disabled"}
+        title="${it.t ? `Abrir ${esc(it.t)}` : it.classe ? `Ver ${esc(it.rotulo)} nos rankings` : ""}">
+      <i style="background:${it.cor}"></i>
+      <span class="aloc-nome"><b>${esc(it.rotulo)}</b>${it.sub ? `<small>${esc(it.sub)}</small>` : ""}</span>
+      <span class="aloc-val"><b>${pct(it.v / total, 1)}</b><em>${esc(valorAloc(it.v, total))}</em></span>
+      <span class="aloc-barra"><span style="width:${(it.v / itens[0].v * 100).toFixed(1)}%;background:${it.cor}"></span></span></button></li>`).join("")}</ul>`;
+  // passar o mouse numa fatia ou num item realça os dois e mostra o item no centro
+  const caixa = $(".aloc-grafico", el), c1 = $("#aloc-c1", el), c2 = $("#aloc-c2", el), c3 = $("#aloc-c3", el);
+  const realcar = (i) => {
+    caixa.classList.toggle("aloc-foco", i != null);
+    $$(".aloc-fatia", el).forEach((f) => f.classList.toggle("on", f.dataset.i === String(i)));
+    $$(".aloc-item", el).forEach((b) => b.classList.toggle("on", b.dataset.i === String(i)));
+    const it = itens[i];
+    c1.textContent = it ? (it.rotulo.length > 14 ? it.rotulo.slice(0, 13) + "…" : it.rotulo) : "Total";
+    c2.textContent = it ? pct(it.v / total, 1) : centroAloc(total);
+    c3.textContent = it ? centroAloc(it.v) : "investido";
+    caber();
+  };
+  // o texto do centro nunca passa da largura do furo da rosca
+  const caber = () => [[c1, 10.5, 70], [c2, 20, 88], [c3, 11, 80]].forEach(([t, base, max]) => {
+    t.style.fontSize = base + "px";
+    const w = t.getComputedTextLength();
+    if (w > max) t.style.fontSize = (base * max / w).toFixed(1) + "px";
+  });
+  caber();
+  $$(".aloc-fatia, .aloc-item", el).forEach((n) => {
+    n.addEventListener("mouseenter", () => realcar(+n.dataset.i));
+    n.addEventListener("mouseleave", () => realcar(null));
+    n.addEventListener("focus", () => realcar(+n.dataset.i));
+    n.addEventListener("blur", () => realcar(null));
+  });
   $$("[data-aloc-t]", el).forEach((b) => b.onclick = () => ir("#ativo-" + b.dataset.alocT));
   $$("[data-aloc-classe]", el).forEach((b) => b.onclick = () => { UI.tipo = b.dataset.alocClasse; UI.preset = 0; UI.ordem = null; ir("#explorar"); });
 }
