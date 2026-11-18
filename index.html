@@ -146,7 +146,7 @@ nav.menu svg{width:18px;height:18px;flex:none}
 .servicos svg{width:17px;height:17px;flex:none}
 .barra-topo .busca{margin-left:auto;max-width:280px;min-width:214px}
 .barra-topo .usuario{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--tinta-2);white-space:nowrap}
-@media (max-width:1320px){.barra-dentro{flex-wrap:wrap;row-gap:6px}.servicos{order:5;width:100%;flex:auto;margin:0 -11px}}
+@media (max-width:1580px){.barra-dentro{flex-wrap:wrap;row-gap:6px}.servicos{order:5;width:100%;flex:auto;margin:0 -11px}}
 @media (max-width:700px){.barra-topo{position:static}.barra-dentro{padding:10px 18px;gap:12px}.barra-topo .busca{order:6;max-width:none;width:100%;margin-left:0}.barra-topo .usuario{margin-left:auto}.barra-topo .usuario .nome{display:none}}
 .demo{background:var(--ouro-claro);color:#6B4D10;padding:9px 36px;font-size:13px;border-bottom:1px solid #E8D8B0}
 .conteudo{padding:28px 36px 64px;max-width:1280px}
@@ -487,6 +487,45 @@ details.ajustar .painel{border:none;padding:0}
 .filtrao-cta{display:inline-block;margin-top:8px;font-weight:700;color:#8A6416;background:linear-gradient(120deg,#F3E3B5,#FFF6DB);padding:5px 10px;border-radius:999px;text-decoration:none}
 .plano-botoes{display:flex;flex-wrap:wrap;gap:10px}
 .imp-ajuste{display:grid;gap:8px;margin-top:6px}
+.legenda-multi{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--tinta-2);margin-bottom:8px}
+.legenda-multi i,.cmp-chip i,.ponto-cor{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.cmp-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.cmp-escolha .chips{margin:12px 0 0}
+.cmp-chip{display:inline-flex;align-items:center;gap:2px;cursor:default}
+.cmp-chip button{border:0;background:none;color:var(--tinta-3);font-size:17px;line-height:1;padding:0 2px 0 6px;cursor:pointer}
+.cmp-chip button:hover{color:var(--queda)}
+.cmp-tabela th small{display:block;font-weight:400;color:var(--tinta-3);font-size:11.5px;max-width:150px;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp-tabela td small{display:block;font-size:11.5px}
+.cmp-tabela td.destaque{background:var(--verde-claro);font-weight:700;color:var(--verde)}
+.btn.favoritar[aria-pressed="true"]{color:#A9781C;border-color:#E2C77E;background:var(--ouro-claro)}
+.btn.favoritar[aria-pressed="true"] svg{fill:#D4A537;stroke:#B88A2C}
+.ativo-cab .acoes .btn{display:inline-flex;align-items:center;gap:6px}
+.ativo-cab .acoes .btn svg{width:17px;height:17px}
+.cal-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.cal-topo h2{margin:0}
+.cal-legenda{display:flex;gap:16px;font-size:12.5px;color:var(--tinta-3);margin-bottom:10px}
+.cal-legenda i{font-style:normal}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-sem{font-size:12px;color:var(--tinta-3);text-align:center;padding:2px 0}
+.cal-dia{min-height:86px;border:1px solid var(--linha-2);border-radius:10px;padding:5px;display:flex;flex-direction:column;gap:3px;background:var(--branco)}
+.cal-dia.fora{border:0;background:none}
+.cal-dia.hoje{border-color:var(--verde);box-shadow:inset 0 0 0 1px var(--verde)}
+.cal-num{font-size:12px;color:var(--tinta-3);font-weight:600}
+.cal-item{display:block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 5px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-item.com{color:var(--verde);background:var(--verde-claro)}
+.cal-item.pag{color:#8A6416;background:var(--ouro-claro)}
+.radar-mes{margin:18px 0 6px;font-size:16px}
+.radar-mes:first-of-type{margin-top:4px}
+.comparar-com{font-size:13px;color:var(--tinta-3);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.comparar-com select{font:inherit;color:var(--tinta);border:1px solid var(--linha);border-radius:8px;padding:4px 8px;background:var(--branco)}
+.grade-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin:16px 0}
+.numeros.dois{grid-template-columns:repeat(2,minmax(0,1fr))}
+.numeros.dois > div:nth-child(2n){border-right:none}
+.numeros.dois > div:nth-child(-n+2){border-bottom:1px solid var(--linha-2)}
+.grade-2 > .painel{margin:0}
+.form-col{display:grid;gap:12px}
+.form-col .faixa span{align-self:center;color:var(--tinta-3);font-size:13px;white-space:nowrap}
+@media (max-width:900px){.grade-2{grid-template-columns:1fr}.cal{gap:2px}.cal-dia{min-height:58px;padding:2px;border-radius:7px}.cal-item{font-size:8.5px;padding:0 2px;letter-spacing:-.2px;text-overflow:clip}}
 .imp-ajuste[hidden]{display:none}
 .btn.pix{background:#32BCAD;border-color:#2AA597;color:#04302B;font-weight:800}
 .btn.pix:hover{background:#2AA597}
@@ -1370,6 +1409,10 @@ const ICO = {
   busca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
   analise: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 3v18M12 6v14M18 2v16"/><rect x="4" y="7" width="4" height="8" rx="1" fill="currentColor" stroke="none"/><rect x="10" y="10" width="4" height="5" rx="1"/><rect x="16" y="5" width="4" height="9" rx="1" fill="currentColor" stroke="none"/></svg>',
   importar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
+  comparar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/></svg>',
+  agenda: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6" fill="currentColor"/></svg>',
+  indicadores: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>',
+  estrela: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></svg>',
   lapis: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>',
   lixo: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
 };
@@ -1593,7 +1636,7 @@ function telaCarteiras() {
   $("#raiz").innerHTML = `<header class="barra-topo"><div class="barra-dentro">
       <a href="#carteiras" class="marca-link" aria-label="Milhão, tela inicial">${logoHTML("pequena")}</a>
       <nav class="servicos" aria-label="Serviços do Milhão">
-        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("explorar", "Ações e FIIs")}${servico("ferramentas", "Ferramentas")}${servico("importar", "Importar da B3")}
+        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ações e FIIs")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("importar", "Importar da B3")}
       </nav>
       <div class="busca">${ICO.busca}
         <input type="search" id="busca" placeholder="Buscar ação ou FII" aria-label="Buscar ativo" autocomplete="off">
@@ -1669,7 +1712,7 @@ function moldura(rota) {
       <a href="#carteiras" class="marca-link" aria-label="Milhão, voltar para a tela inicial">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
-        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("explorar", "Ações e FIIs")}${item("ferramentas", "Ferramentas")}${item("perfil", "Perfil")}
+        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ações e FIIs")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("perfil", "Perfil")}
       </nav>
       <div class="rodape">
         <span>Cotações de fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span>
@@ -1747,7 +1790,9 @@ rotas.carteira = async (el) => {
       <div><span>Lucro em vendas</span><strong class="${cls(realizado)}">${brl(realizado)}</strong></div>
     </div>
     <div class="grade g-ativo">
-      <div class="painel"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">Evolução do patrimônio</h2><span class="fraco">Tracejado: valor investido</span></div><div class="grafico" id="g-evolucao"></div></div>
+      <div class="painel"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">Evolução do patrimônio</h2>
+        <label class="comparar-com">Comparar com <select id="ref-evolucao"><option value="">o valor investido</option><option value="cdi">o CDI</option>${S.porTicker.BOVA11 ? `<option value="ibov">o Ibovespa</option>` : ""}${S.porTicker.XFIX11 ? `<option value="ifix">o IFIX</option>` : ""}</select></label></div>
+        <div class="grafico" id="g-evolucao"></div><p class="fraco" id="ref-nota" style="margin:8px 0 0">Tracejado: valor investido.</p></div>
       <div class="painel"><h2>Onde está o dinheiro</h2><div id="alocacao"></div></div>
     </div>
       <div class="painel"><h2>Posições</h2><div style="overflow:auto"><table>
@@ -1797,8 +1842,21 @@ rotas.carteira = async (el) => {
   });
   const [ev, provs] = await Promise.all([evolucao(c), proventosDaCarteira(c)]);
   if (!$("#g-evolucao")) return;
-  graficoLinha($("#g-evolucao"), ev, { segunda: ev.map((p) => ({ d: p.d, v: p.custo })), formato: compacto,
-    semDados: "O gráfico começa a se formar no segundo pregão depois da primeira compra." });
+  const desenharEvolucao = async () => {
+    const qual = $("#ref-evolucao")?.value || "";
+    let segunda = ev.map((p) => ({ d: p.d, v: p.custo })), nota = "Tracejado: valor investido.";
+    if (qual) {
+      const ref = evolucaoReferencia(ev, c, await serieReferencia(qual));
+      const nome = qual === "cdi" ? "CDI" : ETF_REFERENCIA[qual][1];
+      if (ref) { segunda = ref; nota = `Tracejado: quanto o mesmo dinheiro teria hoje no ${nome}, aplicando e resgatando nas mesmas datas das suas compras e vendas${qual === "cdi" ? "" : ` (pelo ETF ${ETF_REFERENCIA[qual][0]})`}. Hoje: <b>${compacto(ref.at(-1).v)}</b> no ${nome}, contra <b>${compacto(ev.at(-1).v)}</b> na carteira.`; }
+      else nota = `Ainda não há dados do ${nome} para comparar. Mostrando o valor investido.`;
+    }
+    if (!$("#g-evolucao")) return;
+    graficoLinha($("#g-evolucao"), ev, { segunda, formato: compacto, semDados: "O gráfico começa a se formar no segundo pregão depois da primeira compra." });
+    $("#ref-nota").innerHTML = nota;
+  };
+  if ($("#ref-evolucao")) $("#ref-evolucao").onchange = desenharEvolucao;
+  await desenharEvolucao();
   $("#prov-total").textContent = brl(provs.filter((p) => p.recebido).reduce((s, p) => s + p.total, 0));
 };
 
@@ -2291,13 +2349,26 @@ const PRESETS = {
     ["Mais descontadas (Graham)", (a) => a.filter((x) => x.graham), "up_graham", -1],
     ["Buy and hold", (a) => a.filter((x) => x.pontos != null), "pontos", -1],
     ["Maiores ROE", (a) => a.filter((x) => x.roe != null), "roe", -1],
+    ["Maiores margens líquidas", (a) => a.filter((x) => x.m_liq != null), "m_liq", -1],
+    ["Maior lucro", (a) => a.filter((x) => x.lucro > 0), "lucro", -1],
+    ["Maior valor de mercado", (a) => a.filter((x) => x.vm > 0), "vm", -1],
+    ["Menos endividadas", (a) => a.filter((x) => x.dl_ebitda != null), "dl_ebitda", 1],
+    ["Maiores altas em 30 dias", (a) => a.filter((x) => x.var_30d != null), "var_30d", -1],
+    ["Maiores altas em 12 meses", (a) => a.filter((x) => x.var_12m != null), "var_12m", -1],
+    ["Favoritos", (a) => a.filter((x) => ehFavorito(x.t)), "liq", -1],
   ],
   fii: [
     ["Mais negociados", (a) => a, "liq", -1],
     ["Maiores dividend yields", (a) => a.filter((x) => x.dy > 0), "dy", -1],
     ["Menores P/VP", (a) => a.filter((x) => x.pvp > 0), "pvp", 1],
+    ["Maiores altas em 30 dias", (a) => a.filter((x) => x.var_30d != null), "var_30d", -1],
+    ["Maiores altas em 12 meses", (a) => a.filter((x) => x.var_12m != null), "var_12m", -1],
+    ["Favoritos", (a) => a.filter((x) => ehFavorito(x.t)), "liq", -1],
   ],
 };
+// coluna extra quando o ranking ordena por um indicador que a tabela não mostra
+const COL_EXTRA = { m_liq: ["Margem líquida", pct], lucro: ["Lucro 12 meses", compacto], vm: ["Valor de mercado", compacto],
+  dl_ebitda: ["Dív. líq./EBITDA", xv], var_30d: ["30 dias", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`] };
 const COLS = {
   acao: [["t", "Ativo"], ["setor", "Setor"], ["preco", "Cotação", brl], ["var_12m", "12 meses", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`],
     ["dy", "DY", pct], ["pl", "P/L", xv], ["pvp", "P/VP", xv], ["roe", "ROE", pct],
@@ -2336,17 +2407,20 @@ rotas.explorar = (el) => {
       if (mx !== undefined && mx !== "") lista = lista.filter((a) => a[k] != null && a[k] * esc_ <= +mx);
     }
     const ord = UI.ordem || chave, d = UI.ordem ? UI.dir : dir;
+    const cols = COL_EXTRA[chave] && !COLS[UI.tipo].some(([k]) => k === chave) ? [...COLS[UI.tipo].slice(0, 3), [chave, ...COL_EXTRA[chave]], ...COLS[UI.tipo].slice(3)] : COLS[UI.tipo];
     lista.sort((a, b) => {
       const x = a[ord], y = b[ord];
       if (vazio(x) && vazio(y)) return 0; if (vazio(x)) return 1; if (vazio(y)) return -1;
       return (typeof x === "string" ? x.localeCompare(y) : x - y) * d;
     });
     $("#contagem").textContent = `${lista.length} ${UI.tipo === "fii" ? "fundos" : "ações"}`;
-    $("#tabela").innerHTML = lista.length ? `<table><thead><tr><th>#</th>${COLS[UI.tipo].map(([k, n]) => `<th class="ordena ${k === "setor" || k === "t" ? "esq" : ""}" data-k="${k}" aria-sort="${ord === k ? (d > 0 ? "ascending" : "descending") : "none"}">${n}</th>`).join("")}</tr></thead>
-      <tbody>${lista.map((a, i) => `<tr><td class="fraco">${i + 1}</td>${COLS[UI.tipo].map(([k, , f]) => k === "t"
+    $("#tabela").innerHTML = lista.length ? `<table><thead><tr><th>#</th>${cols.map(([k, n]) => `<th class="ordena ${k === "setor" || k === "t" ? "esq" : ""}" data-k="${k}" aria-sort="${ord === k ? (d > 0 ? "ascending" : "descending") : "none"}">${n}</th>`).join("")}</tr></thead>
+      <tbody>${lista.map((a, i) => `<tr><td class="fraco">${i + 1}</td>${cols.map(([k, , f]) => k === "t"
         ? `<td class="esq"><a class="tk" href="#ativo-${a.t}">${a.t}</a><small>${esc(a.n)}</small></td>`
         : k === "setor" ? `<td class="esq sutil" style="max-width:150px;overflow:hidden;text-overflow:ellipsis" title="${esc(a.setor)}">${esc(a.setor)}</td>` : `<td>${f(a[k])}</td>`).join("")}</tr>`).join("")}</tbody></table>`
-      : `<div class="vazio"><h3>Nenhum ativo passa nesses filtros</h3><p>Afrouxe um dos limites ou escolha outro setor.</p></div>`;
+      : PRESETS[UI.tipo][UI.preset][0] === "Favoritos" && !favoritos().length
+        ? `<div class="vazio"><h3>Você ainda não tem favoritos</h3><p>Na página de um ativo, toque em "Favoritar" para acompanhar por aqui e na agenda de dividendos.</p></div>`
+        : `<div class="vazio"><h3>Nenhum ativo passa nesses filtros</h3><p>Afrouxe um dos limites ou escolha outro setor.</p></div>`;
     $$("th.ordena").forEach((th) => th.onclick = () => {
       const k = th.dataset.k; UI.dir = UI.ordem === k ? -UI.dir : (k === "t" || k === "setor" ? 1 : -1); UI.ordem = k; desenhar();
     });
@@ -2523,13 +2597,21 @@ rotas.ativo = async (el, t) => {
         <p class="sutil" style="margin:4px 0 0">${esc(d.nome)}, ${esc(d.setor)}</p></div>
       <div><div class="preco">${brl(d.preco)}</div>
         <p style="margin:2px 0 10px;text-align:right" class="${cls(d.var_dia)}">${pct(d.var_dia, 2, true)} no dia, fechamento de ${dataBR(d.data)}</p>
-        <div class="acoes" style="justify-content:flex-end"><button class="btn primario" id="add">Adicionar à carteira</button></div></div>
+        <div class="acoes" style="justify-content:flex-end">
+          <button class="btn favoritar" id="fav" aria-pressed="${ehFavorito(d.ticker)}">${ICO.estrela}${ehFavorito(d.ticker) ? "Favorito" : "Favoritar"}</button>
+          <a class="btn" href="#comparar-${[d.ticker, ...(d.pares || []).filter((p) => S.porTicker[p]).slice(0, 4)].join(",")}">${ICO.comparar}Comparar com o setor</a>
+          <button class="btn primario" id="add">Adicionar à carteira</button></div></div>
     </div>
     ${pos ? `<p class="sutil" style="margin:-8px 0 16px">Você tem ${qtdF(pos.qtd)} ${fii ? "cotas" : "ações"} a ${brl(pos.pm)} de preço médio: <b class="${cls(pos.resultado)}">${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}</b>.</p>` : ""}
     <div class="abas" role="tablist">${abas.map(([k, n], i) => `<button role="tab" aria-selected="${i === 0}" data-aba="${k}">${n}</button>`).join("")}</div>
     ${abas.map(([k], i) => `<section data-painel="${k}" class="${i ? "oculto" : ""}">${(fii ? PAINEIS_FII : PAINEIS_ACAO)[k](d, ind, med)}</section>`).join("")}
     <p class="fraco" style="margin-top:18px">Calculado pelo Milhão com dados da CVM${d.base?.referencia ? " até " + dataBR(d.base.referencia) : ""} e cotações da B3. Não é recomendação de investimento.</p>`;
   $("#add").onclick = () => abrirLancamento(d.ticker);
+  $("#fav").onclick = (e) => {
+    const agora = alternarFavorito(d.ticker), b = e.currentTarget;
+    b.setAttribute("aria-pressed", agora); b.innerHTML = ICO.estrela + (agora ? "Favorito" : "Favoritar");
+    aviso(agora ? `${d.ticker} entrou nos favoritos` : `${d.ticker} saiu dos favoritos`);
+  };
   // gráficos só são desenhados quando a aba aparece (escondidos, eles ficariam sem largura)
   const desenhado = new Set();
   const desenhar = (k) => {
@@ -2928,8 +3010,10 @@ function blocoMercado() {
 }
 
 /* ---------- tela: ferramentas ---------- */
-rotas.ferramentas = (el) => {
-  el.innerHTML = `<div class="cabeca"><div><h1>Ferramentas</h1><p class="sutil" style="margin:6px 0 0">Simule quanto o dinheiro cresce e quanto tempo falta para o primeiro milhão.</p></div></div>
+rotas.ferramentas = async (el) => {
+  await carregarIndicadores();
+  if (!$("#conteudo") || location.hash !== "#ferramentas") return;
+  el.innerHTML = `<div class="cabeca"><div><h1>Ferramentas</h1><p class="sutil" style="margin:6px 0 0">Simule juros, renda com dividendos, renda fixa e a sua reserva de emergência.</p></div></div>
     <div class="painel"><h2>Juros compostos</h2><div class="calc">
       <form id="f-juros">
         <label class="campo">Valor inicial (R$)<input type="number" name="ini" value="10000" min="0" step="100"></label>
@@ -2944,7 +3028,8 @@ rotas.ferramentas = (el) => {
         <label class="campo">Aporte mensal (R$)<input type="number" name="mes" value="1500" min="0" step="50"></label>
         <label class="campo">Rentabilidade (% ao ano)<input type="number" name="taxa" value="10" step="0.1"></label>
       </form>
-      <div id="r-milhao"></div></div></div>`;
+      <div id="r-milhao"></div></div></div>
+    ${ferramentasExtras()}`;
   const simular = (ini, mes, taxa, meses) => {
     const im = Math.pow(1 + taxa / 100, 1 / 12) - 1; let v = ini, inv = ini; const pts = [{ m: 0, v, inv }];
     for (let k = 1; k <= meses; k++) { v = v * (1 + im) + mes; inv += mes; pts.push({ m: k, v, inv }); }
@@ -2964,7 +3049,360 @@ rotas.ferramentas = (el) => {
          <p class="sutil">Por volta de ${new Date(rotulo(k)).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}. Até lá, você coloca ${brl(pts[k].inv, 0)} do bolso e os juros rendem ${brl(pts[k].v - pts[k].inv, 0)}.</p>`;
   };
   $("#f-juros").oninput = juros; $("#f-milhao").oninput = milhao; juros(); milhao();
+  ligarFerramentasExtras();
 };
+
+/* ---------- favoritos (ficam na conta, valem em qualquer aparelho) ---------- */
+const favoritos = () => (S.estado.favoritos ??= []);
+const ehFavorito = (t) => favoritos().includes(t);
+function alternarFavorito(t) {
+  const f = favoritos(), i = f.indexOf(t);
+  if (i >= 0) f.splice(i, 1); else f.push(t);
+  salvar();
+  return i < 0;
+}
+const naCarteira = () => new Set(posicoes(carteira() || { lancamentos: [] }).filter((p) => p.qtd > 0).map((p) => p.ticker));
+
+const maiuscula = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ---------- gráfico de várias linhas (comparador e indicadores) ---------- */
+const CORES_SERIES = ["var(--verde)", "#C9971C", "#2F6FB3", "#C2453D", "#7B57B8"];
+function graficoMulti(el, series, { altura = 300, formato = (v) => pct(v, 1, true) } = {}) {
+  el.innerHTML = "";
+  series = series.filter((s) => s.pontos.length >= 2);
+  if (!series.length) { el.innerHTML = `<p class="fraco">Sem dados suficientes para o gráfico.</p>`; return; }
+  const L = Math.max(el.clientWidth, 320), A = altura, m = { e: 8, d: 64, t: 12, b: 26 };
+  const vals = series.flatMap((s) => s.pontos.map((p) => p.v));
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { min -= 1; max += 1; }
+  const pad = (max - min) * 0.08; min -= pad; max += pad;
+  const t0 = Math.min(...series.map((s) => Date.parse(s.pontos[0].d))), t1 = Math.max(...series.map((s) => Date.parse(s.pontos.at(-1).d)));
+  const X = (d) => m.e + ((Date.parse(d) - t0) / Math.max(t1 - t0, 1)) * (L - m.e - m.d);
+  const Y = (v) => m.t + (1 - (v - min) / (max - min)) * (A - m.t - m.b);
+  let grade = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = min + ((max - min) / 4) * k, y = Y(v);
+    grade += `<line x1="${m.e}" x2="${L - m.d}" y1="${y}" y2="${y}" stroke="var(--linha-2)"/><text x="${L - m.d + 8}" y="${y + 4}" font-size="11.5" fill="var(--tinta-3)">${esc(formato(v))}</text>`;
+  }
+  const datasEixo = [0, 1, 2, 3].map((k) => new Date(t0 + (k / 3) * (t1 - t0)).toISOString().slice(0, 10));
+  const eixo = datasEixo.map((d, k) => `<text x="${X(d)}" y="${A - 6}" font-size="11.5" fill="var(--tinta-3)" text-anchor="${k === 0 ? "start" : k === 3 ? "end" : "middle"}">${dataBR(d)}</text>`).join("");
+  const linhas = series.map((s, i) => `<path d="${s.pontos.map((p, k) => (k ? "L" : "M") + X(p.d).toFixed(1) + " " + Y(p.v).toFixed(1)).join("")}" fill="none" stroke="${s.cor || CORES_SERIES[i % 5]}" stroke-width="2"${s.tracejado ? ' stroke-dasharray="5 4"' : ""}/>`).join("");
+  el.innerHTML = `<div class="legenda-multi">${series.map((s, i) => `<span><i style="background:${s.cor || CORES_SERIES[i % 5]}"></i>${esc(s.nome)}</span>`).join("")}</div>
+    <svg viewBox="0 0 ${L} ${A}" height="${A}" role="img" aria-label="Gráfico comparando ${esc(series.map((s) => s.nome).join(", "))}">
+      ${min < 0 && max > 0 ? `<line x1="${m.e}" x2="${L - m.d}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--tinta-3)" stroke-width="1" opacity=".5"/>` : ""}
+      ${grade}${eixo}${linhas}
+      <line class="mira" y1="${m.t}" y2="${A - m.b}" stroke="var(--tinta-3)" opacity="0"/>
+      <rect x="${m.e}" y="0" width="${L - m.e - m.d}" height="${A}" fill="transparent"/>
+    </svg><div class="dica oculto"></div>`;
+  const svg = $("svg", el), dica = $(".dica", el), mira = $(".mira", el);
+  const valorEm = (s, alvo) => {   // último ponto da série até a data
+    let lo = 0, hi = s.pontos.length - 1;
+    if (Date.parse(s.pontos[0].d) > alvo) return null;
+    while (lo < hi) { const md = (lo + hi + 1) >> 1; if (Date.parse(s.pontos[md].d) <= alvo) lo = md; else hi = md - 1; }
+    return s.pontos[lo];
+  };
+  svg.addEventListener("mousemove", (ev) => {
+    const r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * (L / r.width);
+    const alvo = t0 + ((x - m.e) / (L - m.e - m.d)) * (t1 - t0);
+    const pts = series.map((s) => [s, valorEm(s, alvo)]).filter(([, p]) => p);
+    if (!pts.length) return;
+    const d = pts[0][1].d;
+    mira.setAttribute("x1", X(d)); mira.setAttribute("x2", X(d)); mira.setAttribute("opacity", 1);
+    dica.innerHTML = `${dataBR(d)}<br>${pts.map(([s, p], i) => `<span style="color:${s.cor || CORES_SERIES[series.indexOf(s) % 5]}">●</span> ${esc(s.nome)} <b>${esc(formato(p.v))}</b>`).join("<br>")}`;
+    dica.style.left = (X(d) * r.width / L) + "px"; dica.style.top = "30px";
+    dica.classList.remove("oculto");
+  });
+  svg.addEventListener("mouseleave", () => { dica.classList.add("oculto"); mira.setAttribute("opacity", 0); });
+}
+
+/* ---------- tela: comparar ativos ---------- */
+const LINHAS_COMPARAR = [
+  // chave, nome, formato, direção do destaque (1 maior, -1 menor, 0 sem), para quem (acao, fii ou ambos)
+  ["setor", "Setor ou segmento", (v) => esc(v ?? "–"), 0, "ambos"],
+  ["preco", "Cotação", brl, 0, "ambos"],
+  ["var_30d", "Variação em 30 dias", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`, 0, "ambos"],
+  ["var_12m", "Variação em 12 meses", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`, 0, "ambos"],
+  ["dy", "Dividend yield (12 meses)", pct, 1, "ambos"],
+  ["pl", "P/L", xv, -1, "acao"],
+  ["pvp", "P/VP", xv, -1, "ambos"],
+  ["roe", "ROE", pct, 1, "acao"],
+  ["m_liq", "Margem líquida", pct, 1, "acao"],
+  ["roic", "ROIC", pct, 1, "acao"],
+  ["dl_ebitda", "Dívida líquida / EBITDA", xv, -1, "acao"],
+  ["cagr_rec", "Crescimento da receita (5 anos, por ano)", (v) => pct(v, 1, true), 1, "acao"],
+  ["cagr_luc", "Crescimento do lucro (5 anos, por ano)", (v) => pct(v, 1, true), 1, "acao"],
+  ["liq_corr", "Liquidez corrente", xv, 1, "acao"],
+  ["lucro", "Lucro (12 meses)", compacto, 0, "acao"],
+  ["vm", "Valor de mercado", compacto, 0, "acao"],
+  ["graham", "Preço justo de Graham", null, 0, "acao"],
+  ["bazin", "Preço teto de Bazin (6%)", null, 0, "acao"],
+  ["pontos", "Nota buy and hold", (v) => vazio(v) ? "–" : v + "/8", 1, "acao"],
+  ["vp", "Valor patrimonial por cota", brl, 0, "fii"],
+  ["magic", "Magic number", (v) => vazio(v) ? "–" : F.n0.format(v), 0, "fii"],
+  ["liq", "Liquidez diária", compacto, 1, "ambos"],
+];
+rotas.comparar = async (el, arg = "") => {
+  const sel = [...new Set(String(arg).toUpperCase().split(",").map((t) => t.trim()).filter((t) => S.porTicker[t]))].slice(0, 5);
+  const irPara = (lista) => ir("#comparar" + (lista.length ? "-" + lista.join(",") : ""));
+  const ativos = sel.map((t) => S.porTicker[t]);
+  const sugestao = S.ativos.filter((a) => a.tipo === "acao").slice(0, 3).map((a) => a.t);
+  el.innerHTML = `<div class="cabeca"><div><h1>Comparar ativos</h1><p class="sutil" style="margin:6px 0 0">Até 5 ações ou FIIs lado a lado. Em cada linha, o destaque marca o maior ou o menor valor, conforme o indicador.</p></div></div>
+    <div class="painel cmp-escolha">
+      <form id="cmp-add" class="cmp-form">
+        <label class="campo" style="flex:1">Adicionar ativo<input type="text" id="cmp-campo" list="cmp-lista" placeholder="Digite o código, como PETR4 ou MXRF11" autocomplete="off" ${sel.length >= 5 ? "disabled" : ""}></label>
+        <button class="btn primario" ${sel.length >= 5 ? "disabled" : ""}>Adicionar</button>
+      </form>
+      <datalist id="cmp-lista">${S.ativos.map((a) => `<option value="${a.t}">${esc(a.n)}</option>`).join("")}</datalist>
+      <div class="chips">${sel.map((t, i) => `<span class="chip cmp-chip"><i style="background:${CORES_SERIES[i]}"></i>${t}<button type="button" data-tira="${t}" aria-label="Tirar ${t} da comparação">×</button></span>`).join("")}
+        ${sel.length >= 5 ? `<span class="fraco">Máximo de 5 ativos.</span>` : ""}</div>
+    </div>
+    ${!sel.length ? `<div class="painel vazio"><h3>Escolha os ativos para comparar</h3><p>Digite o código acima, ou abra a página de um ativo e toque em "Comparar com o setor".</p>
+        <div class="acoes"><button class="btn" id="cmp-exemplo">Comparar ${sugestao.join(", ")}</button></div></div>` : `
+    <div class="painel"><h2>Indicadores</h2><div class="rolagem"><table class="cmp-tabela"><thead><tr><th class="esq">Indicador</th>
+      ${ativos.map((a, i) => `<th><a class="tk" href="#ativo-${a.t}"><i class="ponto-cor" style="background:${CORES_SERIES[i]}"></i>${a.t}</a><small>${esc(a.n)}</small></th>`).join("")}</tr></thead>
+      <tbody>${LINHAS_COMPARAR.filter(([, , , , para]) => para === "ambos" || ativos.some((a) => a.tipo === para)).map(([k, nome, f, dir, para]) => {
+        const vale = (a) => para === "ambos" || a.tipo === para;
+        const valores = ativos.map((a) => (vale(a) ? a[k] : null));
+        let alvo = null;
+        if (dir) {
+          const nums = valores.map((v, i) => [v, i]).filter(([v]) => typeof v === "number" && !vazio(v) && (dir > 0 || v > 0));
+          if (nums.length >= 2) alvo = nums.reduce((b, c) => (dir > 0 ? c[0] > b[0] : c[0] < b[0]) ? c : b)[1];
+        }
+        const cel = (v, i) => {
+          const a = ativos[i];
+          if (!vale(a)) return "–";
+          if (k === "graham" || k === "bazin") return vazio(v) ? "–" : `${brl(v)}<small class="${cls(v / a.preco - 1)}">${pct(v / a.preco - 1, 0, true)} da cotação</small>`;
+          return f(v);
+        };
+        return `<tr><td class="esq">${nome}</td>${valores.map((v, i) => `<td class="${i === alvo ? "destaque" : ""}">${cel(v, i)}</td>`).join("")}</tr>`;
+      }).join("")}</tbody></table></div>
+      <p class="fraco" style="margin:10px 0 0">Graham e Bazin são estimativas automáticas com dados públicos, não recomendação de compra ou venda.</p></div>
+    <div class="painel"><h2>Variação da cotação em 12 meses</h2><div class="grafico" id="g-cmp"><p class="fraco">Carregando…</p></div></div>`}`;
+  $("#cmp-add").onsubmit = (e) => {
+    e.preventDefault();
+    const t = $("#cmp-campo").value.trim().toUpperCase().split(/\s/)[0];
+    if (!S.porTicker[t]) { aviso(`Não achei ${t || "esse código"} na base. Confira o código.`); return; }
+    if (sel.includes(t)) { aviso(`${t} já está na comparação.`); return; }
+    irPara([...sel, t]);
+  };
+  $$("[data-tira]").forEach((b) => b.onclick = () => irPara(sel.filter((t) => t !== b.dataset.tira)));
+  if ($("#cmp-exemplo")) $("#cmp-exemplo").onclick = () => irPara(sugestao);
+  if (!sel.length) return;
+  const limite = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
+  const series = await Promise.all(sel.map(async (t, i) => {
+    try {
+      const pts = (await detalhe(t)).precos.filter((p) => p[0] >= limite);
+      const base = pts[0]?.[1];
+      return { nome: t, cor: CORES_SERIES[i], pontos: base ? pts.map((p) => ({ d: p[0], v: p[1] / base - 1 })) : [] };
+    } catch (e) { return { nome: t, cor: CORES_SERIES[i], pontos: [] }; }
+  }));
+  if ($("#g-cmp")) graficoMulti($("#g-cmp"), series);
+};
+
+/* ---------- tela: agenda de dividendos ---------- */
+const UIA = { filtro: "todos", aba: "anunciados", mes: null };
+rotas.agenda = async (el) => {
+  el.innerHTML = `<p class="fraco">Carregando a agenda…</p>`;
+  try { S.agenda ??= await j("data/agenda.json"); } catch (e) {
+    el.innerHTML = `<div class="cabeca"><div><h1>Agenda de dividendos</h1></div></div><div class="painel vazio"><h3>A agenda ainda está sendo preparada</h3><p>Ela aparece depois da próxima atualização dos dados, que roda todo dia útil à noite.</p></div>`;
+    return;
+  }
+  const hoje = hojeISO(), c = carteira(), minhas = naCarteira(), favs = new Set(favoritos());
+  const passa = (t) => UIA.filtro === "carteira" ? minhas.has(t) : UIA.filtro === "favoritos" ? favs.has(t) : true;
+  const anunciados = S.agenda.anunciados.filter((p) => passa(p.t));
+  const radar = S.agenda.radar.filter((p) => passa(p.t));
+  UIA.mes ??= hoje.slice(0, 7);
+  const recebe = (p) => {
+    if (!c || !minhas.has(p.t) && !c.lancamentos.some((l) => l.ticker === p.t)) return null;
+    const q = p.data_com >= hoje ? (posicoes(c).find((x) => x.ticker === p.t)?.qtd || 0) : qtdEm(c, p.t, p.data_com);
+    return q > 0 ? q * p.valor : null;
+  };
+  const linha = (p) => { const r = recebe(p); return `<tr><td class="esq"><a class="tk" href="#ativo-${p.t}">${p.t}</a></td><td class="esq">${esc(p.tipo || "Provento")}</td>
+    <td>${dataBR(p.data_com)}</td><td>${dataBR(p.pagamento)}</td><td>${brl(p.valor, 4)}</td><td>${pct(p.dy, 2)}</td><td>${r ? `<b class="ouro">${brl(r)}</b>` : "–"}</td></tr>`; };
+  const cab = `<thead><tr><th class="esq">Ativo</th><th class="esq">Tipo</th><th>Data com</th><th>Pagamento</th><th>Por ação ou cota</th><th>DY do provento</th><th>Você recebe</th></tr></thead>`;
+  const tabela = (lista, vazioTxt) => lista.length ? `<div class="rolagem"><table>${cab}<tbody>${lista.map(linha).join("")}</tbody></table></div>` : `<p class="fraco">${vazioTxt}</p>`;
+  const aindaDa = anunciados.filter((p) => p.data_com >= hoje);
+  const aCaminho = anunciados.filter((p) => p.data_com < hoje && p.pagamento && p.pagamento >= hoje).sort((a, b) => a.pagamento.localeCompare(b.pagamento));
+  const vazioFiltro = UIA.filtro === "carteira" ? "Nenhum ativo da sua carteira aqui." : UIA.filtro === "favoritos" ? "Nenhum favorito aqui. Marque favoritos na página de cada ativo." : "Nada anunciado por enquanto.";
+
+  const calendario = () => {
+    const [a, m] = UIA.mes.split("-").map(Number), prim = new Date(Date.UTC(a, m - 1, 1)), dias = new Date(Date.UTC(a, m, 0)).getUTCDate();
+    const porDia = {};
+    for (const p of anunciados) {
+      if (p.data_com.startsWith(UIA.mes)) (porDia[+p.data_com.slice(8)] ??= []).push(["com", p]);
+      if (p.pagamento?.startsWith(UIA.mes)) (porDia[+p.pagamento.slice(8)] ??= []).push(["pag", p]);
+    }
+    const nomeMes = maiuscula(prim.toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }));
+    const vazios = prim.getUTCDay();
+    let cel = "";
+    for (let k = 0; k < vazios; k++) cel += `<div class="cal-dia fora"></div>`;
+    for (let d = 1; d <= dias; d++) {
+      const iso = `${UIA.mes}-${String(d).padStart(2, "0")}`, itens = porDia[d] || [];
+      cel += `<div class="cal-dia ${iso === hoje ? "hoje" : ""}"><span class="cal-num">${d}</span>${itens.slice(0, 4).map(([tipo, p]) => `<a href="#ativo-${p.t}" class="cal-item ${tipo}" title="${p.t}: ${tipo === "com" ? "data com" : "pagamento"} de ${brl(p.valor, 4)} por ação">${p.t}</a>`).join("")}${itens.length > 4 ? `<span class="fraco">+${itens.length - 4}</span>` : ""}</div>`;
+    }
+    return `<div class="cal-topo"><button class="btn" data-mes="-1" aria-label="Mês anterior">‹</button><h2>${nomeMes}</h2><button class="btn" data-mes="1" aria-label="Próximo mês">›</button></div>
+      <div class="cal-legenda"><span><i class="cal-item com">Ativo</i> data com</span><span><i class="cal-item pag">Ativo</i> pagamento</span></div>
+      <div class="cal"><div class="cal-sem">dom</div><div class="cal-sem">seg</div><div class="cal-sem">ter</div><div class="cal-sem">qua</div><div class="cal-sem">qui</div><div class="cal-sem">sex</div><div class="cal-sem">sáb</div>${cel}</div>`;
+  };
+  const radarHTML = () => {
+    const porMes = {};
+    for (const p of radar) (porMes[p.mes] ??= []).push(p);
+    const meses = Object.keys(porMes).sort();
+    if (!meses.length) return `<p class="fraco">${vazioFiltro}</p>`;
+    return `<p class="imp-nota" style="margin:0 0 12px">Projeção pelo histórico: o mês em que cada ação teve data com em pelo menos 2 dos últimos 3 anos. Não é anúncio. A empresa pode mudar a data, o valor ou não pagar.</p>
+      ${meses.map((mes) => `<h3 class="radar-mes">${maiuscula(new Date(mes + "-15").toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))}</h3>
+        <div class="rolagem"><table><thead><tr><th class="esq">Ação</th><th class="esq">Costuma pagar</th><th>Média por ação</th><th>DY médio</th></tr></thead><tbody>
+        ${porMes[mes].map((p) => `<tr><td class="esq"><a class="tk" href="#ativo-${p.t}">${p.t}</a></td><td class="esq">em ${p.anos} dos últimos 3 anos</td><td>${brl(p.valor, 4)}</td><td>${pct(p.dy, 2)}</td></tr>`).join("")}</tbody></table></div>`).join("")}`;
+  };
+  el.innerHTML = `<div class="cabeca"><div><h1>Agenda de dividendos</h1><p class="sutil" style="margin:6px 0 0">Datas com e pagamentos que as empresas e fundos já anunciaram, e o radar dos meses em que cada ação costuma pagar.</p></div></div>
+    <div class="chips">${[["todos", "Todo o mercado"], ["carteira", "Minha carteira"], ["favoritos", "Favoritos"]].map(([k, n]) => `<button class="chip" data-filtro="${k}" aria-pressed="${UIA.filtro === k}">${n}</button>`).join("")}</div>
+    <div class="abas" role="tablist">${[["anunciados", "Anunciados"], ["calendario", "Calendário"], ["radar", "Radar"]].map(([k, n]) => `<button role="tab" data-aba-ag="${k}" aria-selected="${UIA.aba === k}">${n}</button>`).join("")}</div>
+    ${UIA.aba === "anunciados" ? `<div class="painel"><h2>Ainda dá tempo: data com hoje ou depois</h2><p class="fraco" style="margin:-4px 0 10px">Quem tiver o ativo no fim do pregão da data com recebe o provento.</p>${tabela(aindaDa, vazioFiltro)}</div>
+      <div class="painel"><h2>Pagamento a caminho</h2>${tabela(aCaminho, vazioFiltro)}</div>`
+    : UIA.aba === "calendario" ? `<div class="painel">${calendario()}</div>` : `<div class="painel">${radarHTML()}</div>`}
+    <p class="fraco">Fontes: B3 e CVM. Valores brutos, antes de impostos (o JCP tem imposto retido na fonte).</p>`;
+  $$("[data-filtro]").forEach((b) => b.onclick = () => { UIA.filtro = b.dataset.filtro; rotas.agenda(el); });
+  $$("[data-aba-ag]").forEach((b) => b.onclick = () => { UIA.aba = b.dataset.abaAg; rotas.agenda(el); });
+  $$("[data-mes]").forEach((b) => b.onclick = () => {
+    const [a, m] = UIA.mes.split("-").map(Number), d = new Date(Date.UTC(a, m - 1 + +b.dataset.mes, 1));
+    UIA.mes = d.toISOString().slice(0, 7); rotas.agenda(el);
+  });
+};
+
+/* ---------- tela: indicadores da economia ---------- */
+async function carregarIndicadores() {
+  if (S.indicadores !== undefined) return S.indicadores;
+  try { S.indicadores = await j("data/indicadores.json"); } catch (e) { S.indicadores = null; }
+  return S.indicadores;
+}
+const ETF_REFERENCIA = { ibov: ["BOVA11", "Ibovespa"], ifix: ["XFIX11", "IFIX"] };
+rotas.indicadores = async (el) => {
+  el.innerHTML = `<p class="fraco">Carregando…</p>`;
+  const ind = await carregarIndicadores();
+  const etf = (k) => S.porTicker[ETF_REFERENCIA[k][0]];
+  const cartao = (nome, valor, detalhe, dica = "") => `<div><span>${nome}</span><strong>${valor}</strong>${detalhe ? `<small class="sutil">${detalhe}</small>` : ""}${dica ? `<small class="fraco">${dica}</small>` : ""}</div>`;
+  el.innerHTML = `<div class="cabeca"><div><h1>Indicadores</h1><p class="sutil" style="margin:6px 0 0">Juros, inflação, dólar e bolsa, para comparar com os seus investimentos.</p></div></div>
+    ${ind ? `<div class="numeros">
+      ${ind.selic ? cartao("Selic (meta)", pct(ind.selic.meta, 2) + " ao ano", `em ${dataBR(ind.selic.data)}`) : ""}
+      ${ind.cdi ? cartao("CDI", pct(ind.cdi.ao_ano, 2) + " ao ano", `${pct(ind.cdi["12m"], 2)} nos últimos 12 meses`) : ""}
+      ${ind.ipca ? cartao("IPCA (inflação)", pct(ind.ipca["12m"], 2) + " em 12 meses", `${pct(ind.ipca.mes, 2)} no mês de ${new Date(ind.ipca.data.slice(0, 7) + "-15").toLocaleDateString("pt-BR", { month: "long" })}`) : ""}
+      ${ind.dolar ? cartao("Dólar (PTAX)", brl(ind.dolar.atual, 4), `<span class="${cls(ind.dolar.var_12m)}">${pct(ind.dolar.var_12m, 1, true)}</span> em 12 meses`) : ""}
+      ${etf("ibov") ? cartao("Ibovespa", `<span class="${cls(etf("ibov").var_12m)}">${pct(etf("ibov").var_12m, 1, true)}</span>`, "em 12 meses", "pelo ETF BOVA11") : ""}
+      ${etf("ifix") ? cartao("IFIX", `<span class="${cls(etf("ifix").var_12m)}">${pct(etf("ifix").var_12m, 1, true)}</span>`, "em 12 meses", "pelo ETF XFIX11") : ""}
+    </div>
+    <div class="painel"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">Histórico</h2>
+      <div class="chips" style="margin:0">${[["selic", "Selic"], ["ipca", "IPCA em 12 meses"], ["dolar", "Dólar"], ["cdi", "CDI acumulado"]].filter(([k]) => ind[k]).map(([k, n], i) => `<button class="chip" data-ind="${k}" aria-pressed="${i === 0}">${n}</button>`).join("")}</div></div>
+      <div class="grafico" id="g-ind"></div></div>
+    <p class="fraco">Fonte: ${esc(ind.fonte || "Banco Central do Brasil")}. ${etf("ibov") || etf("ifix") ? "Ibovespa e IFIX pela cotação dos ETFs que seguem esses índices, na B3." : ""}</p>`
+    : `<div class="painel vazio"><h3>Os indicadores estão sendo preparados</h3><p>Eles aparecem depois da próxima atualização dos dados, que roda todo dia útil à noite.</p></div>`}`;
+  if (!ind) return;
+  const desenhar = (k) => {
+    const s = ind[k].serie.map(([d, v]) => ({ d, v: k === "cdi" ? v / ind.cdi.serie[0][1] - 1 : v }));
+    graficoLinha($("#g-ind"), s, { altura: 260, formato: k === "dolar" ? (v) => brl(v, 2) : (v) => pct(v, 1) });
+  };
+  $$("[data-ind]").forEach((b) => b.onclick = () => { $$("[data-ind]").forEach((x) => x.setAttribute("aria-pressed", x === b)); desenhar(b.dataset.ind); });
+  const prim = $("[data-ind]"); if (prim) desenhar(prim.dataset.ind);
+};
+
+/* ---------- referência para a evolução da carteira: o mesmo dinheiro aplicado no CDI ou num índice ---------- */
+async function serieReferencia(qual) {
+  if (qual === "cdi") {
+    const ind = await carregarIndicadores();
+    return ind?.cdi ? ind.cdi.serie : null;
+  }
+  const etf = ETF_REFERENCIA[qual]?.[0];
+  if (!etf || !S.porTicker[etf]) return null;
+  try { return (await detalhe(etf)).precos; } catch (e) { return null; }
+}
+function evolucaoReferencia(ev, c, serie) {
+  // cada compra "aplica" o mesmo valor na referência e cada venda "resgata" o mesmo valor, na mesma data
+  if (!serie?.length || !ev.length) return null;
+  let k = 0, ultimo = null, cotas = 0;
+  const fluxo = {};
+  for (const l of c.lancamentos) if (l.tipo === "C" || l.tipo === "V") fluxo[l.data] = (fluxo[l.data] || 0) + (l.tipo === "C" ? 1 : -1) * l.qtd * l.preco;
+  const datasFluxo = Object.keys(fluxo).sort();
+  let f = 0;
+  return ev.map((p) => {
+    while (k < serie.length && serie[k][0] <= p.d) { ultimo = serie[k][1]; k++; }
+    if (!ultimo) return { d: p.d, v: p.custo };
+    while (f < datasFluxo.length && datasFluxo[f] <= p.d) { cotas += fluxo[datasFluxo[f]] / ultimo; f++; }
+    cotas = Math.max(cotas, 0);
+    return { d: p.d, v: cotas * ultimo };
+  });
+}
+
+/* ---------- calculadoras extras ---------- */
+function ferramentasExtras() {
+  const cdiPadrao = S.indicadores?.cdi?.ao_ano ? +(S.indicadores.cdi.ao_ano * 100).toFixed(2) : 14;
+  return `
+    <div class="painel"><h2>Viver de dividendos</h2><div class="calc">
+      <form id="f-renda">
+        <label class="campo">Renda que você quer por mês (R$)<input type="number" name="renda" value="5000" min="0" step="100"></label>
+        <label class="campo">Dividend yield médio (% ao ano)<input type="number" name="dy" value="8" min="0.1" step="0.1"></label>
+        <label class="campo">Quanto você já tem (R$)<input type="number" name="ini" value="20000" min="0" step="1000"></label>
+        <label class="campo">Aporte mensal (R$)<input type="number" name="mes" value="1500" min="0" step="50"></label>
+        <label class="campo">Valorização das cotas (% ao ano, além dos dividendos)<input type="number" name="val" value="3" step="0.1"></label>
+      </form>
+      <div id="r-renda"></div></div></div>
+    <div class="painel"><h2>Quanto rende na renda fixa</h2><div class="calc">
+      <form id="f-cdi">
+        <label class="campo">Valor aplicado (R$)<input type="number" name="valor" value="10000" min="0" step="100"></label>
+        <label class="campo">Rentabilidade (% do CDI)<input type="number" name="pct" value="100" min="0" step="1"></label>
+        <label class="campo">CDI (% ao ano)<input type="number" name="cdi" value="${cdiPadrao}" min="0" step="0.01"></label>
+        <label class="campo">Prazo (meses)<input type="number" name="meses" value="12" min="1" max="600" step="1"></label>
+        <label class="campo">Tipo<select name="tipo"><option value="cdb">CDB, Tesouro, debênture (com IR)</option><option value="isento">LCI, LCA (isentas para pessoa física)</option></select></label>
+      </form>
+      <div id="r-cdi"></div></div></div>
+    <div class="grade-2">
+      <div class="painel"><h2>Reserva de emergência</h2>
+        <form id="f-reserva" class="form-col">
+          <label class="campo">Gastos fixos por mês (R$)<input type="number" name="gasto" value="3500" min="0" step="100"></label>
+          <label class="campo">Sua situação<select name="tipo"><option value="6">Emprego com carteira assinada (6 meses)</option><option value="12">Autônomo ou empresário (12 meses)</option><option value="3">Servidor público estável (3 meses)</option></select></label>
+          <label class="campo">Quanto você já guardou (R$)<input type="number" name="tem" value="5000" min="0" step="100"></label>
+        </form><div id="r-reserva" style="margin-top:12px"></div></div>
+      <div class="painel"><h2>Porcentagem</h2>
+        <form id="f-pct" class="form-col">
+          <label class="campo">Quanto é<span class="faixa"><input type="number" name="p" value="10" step="any" aria-label="Porcentagem"><span>% de</span><input type="number" name="de" value="250" step="any" aria-label="Valor"></span></label>
+          <label class="campo">Variação de<span class="faixa"><input type="number" name="a" value="20" step="any" aria-label="Valor inicial"><span>para</span><input type="number" name="b" value="23" step="any" aria-label="Valor final"></span></label>
+        </form><div id="r-pct" style="margin-top:12px"></div></div>
+    </div>`;
+}
+function ligarFerramentasExtras() {
+  const renda = () => {
+    const f = new FormData($("#f-renda")), r = +f.get("renda"), dy = +f.get("dy") / 100, ini = +f.get("ini"), mes = +f.get("mes"), val = +f.get("val") / 100;
+    const alvo = dy > 0 ? (r * 12) / dy : Infinity;
+    // reinveste os dividendos até chegar lá
+    const im = Math.pow(1 + dy + val, 1 / 12) - 1; let v = ini, k = 0;
+    while (v < alvo && k < 12 * 80) { v = v * (1 + im) + mes; k++; }
+    $("#r-renda").innerHTML = `<p class="sutil" style="margin:0">Para receber ${brl(r, 0)} por mês com ${pct(dy, 1)} de dividendos ao ano, você precisa de</p>
+      <p class="resultado-grande" style="margin:4px 0">${isFinite(alvo) ? brl(alvo, 0) : "–"}</p>
+      <p class="sutil">${v >= alvo ? `Com ${brl(mes, 0)} por mês e reinvestindo os dividendos, você chega lá em <b>${Math.floor(k / 12)} anos e ${k % 12} ${k % 12 === 1 ? "mês" : "meses"}</b>.` : "Com esse aporte, leva mais de 80 anos. Aumente o aporte ou o prazo."}</p>
+      <p class="fraco">Simulação com taxas constantes. Dividendos variam de ano para ano.</p>`;
+  };
+  const cdi = () => {
+    const f = new FormData($("#f-cdi")), valor = +f.get("valor"), taxa = (+f.get("cdi") / 100) * (+f.get("pct") / 100), meses = +f.get("meses");
+    const bruto = valor * (Math.pow(1 + taxa, meses / 12) - 1), dias = meses * 30.4;
+    const aliq = f.get("tipo") === "isento" ? 0 : dias <= 180 ? 0.225 : dias <= 360 ? 0.2 : dias <= 720 ? 0.175 : 0.15;
+    const ir = bruto * aliq, liquido = bruto - ir;
+    $("#r-cdi").innerHTML = `<div class="numeros dois"><div><span>Valor final líquido</span><strong class="alta">${brl(valor + liquido)}</strong></div>
+      <div><span>Rendimento bruto</span><strong>${brl(bruto)}</strong></div>
+      <div><span>Imposto de renda</span><strong>${brl(ir)}</strong><small class="sutil">${aliq ? pct(aliq, 1) + " pela tabela regressiva" : "isento"}</small></div>
+      <div><span>Rende por mês, em média</span><strong>${brl(liquido / meses)}</strong></div></div>
+      <p class="fraco" style="margin-top:10px">IR pela tabela regressiva: 22,5% até 180 dias, 20% até 360, 17,5% até 720 e 15% acima disso. Sem IOF (só vale para resgates em menos de 30 dias).</p>`;
+  };
+  const reserva = () => {
+    const f = new FormData($("#f-reserva")), alvo = +f.get("gasto") * +f.get("tipo"), tem = +f.get("tem");
+    $("#r-reserva").innerHTML = `<p class="sutil" style="margin:0">Sua reserva ideal</p><p class="resultado-grande" style="margin:4px 0">${brl(alvo, 0)}</p>
+      <p class="sutil">${tem >= alvo ? "Você já tem a reserva completa." : `Faltam ${brl(alvo - tem, 0)}. ${pct(tem / alvo, 0)} já estão guardados.`} Deixe num lugar com liquidez diária e baixo risco, como Tesouro Selic ou CDB com liquidez diária.</p>`;
+  };
+  const porcento = () => {
+    const f = new FormData($("#f-pct")), p = +f.get("p"), de = +f.get("de"), a = +f.get("a"), b = +f.get("b");
+    $("#r-pct").innerHTML = `<p style="margin:0">${nf(2).format(p)}% de ${nf(2).format(de)} é <b>${nf(2).format((p / 100) * de)}</b></p>
+      <p style="margin:6px 0 0">De ${nf(2).format(a)} para ${nf(2).format(b)}: <b class="${cls(b - a)}">${a ? pct(b / a - 1, 2, true) : "–"}</b></p>`;
+  };
+  $("#f-renda").oninput = renda; $("#f-cdi").oninput = cdi; $("#f-reserva").oninput = reserva; $("#f-pct").oninput = porcento;
+  renda(); cdi(); reserva(); porcento();
+}
 
 /* ---------- planos: Grátis e Milhão Ouro ---------- */
 const PLANO_OURO = { nome: "Milhão Ouro", preco: 9.9 };
