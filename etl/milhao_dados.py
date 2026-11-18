@@ -176,11 +176,14 @@ def ler_cotahist(texto: str) -> list[dict]:
     return linhas
 
 
-def tipo_ativo(bdi: str, especi: str) -> str:
+FIAGROS: set[str] = set()  # tickers que já apareceram com BDI 13 (a B3 passou a listar Fiagros junto dos ETFs)
+
+
+def tipo_ativo(bdi: str, especi: str, ticker: str = "") -> str:
     """Classe do ativo pelo código BDI e pela especificação do COTAHIST."""
     if bdi == "12":
         return "fii"
-    if bdi == "13":
+    if bdi == "13" or ticker in FIAGROS:
         return "fiagro"
     if bdi == "14":
         return "etf"
@@ -937,10 +940,11 @@ def main() -> None:
             }
 
     print("4/5 proventos", flush=True)
+    FIAGROS.update(cot.loc[cot["bdi"] == "13", "ticker"].unique())
     ultimos = cot.sort_values("data").groupby("ticker").tail(1).set_index("ticker")
     emissores = {}
     for tk, row in ultimos.iterrows():
-        tp = tipo_ativo(row["bdi"], row["especi"])
+        tp = tipo_ativo(row["bdi"], row["especi"], tk)
         if tp in ("etf", "bdr"):  # sem consulta de proventos na B3 por enquanto
             continue
         emissores[tk[:4]] = "fii" if tp in ("fii", "fiagro") else emissores.get(tk[:4], "acao")
@@ -956,7 +960,7 @@ def main() -> None:
     lista_ativos, detalhes = [], {}
     for tk, grupo in cot.groupby("ticker"):
         u = grupo.iloc[-1]
-        isin, tipo = u["isin"], tipo_ativo(u["bdi"], u["especi"])
+        isin, tipo = u["isin"], tipo_ativo(u["bdi"], u["especi"], tk)
         liq = grupo.tail(21)["volume"].mean()
         if tipo == "bdr" and not liq >= 50_000:  # só BDRs com negócio de verdade (média de R$ 50 mil por dia)
             continue
