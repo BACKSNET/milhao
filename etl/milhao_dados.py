@@ -139,6 +139,9 @@ def limpar(obj):
 # --------------------------------------------------------------------------
 # 1. Cotações (COTAHIST da B3)
 # --------------------------------------------------------------------------
+CODIGOS_BDI: dict = {}   # resumo dos códigos BDI do mercado à vista (diagnóstico para novas classes de ativo)
+
+
 def ler_cotahist(texto: str) -> list[dict]:
     """Layout oficial COTAHIST.AAAA.TXT (posições 1-based do manual da B3)."""
     linhas = []
@@ -146,6 +149,13 @@ def ler_cotahist(texto: str) -> list[dict]:
         if not ln.startswith("01") or len(ln) < 245:
             continue
         codbdi, tpmerc = ln[10:12], ln[24:27]
+        if tpmerc == "010":
+            chave = f"{codbdi}|{ln[39:49].strip()[:3]}"
+            item = CODIGOS_BDI.setdefault(chave, {"linhas": 0, "exemplos": []})
+            item["linhas"] += 1
+            tk = ln[12:24].strip()
+            if len(item["exemplos"]) < 12 and tk not in item["exemplos"]:
+                item["exemplos"].append(tk)
         if tpmerc != "010" or codbdi not in ("02", "12"):  # lote padrão e FII
             continue
         linhas.append({
@@ -743,6 +753,108 @@ def montar_fii(t, preco, pontos, info, provs) -> dict:
     }
 
 
+URL_SGS = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{serie}/dados?formato=json&dataInicial={ini}&dataFinal={fim}"
+
+
+def serie_bcb(fonte: Fonte, serie: int, anos: int = 5) -> list[tuple[str, float]]:
+    """Série do SGS do Banco Central (dados públicos e gratuitos) como [(AAAA-MM-DD, valor)]."""
+    fim = HOJE
+    ini = fim - dt.timedelta(days=365 * anos + 5)
+    url = URL_SGS.format(serie=serie, ini=ini.strftime("%d/%m/%Y"), fim=fim.strftime("%d/%m/%Y"))
+    b = fonte.baixar(url, nome=f"sgs_{serie}.json", cache_dias=0.3, silencioso=True)
+    if not b:
+        return []
+    try:
+        dados = json.loads(b.decode("utf-8"))
+    except Exception:  # noqa: BLE001
+        return []
+    out = []
+    for item in dados if isinstance(dados, list) else []:
+        try:
+            d = dt.datetime.strptime(item["data"], "%d/%m/%Y").date().isoformat()
+            out.append((d, float(str(item["valor"]).replace(",", "."))))
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+def montar_indicadores(fonte: Fonte) -> dict | None:
+    """CDI, Selic, IPCA e dólar (PTAX) do Banco Central."""
+    cdi, selic, ipca, dolar = serie_bcb(fonte, 12), serie_bcb(fonte, 432), serie_bcb(fonte, 433), serie_bcb(fonte, 1)
+    if not (cdi or selic or ipca or dolar):
+        aviso("indicadores do Banco Central indisponíveis")
+        return None
+    out: dict = {"fonte": "Banco Central do Brasil (SGS)"}
+    if cdi:
+        idx, serie = 1.0, []
+        for d, v in cdi:
+            idx *= 1 + v / 100
+            serie.append([d, round(idx, 6)])
+        ult = serie[-1][1]
+        base12 = next((p[1] for p in reversed(serie) if p[0] <= (dt.date.fromisoformat(serie[-1][0]) - dt.timedelta(days=365)).isoformat()), None)
+        out["cdi"] = {"ao_ano": r((1 + cdi[-1][1] / 100) ** 252 - 1), "12m": r(ult / base12 - 1) if base12 else None,
+                      "data": cdi[-1][0], "serie": serie}
+    if selic:
+        mensal = {}
+        for d, v in selic:
+            mensal[d[:7]] = [d, v]
+        out["selic"] = {"meta": selic[-1][1] / 100, "data": selic[-1][0], "serie": [[d, v / 100] for d, v in mensal.values()]}
+    if ipca:
+        serie12 = []
+        for i in range(11, len(ipca)):
+            acum = 1.0
+            for _, v in ipca[i - 11:i + 1]:
+                acum *= 1 + v / 100
+            serie12.append([ipca[i][0], round(acum - 1, 6)])
+        out["ipca"] = {"12m": serie12[-1][1] if serie12 else None, "mes": ipca[-1][1] / 100, "data": ipca[-1][0], "serie": serie12}
+    if dolar:
+        semanal = {}
+        for d, v in dolar:
+            semanal[dt.date.fromisoformat(d).strftime("%G-%V")] = [d, v]
+        serie = list(semanal.values())
+        base12 = next((v for d, v in reversed(dolar) if d <= (dt.date.fromisoformat(dolar[-1][0]) - dt.timedelta(days=365)).isoformat()), None)
+        out["dolar"] = {"atual": dolar[-1][1], "data": dolar[-1][0], "var_12m": r(dolar[-1][1] / base12 - 1) if base12 else None,
+                        "serie": serie}
+    return out
+
+
+def montar_agenda(detalhes: dict, hoje: dt.date) -> dict:
+    """Agenda de proventos do mercado: o que já foi anunciado e o radar (meses em que cada ação
+    costuma ter data com, pelo histórico dos últimos 3 anos). Projeção, não promessa."""
+    inicio = (hoje - dt.timedelta(days=45)).isoformat()
+    anunciados, radar = [], []
+    for tk, d in detalhes.items():
+        provs = [p for p in d.get("proventos") or [] if p.get("data_com") and p.get("valor")]
+        preco = d.get("preco")
+        for p in provs:
+            ref = max(p["data_com"], p.get("pagamento") or "")
+            if ref >= inicio:
+                anunciados.append({"t": tk, "tipo": p.get("tipo"), "data_com": p["data_com"], "pagamento": p.get("pagamento"),
+                                   "valor": r(p["valor"], 6), "dy": r(div(p["valor"], preco))})
+        if d.get("tipo") != "acao":
+            continue
+        # meses com data com em cada um dos 3 anos fechados anteriores
+        anos = [hoje.year - k for k in (1, 2, 3)]
+        meses = defaultdict(lambda: defaultdict(float))
+        for p in provs:
+            a, m = int(p["data_com"][:4]), int(p["data_com"][5:7])
+            if a in anos:
+                meses[m][a] += p["valor"]
+        ja = {p["data_com"][:7] for p in provs if p["data_com"] >= hoje.replace(day=1).isoformat()}
+        for k in range(0, 12):
+            mes_n = (hoje.month - 1 + k) % 12 + 1
+            ano_n = hoje.year + (hoje.month - 1 + k) // 12
+            chave = f"{ano_n}-{mes_n:02d}"
+            vezes = len(meses[mes_n])
+            if vezes >= 2 and chave not in ja:
+                radar.append({"t": tk, "mes": chave, "anos": vezes,
+                              "valor": r(sum(meses[mes_n].values()) / vezes, 6),
+                              "dy": r(div(sum(meses[mes_n].values()) / vezes, preco))})
+    anunciados.sort(key=lambda x: (x["data_com"], x["t"]))
+    radar.sort(key=lambda x: (x["mes"], -(x["anos"]), x["t"]))
+    return {"gerado_em": hoje.isoformat(), "anunciados": anunciados, "radar": radar}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--saida", default="data")
@@ -879,6 +991,8 @@ def main() -> None:
         lista_ativos.append({
             "t": d["ticker"], "n": d["nome"], "tipo": d["tipo"], "setor": d["setor"],
             "preco": d["preco"], "var_dia": d["var_dia"], "var_12m": d["var_12m"], "liq": d["liquidez"],
+            "var_30d": r(variacao(d["precos"], 30)),
+            "lucro": d.get("base", {}).get("lucro_12m"), "receita": d.get("base", {}).get("receita_12m"),
             **{k: ind.get(k) for k in ("dy", "pl", "pvp", "roe", "m_liq", "roic", "ev_ebit", "dl_ebitda",
                                        "cagr_rec", "cagr_luc", "liq_corr")},
             "vm": d.get("base", {}).get("valor_mercado"),
@@ -889,6 +1003,14 @@ def main() -> None:
             json.dumps(limpar(d), ensure_ascii=False, separators=(",", ":"), default=str), encoding="utf-8")
 
     lista_ativos.sort(key=lambda x: -(x["liq"] or 0))
+    indicadores = montar_indicadores(fonte)
+    if indicadores:
+        (saida / "indicadores.json").write_text(json.dumps(limpar(indicadores), ensure_ascii=False, separators=(",", ":")),
+                                                encoding="utf-8")
+    (saida / "codigos_bdi.json").write_text(json.dumps(dict(sorted(CODIGOS_BDI.items(), key=lambda kv: -kv[1]["linhas"])),
+                                                       ensure_ascii=False, indent=1), encoding="utf-8")
+    (saida / "agenda.json").write_text(json.dumps(limpar(montar_agenda(detalhes, ultimo_pregao.date())), ensure_ascii=False,
+                                                  separators=(",", ":"), default=str), encoding="utf-8")
     (saida / "ativos.json").write_text(json.dumps(limpar(lista_ativos), ensure_ascii=False, separators=(",", ":"),
                                                   default=str), encoding="utf-8")
     (saida / "meta.json").write_text(json.dumps({
