@@ -1001,6 +1001,7 @@ def main() -> None:
                 dem_emp = {k: g.get(cad["cvm"]) for k, g in por_cvm.items()}
                 dem_emp = {k: v for k, v in dem_emp.items() if v is not None}
                 det = montar_acao(tk, preco, pontos, cad, dem_emp, cap_por_cnpj.get(cad["cnpj"], vazio_cap), prov)
+                det["cnpj"] = cad.get("cnpj")  # vai no texto de bens e direitos do Imposto de Renda
                 nome, setor = cad.get("nome") or u["nome"], cad.get("setor") or "Outros"
         det.update({
             "ticker": tk, "nome": nome, "tipo": tipo, "setor": setor, "isin": isin,
