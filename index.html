@@ -123,6 +123,19 @@ nav.menu a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radi
 nav.menu a:hover{background:var(--papel);color:var(--tinta)}
 nav.menu a.ativo{background:var(--verde-claro);color:var(--verde)}
 nav.menu svg{width:18px;height:18px;flex:none}
+nav.menu svg,.servicos svg{transition:transform .2s ease;transform-origin:center}
+nav.menu a:hover svg,.servicos a:hover svg{animation:ico-pop .4s ease}
+nav.menu a[href="#proventos"]:hover svg,.servicos a[href="#proventos"]:hover svg{animation:ico-spin .6s ease}
+nav.menu a[href="#analise"]:hover svg,.servicos a[href="#analise"]:hover svg{animation:ico-bars .5s ease}
+nav.menu a[href="#indicadores"]:hover svg,.servicos a[href="#indicadores"]:hover svg{animation:ico-rise .5s ease}
+nav.menu a[href="#agenda"]:hover svg,.servicos a[href="#agenda"]:hover svg{animation:ico-wobble .5s ease}
+nav.menu a[href="#comparar"]:hover svg,.servicos a[href="#comparar"]:hover svg{animation:ico-swap .45s ease}
+@keyframes ico-pop{0%{transform:scale(1)}45%{transform:scale(1.28) rotate(-7deg)}100%{transform:scale(1.1)}}
+@keyframes ico-spin{to{transform:rotate(360deg)}}
+@keyframes ico-bars{0%,100%{transform:scaleY(1)}30%{transform:scaleY(.65)}65%{transform:scaleY(1.18)}}
+@keyframes ico-rise{0%{transform:translate(0,0)}50%{transform:translate(2px,-3px)}100%{transform:translate(0,0)}}
+@keyframes ico-wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+@keyframes ico-swap{0%,100%{transform:translateX(0)}30%{transform:translateX(-2px)}70%{transform:translateX(2px)}}
 .lateral .rodape{margin-top:auto;font-size:12px;color:var(--tinta-3);padding:0 8px;display:flex;flex-direction:column;gap:6px}
 .principal{min-width:0}
 .topo{display:flex;align-items:center;gap:16px;padding:16px 36px;border-bottom:1px solid var(--linha);background:var(--papel);position:sticky;top:0;z-index:5}
@@ -311,6 +324,27 @@ th.ordena[aria-sort=descending]::after{content:" ▾"} th.ordena[aria-sort=ascen
 .mercado-ativo b{display:block}
 .mercado-ativo span{display:block;font-size:12px;color:var(--tinta-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mercado-num{text-align:right;font-size:13.5px}
+.topo-carteiras{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:980px){.topo-carteiras{grid-template-columns:1fr}}
+.aloc{padding:18px;position:sticky;top:90px}
+.aloc-chips{margin:0 0 12px}
+.aloc-grafico{display:flex;justify-content:center;margin-bottom:10px}
+.aloc-grafico svg{width:188px;height:188px}
+.aloc-fatia{transition:opacity .15s}
+.aloc-fatia[data-aloc-t],.aloc-fatia[data-aloc-classe]{cursor:pointer}
+.aloc-grafico svg:hover .aloc-fatia{opacity:.45}
+.aloc-grafico svg .aloc-fatia:hover{opacity:1}
+.aloc-centro{font-size:21px;font-weight:800;fill:var(--tinta)}
+.aloc-centro-sub{font-size:11px;fill:var(--tinta-3)}
+.aloc-leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.aloc-item{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;padding:6px;border-radius:7px;text-align:left;font:inherit;color:var(--tinta-2);cursor:pointer}
+.aloc-item:hover:not([disabled]){background:var(--papel);color:var(--tinta)}
+.aloc-item[disabled]{cursor:default}
+.aloc-item i{width:10px;height:10px;border-radius:3px;flex:none}
+.aloc-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}
+.aloc-nome small{font-weight:500;color:var(--tinta-3);font-size:11.5px;margin-left:6px}
+.aloc-val{text-align:right;font-size:13px;white-space:nowrap;line-height:1.2}
+.aloc-val em{display:block;font-style:normal;font-size:11.5px;color:var(--tinta-3)}
 .mercado-num em{display:block;font-style:normal;font-weight:700;font-size:12.5px}
 .ir-grafico{color:var(--tinta-3);display:flex;padding:6px;border-radius:6px}
 .ir-grafico:hover{color:var(--verde);background:var(--verde-claro)}
@@ -1635,6 +1669,78 @@ async function excluirCarteira(id) {
   return true;
 }
 
+/* ---------- gráfico de pizza: onde está o dinheiro ---------- */
+const PALETA_ALOC = ["#0F8A62", "#C9971C", "#2F6FB3", "#C2453D", "#7B57B8", "#1CA39A", "#D97A2B", "#5B8C2A", "#B3458F"];
+let alocModo = "ativo";
+function arcoDonut(c, rO, rI, a0, a1, gap) {
+  if (gap && a1 - a0 > gap * 2.5) { a0 += gap; a1 -= gap; }
+  const p = (r, a) => [(c + r * Math.cos(a)).toFixed(2), (c + r * Math.sin(a)).toFixed(2)];
+  const laf = a1 - a0 > Math.PI ? 1 : 0;
+  const [x0, y0] = p(rO, a0), [x1, y1] = p(rO, a1), [x2, y2] = p(rI, a1), [x3, y3] = p(rI, a0);
+  return `M${x0} ${y0}A${rO} ${rO} 0 ${laf} 1 ${x1} ${y1}L${x2} ${y2}A${rI} ${rI} 0 ${laf} 0 ${x3} ${y3}Z`;
+}
+// soma o valor de hoje de todas as posições de todas as carteiras, por ativo ou por classe
+function dadosAlocacao(modo) {
+  const soma = {};
+  for (const c of S.estado.carteiras) for (const p of posicoes(c)) {
+    if (!(p.qtd > 0) || !p.valor) continue;
+    const a = S.porTicker[p.ticker];
+    const k = modo === "classe" ? (a?.tipo || "acao") : p.ticker;
+    soma[k] = (soma[k] || 0) + p.valor;
+  }
+  let arr = Object.entries(soma).map(([k, v]) => ({ k, v })).sort((x, y) => y.v - x.v);
+  const total = arr.reduce((s, x) => s + x.v, 0);
+  if (modo !== "classe" && arr.length > 8) {  // muitos ativos: mostra os 7 maiores e junta o resto
+    const resto = arr.slice(7).reduce((s, x) => s + x.v, 0);
+    arr = [...arr.slice(0, 7), { k: "__outros", v: resto, outros: true }];
+  }
+  return { arr, total };
+}
+function donutSVG(itens, total) {
+  const S = 170, c = S / 2, rO = 78, rI = 50; let a = -Math.PI / 2; const seg = [];
+  const attr = (it) => it.t ? `data-aloc-t="${it.t}"` : it.classe ? `data-aloc-classe="${it.classe}"` : "";
+  if (itens.length === 1) {
+    const it = itens[0];
+    seg.push(`<circle cx="${c}" cy="${c}" r="${(rO + rI) / 2}" fill="none" stroke="${it.cor}" stroke-width="${rO - rI}" ${attr(it)} class="aloc-fatia"/>`);
+  } else {
+    for (const it of itens) { const a1 = a + (it.v / total) * 2 * Math.PI;
+      seg.push(`<path d="${arcoDonut(c, rO, rI, a, a1, 0.018)}" fill="${it.cor}" ${attr(it)} class="aloc-fatia"/>`); a = a1; }
+  }
+  return `<div class="aloc-grafico"><svg viewBox="0 0 ${S} ${S}" role="img" aria-label="Onde está o dinheiro">${seg.join("")}
+    <text x="${c}" y="${c - 3}" text-anchor="middle" class="aloc-centro">${compacto(total)}</text>
+    <text x="${c}" y="${c + 15}" text-anchor="middle" class="aloc-centro-sub">investido</text></svg></div>`;
+}
+function blocoAlocacao() {
+  const temAlgo = S.estado.carteiras.some((c) => posicoes(c).some((p) => p.qtd > 0 && p.valor));
+  return `<aside class="painel aloc">
+    <h2 style="margin:0 0 4px;font-size:17px">Onde está o dinheiro</h2>
+    <p class="sutil" style="margin:0 0 14px">${temAlgo ? "Somando todas as suas carteiras. Clique para abrir." : "A divisão dos seus investimentos aparece aqui."}</p>
+    ${temAlgo ? `<div class="chips aloc-chips">
+        <button class="chip" data-aloc="ativo" aria-pressed="${alocModo === "ativo"}">Por ativo</button>
+        <button class="chip" data-aloc="classe" aria-pressed="${alocModo === "classe"}">Por classe</button></div>
+      <div id="aloc-corpo"></div>`
+    : `<p class="fraco" style="margin:0">Quando você tiver ativos nas carteiras, mostramos aqui quanto do seu dinheiro está em cada ativo e em cada classe (ações, FIIs, ETFs e mais).</p>`}
+  </aside>`;
+}
+function pintarAlocacao() {
+  const el = $("#aloc-corpo"); if (!el) return;
+  const { arr, total } = dadosAlocacao(alocModo);
+  if (!total) { el.innerHTML = `<p class="fraco">Sem valor para mostrar.</p>`; return; }
+  const itens = arr.map((x, i) => ({
+    v: x.v, cor: x.outros ? "#9AA3AB" : PALETA_ALOC[i % PALETA_ALOC.length],
+    rotulo: x.outros ? "Outros" : alocModo === "classe" ? classe(x.k).aba : x.k,
+    sub: x.outros || alocModo === "classe" ? "" : (S.porTicker[x.k]?.n || ""),
+    t: !x.outros && alocModo !== "classe" ? x.k : null,
+    classe: alocModo === "classe" && !x.outros ? x.k : null,
+  }));
+  el.innerHTML = `${donutSVG(itens, total)}
+    <ul class="aloc-leg">${itens.map((it) => `<li><button class="aloc-item" ${it.t ? `data-aloc-t="${it.t}"` : it.classe ? `data-aloc-classe="${it.classe}"` : "disabled"}>
+      <i style="background:${it.cor}"></i><span class="aloc-nome">${esc(it.rotulo)}${it.sub ? `<small>${esc(it.sub)}</small>` : ""}</span>
+      <span class="aloc-val">${brl(it.v, 0)}<em>${pct(it.v / total, 1)}</em></span></button></li>`).join("")}</ul>`;
+  $$("[data-aloc-t]", el).forEach((b) => b.onclick = () => ir("#ativo-" + b.dataset.alocT));
+  $$("[data-aloc-classe]", el).forEach((b) => b.onclick = () => { UI.tipo = b.dataset.alocClasse; UI.preset = 0; UI.ordem = null; ir("#explorar"); });
+}
+
 /* ---------- seletor de carteiras ---------- */
 function telaCarteiras() {
   const cs = S.estado.carteiras;
@@ -1652,6 +1758,7 @@ function telaCarteiras() {
     </div></header>
     <main class="conteudo" style="margin:0 auto;padding-top:34px">
     <div class="cabeca"><div><h1>Olá, ${esc(S.estado.perfil.nome.split(" ")[0])}. Qual carteira vamos abrir?</h1></div></div>
+    <div class="topo-carteiras">
     <div class="lista-carteiras">
       ${cs.map((c) => { const r = resumoCarteira(c);
         return `<div class="cartao-carteira"><button data-id="${c.id}"><strong>${esc(c.nome)}</strong>
@@ -1664,6 +1771,8 @@ function telaCarteiras() {
           <button class="renomear-carteira" data-renomear="${c.id}" aria-label="Renomear a carteira ${esc(c.nome)}" title="Renomear carteira">${ICO.lapis}</button>
           <button class="excluir-carteira" data-excluir="${c.id}" aria-label="Excluir a carteira ${esc(c.nome)}" title="Excluir carteira">${ICO.lixo}</button></div>`; }).join("")}
       <button class="nova" id="nova-carteira">Criar carteira</button>
+    </div>
+    ${blocoAlocacao()}
     </div>
     ${S.ativos.length ? blocoMercado() : ""}</main>${rodapeSite()}`;
   // mini gráfico da evolução de cada carteira nos últimos 3 meses
@@ -1699,6 +1808,8 @@ function telaCarteiras() {
     else ir("#" + r);
   });
   ligarBusca(); ligarBotaoTema();
+  pintarAlocacao();
+  $$("[data-aloc]").forEach((b) => b.onclick = () => { alocModo = b.dataset.aloc; $$("[data-aloc]").forEach((x) => x.setAttribute("aria-pressed", x === b)); pintarAlocacao(); });
   $("#sair").onclick = async () => {
     if (S.nuvem && S.usuario) {
       if (await perguntar({ titulo: "Sair da sua conta?", texto: "Suas carteiras continuam salvas na conta. É só entrar de novo.", botao: "Sair" })) sairDaConta();
