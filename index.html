@@ -317,11 +317,19 @@ th.ordena[aria-sort=descending]::after{content:" ▾"} th.ordena[aria-sort=ascen
 .ir-grafico:hover{color:var(--verde);background:var(--verde-claro)}
 @media (max-width:980px){.g-3{grid-template-columns:1fr}.painel.teto{grid-template-columns:1fr}}
 .cartao-carteira{position:relative;display:flex}
-.cartao-carteira > button[data-id]{flex:1;padding-right:48px}
+.cartao-carteira > button[data-id]{flex:1;padding-right:84px}
 .lista-carteiras .excluir-carteira{position:absolute;top:10px;right:10px;padding:7px;border:1px solid transparent;border-radius:8px;background:none;
   color:var(--tinta-3);display:flex;opacity:0;transition:opacity .15s}
 .cartao-carteira:hover .excluir-carteira,.lista-carteiras .excluir-carteira:focus-visible{opacity:1}
 .lista-carteiras .excluir-carteira:hover{color:var(--queda);background:var(--queda-claro);border-color:transparent}
+.lista-carteiras .renomear-carteira{position:absolute;top:10px;right:46px;padding:7px;border:1px solid transparent;border-radius:8px;background:none;color:var(--tinta-3);cursor:pointer;opacity:0;display:flex}
+.cartao-carteira:hover .renomear-carteira,.lista-carteiras .renomear-carteira:focus-visible{opacity:1}
+.lista-carteiras .renomear-carteira:hover{color:var(--verde);background:var(--verde-claro)}
+@media (hover:none){.lista-carteiras .renomear-carteira{opacity:1}}
+.titulo-carteira{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px}
+.titulo-carteira h1{margin:0}
+.btn.renomear{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;color:var(--tinta-3);font-weight:600}
+.btn.renomear:hover{color:var(--verde)}
 @media (hover:none){.lista-carteiras .excluir-carteira{opacity:1}}
 .btn.excluir{background:var(--queda);border-color:var(--queda);color:#fff}
 .btn.excluir:hover{background:#9E2F1D}
@@ -438,7 +446,10 @@ details.ajustar .painel{border:none;padding:0}
 .plano-ouro .logo-nome i{color:transparent}
 .plano-ouro .logo-m g{fill:#D4A537;stroke:#D4A537}
 .avatar{width:var(--tam);height:var(--tam);border-radius:50%;object-fit:cover;flex:none;display:inline-flex;align-items:center;justify-content:center;background:var(--verde-claro);color:var(--verde);font-weight:800;font-size:calc(var(--tam) * .38)}
-.plano-ouro .avatar{box-shadow:0 0 0 2px var(--branco),0 0 0 4px #D4A537}
+/* aro da foto: prata no Grátis, ouro no Milhão Ouro */
+.avatar{--aro-sombra:#A9B1B8;box-shadow:0 0 0 2px var(--branco),0 0 0 4px var(--aro-sombra)}
+.plano-ouro .avatar{--aro-sombra:#D4A537}
+.avatar.grande{box-shadow:0 0 0 3px var(--branco),0 0 0 7px var(--aro-sombra)}
 .usuario-link{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--tinta-2);font-size:13px;border-radius:999px;padding:2px 10px 2px 2px}
 .usuario-link:hover{background:var(--papel);color:var(--tinta)}
 .selo-ouro{display:inline-block;background:linear-gradient(120deg,#B88A2C,#E7C45E 50%,#B88A2C);color:#3B2A06;font-weight:800;font-size:12.5px;padding:3px 10px;border-radius:999px;letter-spacing:.01em}
@@ -475,6 +486,8 @@ details.ajustar .painel{border:none;padding:0}
 .link-voltar{color:var(--verde);font-weight:650;text-decoration:none}
 .filtrao-cta{display:inline-block;margin-top:8px;font-weight:700;color:#8A6416;background:linear-gradient(120deg,#F3E3B5,#FFF6DB);padding:5px 10px;border-radius:999px;text-decoration:none}
 .plano-botoes{display:flex;flex-wrap:wrap;gap:10px}
+.imp-ajuste{display:grid;gap:8px;margin-top:6px}
+.imp-ajuste[hidden]{display:none}
 .btn.pix{background:#32BCAD;border-color:#2AA597;color:#04302B;font-weight:800}
 .btn.pix:hover{background:#2AA597}
 .pix-caixa{display:flex;flex-wrap:wrap;align-items:center;gap:18px}
@@ -1357,6 +1370,7 @@ const ICO = {
   busca: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
   analise: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 3v18M12 6v14M18 2v16"/><rect x="4" y="7" width="4" height="8" rx="1" fill="currentColor" stroke="none"/><rect x="10" y="10" width="4" height="5" rx="1"/><rect x="16" y="5" width="4" height="9" rx="1" fill="currentColor" stroke="none"/></svg>',
   importar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>',
+  lapis: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>',
   lixo: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
 };
 
@@ -1539,6 +1553,16 @@ function telaLogin(curva, modo = "entrar") {
   });
 }
 
+/* ---------- renomear carteira ---------- */
+async function renomearCarteira(id) {
+  const c = S.estado.carteiras.find((x) => x.id === id);
+  if (!c) return false;
+  const nome = await perguntar({ titulo: "Renomear carteira", rotulo: "Nome da carteira", valor: c.nome, botao: "Salvar nome" });
+  if (!nome || nome.slice(0, 40) === c.nome) return false;
+  c.nome = nome.slice(0, 40); salvar(); aviso(`Carteira renomeada para "${c.nome}"`);
+  return true;
+}
+
 /* ---------- excluir carteira (com confirmação e "Desfazer") ---------- */
 async function excluirCarteira(id) {
   const lista = S.estado.carteiras, i = lista.findIndex((c) => c.id === id);
@@ -1588,6 +1612,7 @@ function telaCarteiras() {
           <span class="cc-dados"><span><small>Resultado</small><b class="${cls(r.resultado)}">${pct(r.resultadoPct, 1, true)}</b></span>
             <span><small>Yield</small><b>${pct(r.yield, 1)}</b></span><span><small>Ativos</small><b>${r.pos.length}</b></span></span>`
           : `<span class="sutil">Ainda sem ativos. Abra para importar da B3 ou lançar compras.</span>`}</button>
+          <button class="renomear-carteira" data-renomear="${c.id}" aria-label="Renomear a carteira ${esc(c.nome)}" title="Renomear carteira">${ICO.lapis}</button>
           <button class="excluir-carteira" data-excluir="${c.id}" aria-label="Excluir a carteira ${esc(c.nome)}" title="Excluir carteira">${ICO.lixo}</button></div>`; }).join("")}
       <button class="nova" id="nova-carteira">Criar carteira</button>
     </div>
@@ -1602,6 +1627,7 @@ function telaCarteiras() {
   }
   $$(".lista-carteiras button[data-id]").forEach((b) => b.onclick = () => { S.estado.ativa = b.dataset.id; salvar(); ir("#carteira"); });
   $$("[data-excluir]").forEach((b) => b.onclick = async () => { if (await excluirCarteira(b.dataset.excluir)) telaCarteiras(); });
+  $$("[data-renomear]").forEach((b) => b.onclick = async () => { if (await renomearCarteira(b.dataset.renomear)) telaCarteiras(); });
   const criarCarteira = async () => {
     if (!ehOuro() && cs.length >= LIMITES_GRATIS.carteiras) { pedirOuro("carteiras"); return false; }
     const nome = await perguntar({ titulo: "Criar carteira", rotulo: "Nome da carteira", botao: "Criar carteira",
@@ -1709,7 +1735,7 @@ rotas.carteira = async (el) => {
   const total = abertas.reduce((s, p) => s + (p.valor || 0), 0);
   const custo = abertas.reduce((s, p) => s + p.custo, 0);
   const realizado = pos.reduce((s, p) => s + p.realizado, 0);
-  el.innerHTML = `<div class="cabeca"><div><h1>${esc(c.nome)}</h1>
+  el.innerHTML = `<div class="cabeca"><div><div class="titulo-carteira"><h1>${esc(c.nome)}</h1><button class="btn texto renomear" id="renomear-carteira" title="Renomear esta carteira">${ICO.lapis}Renomear</button></div>
       <p class="sutil" style="margin:6px 0 0">${abertas.length ? abertas.length + (abertas.length > 1 ? " ativos" : " ativo") + ", avaliados pelo fechamento de " + dataBR(S.meta?.ultimo_pregao) : "Comece importando suas operações da B3 ou lançando suas compras."}</p></div>
     <div class="acoes"><button class="btn" id="importar">Importar da B3</button><button class="btn primario" id="lancar">Lançar compra ou venda</button></div></div>
     ${c.lancamentos.length ? `
@@ -1738,6 +1764,7 @@ rotas.carteira = async (el) => {
        <div class="acoes"><button class="btn primario" id="importar2">Importar da B3</button><button class="btn" id="lancar2">Lançar compra</button></div></div>`}
     <p style="margin:22px 0 0;text-align:right"><button class="btn texto perigo" id="excluir-esta">Excluir esta carteira</button></p>`;
   $("#excluir-esta").onclick = async () => { if (await excluirCarteira(c.id)) ir("#carteiras"); };
+  $("#renomear-carteira").onclick = async () => { if (await renomearCarteira(c.id)) render(); };
   $("#lancar").onclick = () => abrirLancamento();
   if ($("#lancar2")) $("#lancar2").onclick = () => abrirLancamento();
   $("#importar").onclick = () => abrirImportacao();
@@ -2021,8 +2048,8 @@ function abrirImportacao() {
     <p class="sutil" style="margin:0">Baixe suas planilhas na Área do Investidor da B3 e traga para cá. Dá para escolher mais de um arquivo de uma vez, e o que já estiver na carteira não entra de novo.</p>
     <ol class="passos">
       <li>Entre em <a href="https://www.investidor.b3.com.br" target="_blank" rel="noopener">investidor.b3.com.br</a> com sua conta gov.br ou CPF.</li>
-      <li>Vá em <b>Extratos</b>, escolha <b>Negociação</b> ou <b>Movimentação</b>, ajuste o período e clique em baixar Excel.</li>
-      <li>Se preferir só o retrato de hoje, baixe a planilha de <b>Posição</b>.</li>
+      <li>Vá em <b>Extratos</b>, escolha <b>Negociação</b>, coloque o período <b>desde a sua primeira compra</b> e baixe o Excel.</li>
+      <li>Baixe também a planilha de <b>Posição</b> de hoje e selecione as duas juntas. Assim o Milhão confere se as quantidades ficaram iguais às da B3.</li>
     </ol>
     <ul class="imp-resumo">
       <li><span><b>Negociação</b>: suas compras e vendas, com a data do pregão.</span></li>
@@ -2036,13 +2063,16 @@ function abrirImportacao() {
 }
 function previaImportacao(tudo) {
   const c = carteira(), dlg = $("#dlg-importar");
-  const temNeg = c.lancamentos.some((l) => l.origem === "b3-negociacao") || tudo.lancs.some((l) => l.origem === "b3-negociacao");
   // compra ou venda da Movimentação (não conta a "Atualização", que não aparece na Negociação)
   const ehTroca = (l) => l.origem === "b3-movimentacao" && (l.tipo === "C" || l.tipo === "V") && l.evento !== "Atualização na B3";
-  const movTrocavel = c.lancamentos.filter(ehTroca);
-  // Negociação e Movimentação trazem as mesmas compras (uma na data do pregão, outra na liquidação):
-  // quando há Negociação, da Movimentação só entram os eventos
-  let novos = tudo.lancs.filter((l) => !(temNeg && ehTroca(l)));
+  // Negociação e Movimentação trazem as mesmas compras e vendas (uma na data do pregão, outra na liquidação, dias depois).
+  // Da Movimentação só fica de fora a operação que a Negociação também tem: mesmo ativo e tipo, até 7 dias antes.
+  // O que a Negociação não cobre (período diferente) entra normalmente.
+  const negs = [...c.lancamentos, ...tudo.lancs].filter((l) => l.origem === "b3-negociacao");
+  const naNegociacao = (l) => negs.some((n) => n.ticker === l.ticker && n.tipo === l.tipo
+    && (Date.parse(l.data) - Date.parse(n.data)) / 864e5 >= 0 && (Date.parse(l.data) - Date.parse(n.data)) / 864e5 <= 7);
+  const movTrocavel = c.lancamentos.filter((l) => ehTroca(l) && naNegociacao(l));
+  let novos = tudo.lancs.filter((l) => !(ehTroca(l) && naNegociacao(l)));
   const pulados = tudo.lancs.length - novos.length;
   // duas operações iguais no mesmo dia são reais e entram as duas; o que se repete entre arquivos
   // (períodos que se sobrepõem) ou que já está na carteira entra uma vez só
@@ -2062,7 +2092,22 @@ function previaImportacao(tudo) {
   // Posição: entra só o que a carteira ainda não tem
   const atual = Object.fromEntries(posicoes(c).map((p) => [p.ticker, p.qtd]));
   const posNovas = tudo.posicao.filter((p) => !atual[p.ticker] && !novos.some((l) => l.ticker === p.ticker));
-  const posDif = tudo.posicao.filter((p) => atual[p.ticker] && atual[p.ticker] !== p.qtd);
+  // com a planilha de Posição, confere como a carteira fica depois de importar e iguala à B3
+  const temPosicao = tudo.tipos.has("posicao");
+  const naB3 = Object.fromEntries(tudo.posicao.map((p) => [p.ticker, p]));
+  const ajustesPosicao = (fora = new Set(), trocar = true) => {
+    if (!temPosicao) return [];
+    const sai = trocar ? new Set(movTrocavel.map((l) => l.id)) : new Set();
+    const lanc = [...c.lancamentos.filter((l) => !sai.has(l.id)), ...novos.filter((l) => !fora.has(l.ticker)),
+      ...posNovas.filter((p) => !fora.has(p.ticker)).map((p) => ({ id: "pos", ticker: p.ticker, tipo: "C", data: hojeISO(), qtd: p.qtd, preco: p.preco }))];
+    const sim = Object.fromEntries(posicoes({ lancamentos: lanc }).map((p) => [p.ticker, p]));
+    const tickers = new Set([...Object.keys(naB3), ...Object.keys(sim).filter((t) => sim[t].qtd > 0)]);
+    return [...tickers].filter((t) => !fora.has(t)).map((t) => ({ ticker: t, de: sim[t]?.qtd || 0, para: naB3[t]?.qtd || 0,
+      pm: sim[t]?.pm || 0, preco: naB3[t]?.preco })).filter((a) => Math.abs(a.para - a.de) > 1e-6).sort((a, b) => a.ticker.localeCompare(b.ticker));
+  };
+  const tabelaAjustes = (aj) => `<div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Ficaria no Milhão</th><th>Na B3 hoje</th></tr></thead><tbody>
+    ${aj.map((a) => `<tr><td><b>${esc(a.ticker)}</b></td><td>${qtdF(a.de)}</td><td><b>${qtdF(a.para)}</b></td></tr>`).join("")}</tbody></table></div>`;
+  const ajustes0 = ajustesPosicao();
 
   const resumoItens = (fora = new Set()) => {
     const ls = novos.filter((l) => !fora.has(l.ticker)), conta = (f) => ls.filter(f).length, itens = [];
@@ -2081,7 +2126,7 @@ function previaImportacao(tudo) {
   if (tudo.foraBolsa) fora.push(["Tesouro, renda fixa, opções e outros que o Milhão não acompanha", tudo.foraBolsa]);
   for (const [k, v] of Object.entries(tudo.outros)) fora.push([k, v]);
   const semCot = [...new Set([...novos.map((l) => l.ticker), ...posNovas.map((p) => p.ticker)])].filter((t) => !S.porTicker[t]);
-  const total = novos.length + posNovas.length;
+  const total = novos.length + posNovas.length + ajustes0.length;
   // um resumo por ativo, para você tirar o que não quer trazer
   const porAtivo = new Map();
   const somar = (t, k, n = 1) => { const a = porAtivo.get(t) ?? {}; a[k] = (a[k] || 0) + n; porAtivo.set(t, a); };
@@ -2114,13 +2159,25 @@ function previaImportacao(tudo) {
       </tbody></table></div>` : ""}
     ${movTrocavel.length && tudo.tipos.has("negociacao") ? `<label class="imp-check"><input type="checkbox" id="imp-trocar" checked>
       <span>Trocar as ${plural(movTrocavel.length, "compra ou venda", "compras e vendas")} que vieram da Movimentação pelas da Negociação, que têm a data do pregão. Assim nada fica em dobro.</span></label>` : ""}
-    ${posDif.length ? `<p class="imp-nota">A quantidade na B3 é diferente da carteira em ${posDif.map((p) => `${esc(p.ticker)} (B3: ${qtdF(p.qtd)}, carteira: ${qtdF(atual[p.ticker])})`).slice(0, 6).join(", ")}. Confira se falta algum lançamento.</p>` : ""}
+    <div id="imp-ajuste" class="imp-ajuste" ${ajustes0.length ? "" : "hidden"}>
+      <h3 style="margin:0">Quantidades diferentes da sua posição na B3</h3>
+      <p class="imp-nota" style="margin:0">Depois de importar, estes ativos não ficariam iguais à planilha de Posição. Isso acontece quando compras ou vendas ficaram fora do período baixado, ou por eventos como incorporação e troca de código.</p>
+      <div id="imp-ajuste-tabela">${tabelaAjustes(ajustes0)}</div>
+      <label class="imp-check"><input type="checkbox" id="imp-ajustar" checked><span>Deixar as quantidades iguais às da B3 hoje. O ajuste entra como um lançamento "Ajuste pela posição da B3", sem mudar o preço médio nem o resultado.</span></label>
+      <p class="fraco" style="margin:0">Para o preço médio ficar exato, importe a Negociação desde a sua primeira compra.</p>
+    </div>
+    ${!temPosicao && novos.some((l) => l.tipo === "C" || l.tipo === "V") ? `<p class="fraco" style="margin:0">Dica: selecione junto a planilha de <b>Posição</b> de hoje. Assim o Milhão confere se as quantidades ficaram iguais às da B3.</p>` : ""}
     ${fora.length ? `<h3 style="margin:2px 0 -6px">Fica de fora</h3><ul class="imp-resumo">${fora.map(([k, v]) => `<li class="fora"><span>${esc(k)}</span><span>${F.n0.format(v)}</span></li>`).join("")}</ul>` : ""}
     ${semCot.length ? `<p class="fraco" style="margin:0">Sem cotação na base do Milhão: ${esc(semCot.slice(0, 8).join(", "))}${semCot.length > 8 ? "…" : ""}. Eles entram na carteira, mas sem valor atual.</p>` : ""}`;
   $("#imp-ok").textContent = total ? `Importar ${plural(total, "item", "itens")}` : "Escolher outra planilha";
   $("#imp-ok").disabled = false;
-  const contarMarcados = () => novos.filter((l) => !excluidos.has(l.ticker)).length + posNovas.filter((p) => !excluidos.has(p.ticker)).length;
+  const ajustesAtuais = () => ($("#imp-ajustar")?.checked ? ajustesPosicao(excluidos, $("#imp-trocar")?.checked ?? false) : []);
+  const contarMarcados = () => novos.filter((l) => !excluidos.has(l.ticker)).length + posNovas.filter((p) => !excluidos.has(p.ticker)).length + ajustesAtuais().length;
   const atualizarMarcados = () => {
+    if (temPosicao) {
+      const aj = ajustesPosicao(excluidos, $("#imp-trocar")?.checked ?? false);
+      $("#imp-ajuste").hidden = !aj.length; $("#imp-ajuste-tabela").innerHTML = tabelaAjustes(aj);
+    }
     const n = contarMarcados();
     $("#imp-titulo").textContent = n ? `Importar ${plural(n, "item", "itens")} para ${c.nome}` : "Nenhum ativo marcado";
     $("#imp-ok").textContent = n ? `Importar ${plural(n, "item", "itens")}` : "Importar";
@@ -2130,6 +2187,9 @@ function previaImportacao(tudo) {
     if ($("#imp-todos")) $("#imp-todos").textContent = excluidos.size === ativosImp.length ? "Marcar todos" : "Desmarcar todos";
   };
   $$("[data-ativo]").forEach((cx) => cx.onchange = () => { cx.checked ? excluidos.delete(cx.dataset.ativo) : excluidos.add(cx.dataset.ativo); atualizarMarcados(); });
+  if ($("#imp-ajustar")) $("#imp-ajustar").onchange = atualizarMarcados;
+  if ($("#imp-trocar")) $("#imp-trocar").onchange = atualizarMarcados;
+  if (temPosicao) atualizarMarcados();
   if ($("#imp-todos")) $("#imp-todos").onclick = () => {
     const marcar = excluidos.size === ativosImp.length;
     $$("[data-ativo]").forEach((cx) => { cx.checked = marcar; marcar ? excluidos.delete(cx.dataset.ativo) : excluidos.add(cx.dataset.ativo); });
@@ -2140,6 +2200,7 @@ function previaImportacao(tudo) {
     $("#imp-ok").disabled = false;
     if (dlg.returnValue === "ok" && !total) { $("#arquivo-importar").click(); return; }
     if (dlg.returnValue !== "ok" || !total || !contarMarcados()) return;
+    const ajustes = ajustesAtuais();   // calculado antes de mexer nas listas
     $$("[data-sp]").forEach((inp) => { const v = numeroBR(inp.value); if (Number.isFinite(v) && v >= 0) semPreco[+inp.dataset.sp].preco = v; });
     for (const l of novos) delete l.semPreco;
     novos = novos.filter((l) => !excluidos.has(l.ticker));
@@ -2154,8 +2215,20 @@ function previaImportacao(tudo) {
       novos.push({ id: novoId(), ticker: p.ticker, tipo: "C", data: hoje, qtd: p.qtd,
         preco: Number.isFinite(pm) && pm >= 0 ? pm : p.preco, origem: "b3-posicao", evento: "Posição na B3" });
     });
-    c.lancamentos.push(...novos); salvar();
-    aviso(`${plural(novos.length, "item importado", "itens importados")} para ${c.nome}`);
+    c.lancamentos.push(...novos);
+    // ajuste pela posição: entra ou sai pelo preço médio de agora, então não muda o preço médio nem gera resultado
+    if (ajustes.length) {
+      const agora = Object.fromEntries(posicoes(c).map((p) => [p.ticker, p]));
+      for (const a of ajustes) {
+        const d = Math.round((a.para - (agora[a.ticker]?.qtd || 0)) * 1e6) / 1e6;
+        if (!d) continue;
+        const pm = agora[a.ticker]?.pm > 0 ? agora[a.ticker].pm : (Number.isFinite(a.preco) && a.preco > 0 ? a.preco : (precoAtual(a.ticker) ?? 0));
+        c.lancamentos.push({ id: novoId(), ticker: a.ticker, tipo: d > 0 ? "C" : "V", data: hoje, qtd: Math.abs(d), preco: +pm.toFixed(6),
+          origem: "b3-posicao", evento: "Ajuste pela posição da B3" });
+      }
+    }
+    salvar();
+    aviso(`${plural(novos.length, "item importado", "itens importados")} para ${c.nome}${ajustes.length ? `, com ${plural(ajustes.length, "ativo ajustado", "ativos ajustados")} à posição da B3` : ""}`);
     if (location.hash === "#carteira") render(); else ir("#carteira");
   };
 }
@@ -2937,7 +3010,7 @@ function avatarHTML(tam = 32, cls = "") {
   return foto ? `<img class="avatar ${cls}" src="${esc(foto)}" alt="" width="${tam}" height="${tam}" style="--tam:${tam}px">`
     : `<span class="avatar iniciais ${cls}" style="--tam:${tam}px" aria-hidden="true">${esc(ini)}</span>`;
 }
-const usuarioTopo = () => `<a href="#perfil" class="usuario-link" title="Abrir o seu perfil">${avatarHTML(30)}<span class="nome">${esc(S.estado.perfil.nome)}</span>${assinante() ? '<span class="selo-ouro mini">Ouro</span>' : emTeste() ? '<span class="selo-ouro mini">Teste Ouro</span>' : ""}</a>`;
+const usuarioTopo = () => `<a href="#perfil" class="usuario-link" title="Abrir o seu perfil (plano ${ehOuro() ? "Ouro" : "Grátis"})">${avatarHTML(30)}<span class="nome">${esc(S.estado.perfil.nome)}</span></a>`;
 /* recorta a foto em quadrado de 256 px antes de enviar */
 async function fotoQuadrada(arquivo) {
   const img = await createImageBitmap(arquivo);
