@@ -888,7 +888,8 @@ function graficoLinha(el, pontos, { altura = 280, cor = "var(--verde)", formato 
     grade += `<line x1="${m.e}" x2="${L - m.d}" y1="${y}" y2="${y}" stroke="var(--linha-2)"/>
       <text x="${L - m.d + 8}" y="${y + 4}" font-size="11.5" fill="var(--tinta-3)">${esc(formato(v))}</text>`;
   }
-  const marcas = [0, 1, 2, 3].map((k) => maisPerto(m.e + (k / 3) * (L - m.e - m.d)));
+  const nMarcas = L < 420 ? 2 : L < 640 ? 3 : 4; // datas sem encavalar em tela pequena
+  const marcas = [...Array(nMarcas).keys()].map((k) => maisPerto(m.e + (k / (nMarcas - 1)) * (L - m.e - m.d)));
   const eixo = marcas.map((i) => `<text x="${X(i)}" y="${A - 6}" font-size="11.5" fill="var(--tinta-3)" text-anchor="${i === 0 ? "start" : i === pontos.length - 1 ? "end" : "middle"}">${dataBR(pontos[i].d)}</text>`).join("");
   const pathA = caminho(pontos);
   el.innerHTML = `<svg viewBox="0 0 ${L} ${A}" height="${A}" role="img" aria-label="Gráfico">
@@ -1636,10 +1637,10 @@ function telaCarteiras() {
   $("#raiz").innerHTML = `<header class="barra-topo"><div class="barra-dentro">
       <a href="#carteiras" class="marca-link" aria-label="Milhão, tela inicial">${logoHTML("pequena")}</a>
       <nav class="servicos" aria-label="Serviços do Milhão">
-        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ações e FIIs")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("importar", "Importar da B3")}
+        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ativos da bolsa")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("importar", "Importar da B3")}
       </nav>
       <div class="busca">${ICO.busca}
-        <input type="search" id="busca" placeholder="Buscar ação ou FII" aria-label="Buscar ativo" autocomplete="off">
+        <input type="search" id="busca" placeholder="Buscar ativo" aria-label="Buscar ativo" autocomplete="off">
         <div class="sugestoes oculto" id="sugestoes" role="listbox"></div>
       </div>
       <span class="usuario">${usuarioTopo()}${botaoTema()}<button class="btn texto" id="sair" style="padding:4px 8px">Sair</button></span>
@@ -1712,7 +1713,7 @@ function moldura(rota) {
       <a href="#carteiras" class="marca-link" aria-label="Milhão, voltar para a tela inicial">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
-        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ações e FIIs")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("perfil", "Perfil")}
+        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("perfil", "Perfil")}
       </nav>
       <div class="rodape">
         <span>Cotações de fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span>
@@ -1725,7 +1726,7 @@ function moldura(rota) {
       ${S.meta?.demo ? `<div class="demo">Dados de demonstração com empresas fictícias. Quando o robô rodar no GitHub, aparecem as ações e FIIs reais da B3.</div>` : ""}
       <header class="topo">
         <div class="busca">${ICO.busca}
-          <input type="search" id="busca" placeholder="Buscar ação ou FII pelo código ou nome" aria-label="Buscar ativo" autocomplete="off">
+          <input type="search" id="busca" placeholder="Buscar ação, FII, ETF ou BDR" aria-label="Buscar ativo" autocomplete="off">
           <div class="sugestoes oculto" id="sugestoes" role="listbox"></div>
         </div>
         <span class="usuario">${usuarioTopo()}${botaoTema()}${S.usuario ? ` <button class="btn texto" id="sair-topo" style="padding:4px 8px">Sair</button>` : ""}</span>
@@ -1823,7 +1824,8 @@ rotas.carteira = async (el) => {
   const porClasse = {}, porSetor = {};
   for (const p of abertas) {
     const a = S.porTicker[p.ticker]; const v = p.valor || 0;
-    porClasse[a?.tipo === "fii" ? "FIIs" : "Ações"] = (porClasse[a?.tipo === "fii" ? "FIIs" : "Ações"] || 0) + v;
+    const nomeClasse = a?.tipo === "fii" ? "FIIs" : classe(a?.tipo).aba;
+    porClasse[nomeClasse] = (porClasse[nomeClasse] || 0) + v;
     porSetor[a?.setor || "Outros"] = (porSetor[a?.setor || "Outros"] || 0) + v;
   }
   const barra = (obj, titulo) => {
@@ -2341,6 +2343,27 @@ rotas.proventos = async (el) => {
 };
 
 /* ---------- tela: ações e FIIs (rankings + filtros) ---------- */
+// classes de ativo da base: nome no singular, aba dos rankings, como contar e unidade
+const CLASSES = {
+  acao: { nome: "Ação", aba: "Ações", conta: "ações", unidade: "ações", rotulo: "ação" },
+  fii: { nome: "Fundo imobiliário", aba: "Fundos imobiliários", conta: "fundos", unidade: "cotas", rotulo: "FII" },
+  fiagro: { nome: "Fiagro", aba: "Fiagros", conta: "fundos", unidade: "cotas", rotulo: "Fiagro" },
+  etf: { nome: "ETF", aba: "ETFs", conta: "ETFs", unidade: "cotas", rotulo: "ETF" },
+  bdr: { nome: "BDR", aba: "BDRs", conta: "BDRs", unidade: "BDRs", rotulo: "BDR" },
+};
+const classe = (tipo) => CLASSES[tipo] || CLASSES.acao;
+const ehFundo = (tipo) => tipo === "fii" || tipo === "fiagro";
+const PRESETS_MERCADO = [
+  ["Mais negociados", (a) => a, "liq", -1],
+  ["Maiores altas em 30 dias", (a) => a.filter((x) => x.var_30d != null), "var_30d", -1],
+  ["Maiores quedas em 30 dias", (a) => a.filter((x) => x.var_30d != null), "var_30d", 1],
+  ["Maiores altas em 12 meses", (a) => a.filter((x) => x.var_12m != null), "var_12m", -1],
+  ["Maiores quedas em 12 meses", (a) => a.filter((x) => x.var_12m != null), "var_12m", 1],
+  ["Favoritos", (a) => a.filter((x) => ehFavorito(x.t)), "liq", -1],
+];
+const COLS_MERCADO = [["t", "Ativo"], ["preco", "Cotação", brl], ["var_dia", "Dia", (v) => `<span class="${cls(v)}">${pct(v, 2, true)}</span>`],
+  ["var_30d", "30 dias", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`], ["var_12m", "12 meses", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`],
+  ["dy", "DY 12m", pct], ["liq", "Liquidez diária", compacto]];
 const PRESETS = {
   acao: [
     ["Mais negociadas", (a) => a, "liq", -1],
@@ -2365,6 +2388,13 @@ const PRESETS = {
     ["Maiores altas em 12 meses", (a) => a.filter((x) => x.var_12m != null), "var_12m", -1],
     ["Favoritos", (a) => a.filter((x) => ehFavorito(x.t)), "liq", -1],
   ],
+  fiagro: [
+    ["Mais negociados", (a) => a, "liq", -1],
+    ["Maiores dividend yields", (a) => a.filter((x) => x.dy > 0), "dy", -1],
+    ...PRESETS_MERCADO.slice(1),
+  ],
+  etf: PRESETS_MERCADO,
+  bdr: PRESETS_MERCADO,
 };
 // coluna extra quando o ranking ordena por um indicador que a tabela não mostra
 const COL_EXTRA = { m_liq: ["Margem líquida", pct], lucro: ["Lucro 12 meses", compacto], vm: ["Valor de mercado", compacto],
@@ -2375,22 +2405,27 @@ const COLS = {
     ["up_graham", "Upside Graham", (v) => `<span class="${cls(v)}">${pct(v, 0, true)}</span>`], ["pontos", "Buy and hold", (v) => vazio(v) ? "–" : v + "/8"], ["liq", "Liquidez diária", compacto]],
   fii: [["t", "Fundo"], ["setor", "Segmento"], ["preco", "Cotação", brl], ["var_12m", "12 meses", (v) => `<span class="${cls(v)}">${pct(v, 1, true)}</span>`],
     ["dy", "DY 12m", pct], ["pvp", "P/VP", xv], ["vp", "VP por cota", brl], ["magic", "Magic number", (v) => vazio(v) ? "–" : F.n0.format(v)], ["liq", "Liquidez diária", compacto]],
+  fiagro: COLS_MERCADO, etf: COLS_MERCADO, bdr: COLS_MERCADO,
 };
 const FILTROS = {
   acao: [["dy", "DY (%)", 100], ["pl", "P/L", 1], ["pvp", "P/VP", 1], ["roe", "ROE (%)", 100]],
   fii: [["dy", "DY (%)", 100], ["pvp", "P/VP", 1], ["liq", "Liquidez (R$ mil)", 1 / 1000]],
+  fiagro: [["dy", "DY (%)", 100], ["liq", "Liquidez (R$ mil)", 1 / 1000]],
+  etf: [["var_12m", "12 meses (%)", 100], ["liq", "Liquidez (R$ mil)", 1 / 1000]],
+  bdr: [["var_12m", "12 meses (%)", 100], ["liq", "Liquidez (R$ mil)", 1 / 1000]],
 };
 const UI = { tipo: "acao", preset: 0, ordem: null, dir: -1, filtros: {}, setor: "" };
 rotas.explorar = (el) => {
   const dados = S.ativos.map((a) => ({ ...a, up_graham: a.graham && a.preco ? a.graham / a.preco - 1 : null }));
   const setores = [...new Set(dados.filter((a) => a.tipo === UI.tipo).map((a) => a.setor))].sort();
-  el.innerHTML = `<div class="cabeca"><div><h1>Ações e FIIs</h1><p class="sutil" style="margin:6px 0 0">Rankings prontos e filtros por indicador. Clique no título de uma coluna para ordenar.</p></div></div>
-    <div class="abas" role="tablist">
-      <button role="tab" aria-selected="${UI.tipo === "acao"}" data-tipo="acao">Ações</button>
-      <button role="tab" aria-selected="${UI.tipo === "fii"}" data-tipo="fii">Fundos imobiliários</button></div>
+  const tipos = Object.keys(CLASSES).filter((k) => k === "acao" || k === "fii" || dados.some((a) => a.tipo === k));
+  if (!tipos.includes(UI.tipo)) UI.tipo = "acao";
+  const unico = setores.length < 2;
+  el.innerHTML = `<div class="cabeca"><div><h1>Ativos da bolsa</h1><p class="sutil" style="margin:6px 0 0">Ações, fundos imobiliários, Fiagros, ETFs e BDRs negociados na B3. Rankings prontos e filtros. Clique no título de uma coluna para ordenar.</p></div></div>
+    <div class="abas" role="tablist">${tipos.map((k) => `<button role="tab" aria-selected="${UI.tipo === k}" data-tipo="${k}">${CLASSES[k].aba}</button>`).join("")}</div>
     <div class="chips">${PRESETS[UI.tipo].map((p, i) => `<button class="chip" aria-pressed="${UI.preset === i}" data-preset="${i}">${p[0]}</button>`).join("")}</div>
     <div class="filtros">
-      <label class="campo">${UI.tipo === "fii" ? "Segmento" : "Setor"}<select id="f-setor"><option value="">Todos</option>${setores.map((s) => `<option ${s === UI.setor ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></label>
+      <label class="campo" ${unico ? `style="display:none"` : ""}>${UI.tipo === "fii" ? "Segmento" : "Setor"}<select id="f-setor"><option value="">Todos</option>${setores.map((s) => `<option ${s === UI.setor ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></label>
       ${FILTROS[UI.tipo].map(([k, n]) => `<label class="campo">${n}<span class="faixa">
         <input type="number" step="any" placeholder="mín." data-f="${k}" data-lim="min" value="${UI.filtros[k + "min"] ?? ""}">
         <input type="number" step="any" placeholder="máx." data-f="${k}" data-lim="max" value="${UI.filtros[k + "max"] ?? ""}"></span></label>`).join("")}
@@ -2413,7 +2448,7 @@ rotas.explorar = (el) => {
       if (vazio(x) && vazio(y)) return 0; if (vazio(x)) return 1; if (vazio(y)) return -1;
       return (typeof x === "string" ? x.localeCompare(y) : x - y) * d;
     });
-    $("#contagem").textContent = `${lista.length} ${UI.tipo === "fii" ? "fundos" : "ações"}`;
+    $("#contagem").textContent = `${lista.length} ${classe(UI.tipo).conta}`;
     $("#tabela").innerHTML = lista.length ? `<table><thead><tr><th>#</th>${cols.map(([k, n]) => `<th class="ordena ${k === "setor" || k === "t" ? "esq" : ""}" data-k="${k}" aria-sort="${ord === k ? (d > 0 ? "ascending" : "descending") : "none"}">${n}</th>`).join("")}</tr></thead>
       <tbody>${lista.map((a, i) => `<tr><td class="fraco">${i + 1}</td>${cols.map(([k, , f]) => k === "t"
         ? `<td class="esq"><a class="tk" href="#ativo-${a.t}">${a.t}</a><small>${esc(a.n)}</small></td>`
@@ -2583,16 +2618,17 @@ rotas.ativo = async (el, t) => {
   el.innerHTML = `<p class="fraco">Carregando ${esc(t)}…</p>`;
   let d;
   try { d = await detalhe(t); } catch (e) {
-    el.innerHTML = `<div class="painel vazio"><h3>${esc(t)} não está na base</h3><p>Confira o código. A base traz as ações e FIIs negociados no último pregão.</p><div class="acoes"><a class="btn" href="#explorar">Ver todos os ativos</a></div></div>`; return;
+    el.innerHTML = `<div class="painel vazio"><h3>${esc(t)} não está na base</h3><p>Confira o código. A base traz as ações, FIIs, Fiagros, ETFs e BDRs negociados no último pregão.</p><div class="acoes"><a class="btn" href="#explorar">Ver todos os ativos</a></div></div>`; return;
   }
-  const fii = d.tipo === "fii", ind = d.ind || {}, med = d.setor_mediana || {};
+  const fii = ehFundo(d.tipo), simples = d.tipo === "etf" || d.tipo === "bdr", ind = d.ind || {}, med = d.setor_mediana || {};
   const pos = posicoes(carteira()).find((p) => p.ticker === t && p.qtd > 0);
   const abas = fii
     ? [["resumo", "Resumo"], ["rendimentos", "Rendimentos"], ["fundo", "Sobre o fundo"]]
+    : simples ? [["resumo", "Resumo"], ["dividendos", "Proventos"]]
     : [["resumo", "Resumo"], ["dividendos", "Dividendos"], ["preco", "Preço justo"], ["numeros", "Números da empresa"]];
   el.innerHTML = `
     <div class="cabeca ativo-cab">
-      <div><span class="selo ${fii ? "fii" : ""}">${fii ? "Fundo imobiliário" : "Ação"}</span>
+      <div><span class="selo ${d.tipo === "acao" ? "" : "fii"}">${classe(d.tipo).nome}</span>
         <h1 style="margin-top:8px">${esc(d.ticker)}</h1>
         <p class="sutil" style="margin:4px 0 0">${esc(d.nome)}, ${esc(d.setor)}</p></div>
       <div><div class="preco">${brl(d.preco)}</div>
@@ -2602,10 +2638,10 @@ rotas.ativo = async (el, t) => {
           <a class="btn" href="#comparar-${[d.ticker, ...(d.pares || []).filter((p) => S.porTicker[p]).slice(0, 4)].join(",")}">${ICO.comparar}Comparar com o setor</a>
           <button class="btn primario" id="add">Adicionar à carteira</button></div></div>
     </div>
-    ${pos ? `<p class="sutil" style="margin:-8px 0 16px">Você tem ${qtdF(pos.qtd)} ${fii ? "cotas" : "ações"} a ${brl(pos.pm)} de preço médio: <b class="${cls(pos.resultado)}">${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}</b>.</p>` : ""}
+    ${pos ? `<p class="sutil" style="margin:-8px 0 16px">Você tem ${qtdF(pos.qtd)} ${classe(d.tipo).unidade} a ${brl(pos.pm)} de preço médio: <b class="${cls(pos.resultado)}">${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}</b>.</p>` : ""}
     <div class="abas" role="tablist">${abas.map(([k, n], i) => `<button role="tab" aria-selected="${i === 0}" data-aba="${k}">${n}</button>`).join("")}</div>
-    ${abas.map(([k], i) => `<section data-painel="${k}" class="${i ? "oculto" : ""}">${(fii ? PAINEIS_FII : PAINEIS_ACAO)[k](d, ind, med)}</section>`).join("")}
-    <p class="fraco" style="margin-top:18px">Calculado pelo Milhão com dados da CVM${d.base?.referencia ? " até " + dataBR(d.base.referencia) : ""} e cotações da B3. Não é recomendação de investimento.</p>`;
+    ${abas.map(([k], i) => `<section data-painel="${k}" class="${i ? "oculto" : ""}">${(fii ? PAINEIS_FII : simples ? PAINEIS_MERCADO : PAINEIS_ACAO)[k](d, ind, med)}</section>`).join("")}
+    <p class="fraco" style="margin-top:18px">Calculado pelo Milhão com ${simples ? "" : `dados da CVM${d.base?.referencia ? " até " + dataBR(d.base.referencia) : ""} e `}cotações da B3. Não é recomendação de investimento.</p>`;
   $("#add").onclick = () => abrirLancamento(d.ticker);
   $("#fav").onclick = (e) => {
     const agora = alternarFavorito(d.ticker), b = e.currentTarget;
@@ -2639,7 +2675,7 @@ function blocoCotacao(d) {
     <div class="grafico" id="g-preco"></div><p class="fraco" id="rent-periodo" style="margin:6px 0 0"></p></div>`;
 }
 function ligarCotacao(d) {
-  const fii = d.tipo === "fii", todos = d.precos.map(([dd, v]) => ({ d: dd, v }));
+  const fii = d.tipo !== "acao" && d.tipo !== "bdr", todos = d.precos.map(([dd, v]) => ({ d: dd, v }));
   const periodo = (dias) => {
     const corte = new Date(new Date(d.data).getTime() - dias * 864e5).toISOString().slice(0, 10);
     const pts = todos.filter((p) => p.d >= corte);
@@ -2651,7 +2687,7 @@ function ligarCotacao(d) {
   periodo(366);
 }
 function blocoProventos(d) {
-  const fii = d.tipo === "fii";
+  const fii = d.tipo !== "acao" && d.tipo !== "bdr";
   return `<div class="painel"><div class="cabeca" style="margin-bottom:8px"><h2 style="margin:0">${fii ? "Rendimentos" : "Dividendos e JCP"}</h2>
       ${d.proventos_estimados ? `<span class="fraco">Estimados pelo informe mensal da CVM</span>` : ""}</div>
     <div class="grade g-2"><div><h3 style="margin-bottom:8px">Pago por ${fii ? "cota" : "ação"}, por ano</h3><div id="g-div"></div></div>
@@ -2757,6 +2793,24 @@ const PAINEIS_ACAO = {
   },
 };
 
+// ETFs e BDRs: sem balanço na CVM, a página mostra preço, variação, liquidez e proventos
+const PAINEIS_MERCADO = {
+  resumo: (d, ind) => {
+    const a = S.porTicker[d.ticker] || {}, etf = d.tipo === "etf";
+    const cartoes = [
+      ["12 meses", pct(d.var_12m, 1, true), "Variação da cotação no último ano, sem contar proventos.", cls(d.var_12m)],
+      ["30 dias", pct(a.var_30d, 1, true), "Variação da cotação no último mês.", cls(a.var_30d)],
+      ["Proventos", ind.dy ? pct(ind.dy) + " em 12 meses" : "–", ind.dy ? "Pago nos últimos 12 meses, sobre a cotação de hoje." : etf ? "A maior parte dos ETFs reinveste o que recebe em vez de pagar." : "Sem pagamentos registrados na base."],
+      ["Liquidez", compacto(d.liquidez), "Negociado por dia, em média. Quanto mais, mais fácil comprar e vender."],
+    ];
+    const nota = etf ? "ETF é um fundo negociado na bolsa que segue um índice. Com uma cota você compra um pedaço de todos os ativos do índice."
+      : "BDR é um recibo negociado na B3 que representa ações de uma empresa de fora do Brasil. O preço acompanha a ação lá fora e o dólar.";
+    return `<p class="sutil" style="margin:0 0 14px">${nota}</p>
+      <div class="cartoes">${cartoes.map(([n, v, tx, c]) => `<div><span>${n}</span><strong class="${c || ""}">${v}</strong><p>${tx}</p></div>`).join("")}</div>
+      ${blocoCotacao(d)}`;
+  },
+  dividendos: (d) => blocoProventos(d),
+};
 const PAINEIS_FII = {
   resumo: (d, ind) => {
     const pvp = ind.pvp, ult = ind.ultimo_rendimento;
@@ -2966,7 +3020,7 @@ function leituraGrafico(dados, pos, teto, d) {
     : forca <= 30 ? [xv(forca, 0), "Caiu forte nos últimos dias. Costuma ser chamado de sobrevenda."]
     : [xv(forca, 0), "Sem exagero para cima nem para baixo."];
   const cartoes = [];
-  if (pos) cartoes.push(["Sua posição", `${qtdF(pos.qtd)} ${S.porTicker[pos.ticker]?.tipo === "fii" ? "cotas" : "ações"}`,
+  if (pos) cartoes.push(["Sua posição", `${qtdF(pos.qtd)} ${classe(S.porTicker[pos.ticker]?.tipo).unidade}`,
     `Preço médio de ${brl(pos.pm)}. Resultado de <b class="${cls(pos.resultado)}">${brl(pos.resultado)}</b> (${pct(pos.custo ? pos.resultado / pos.custo : null, 1, true)}). A cotação está ${pct(Math.abs(ult / pos.pm - 1), 1)} ${ult >= pos.pm ? "acima" : "abaixo"} do seu preço médio.`]);
   if (teto) cartoes.push(["Preço teto", brl(teto), `Pelo ${d?.banco ? "modelo de dividendos" : "fluxo de caixa"}, com ${pct(margemSeguranca(), 0)} de margem. Hoje está <b class="${ult <= teto ? "alta" : "baixa"}">${ult <= teto ? "abaixo do teto" : "acima do teto"}</b>.`]);
   cartoes.push(["Tendência", tendencia[0], tendencia[1]]);
@@ -3249,10 +3303,10 @@ rotas.agenda = async (el) => {
     for (const p of radar) (porMes[p.mes] ??= []).push(p);
     const meses = Object.keys(porMes).sort();
     if (!meses.length) return `<p class="fraco">${vazioFiltro}</p>`;
-    return `<p class="imp-nota" style="margin:0 0 12px">Projeção pelo histórico: o mês em que cada ação teve data com em pelo menos 2 dos últimos 3 anos. Não é anúncio. A empresa pode mudar a data, o valor ou não pagar.</p>
+    return `<p class="imp-nota" style="margin:0 0 12px">Projeção pelo histórico: o mês em que cada ação teve data com antes (em pelo menos 2 dos anos que a base cobre, ou no mesmo mês do ano passado quando só há um ano de histórico). Não é anúncio. A empresa pode mudar a data, o valor ou não pagar.</p>
       ${meses.map((mes) => `<h3 class="radar-mes">${maiuscula(new Date(mes + "-15").toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))}</h3>
         <div class="rolagem"><table><thead><tr><th class="esq">Ação</th><th class="esq">Costuma pagar</th><th>Média por ação</th><th>DY médio</th></tr></thead><tbody>
-        ${porMes[mes].map((p) => `<tr><td class="esq"><a class="tk" href="#ativo-${p.t}">${p.t}</a></td><td class="esq">em ${p.anos} dos últimos 3 anos</td><td>${brl(p.valor, 4)}</td><td>${pct(p.dy, 2)}</td></tr>`).join("")}</tbody></table></div>`).join("")}`;
+        ${porMes[mes].map((p) => `<tr><td class="esq"><a class="tk" href="#ativo-${p.t}">${p.t}</a></td><td class="esq">${(p.de || 3) === 1 ? "no mesmo mês do ano passado" : `em ${p.anos} de ${p.de || 3} anos`}</td><td>${brl(p.valor, 4)}</td><td>${pct(p.dy, 2)}</td></tr>`).join("")}</tbody></table></div>`).join("")}`;
   };
   el.innerHTML = `<div class="cabeca"><div><h1>Agenda de dividendos</h1><p class="sutil" style="margin:6px 0 0">Datas com e pagamentos que as empresas e fundos já anunciaram, e o radar dos meses em que cada ação costuma pagar.</p></div></div>
     <div class="chips">${[["todos", "Todo o mercado"], ["carteira", "Minha carteira"], ["favoritos", "Favoritos"]].map(([k, n]) => `<button class="chip" data-filtro="${k}" aria-pressed="${UIA.filtro === k}">${n}</button>`).join("")}</div>
@@ -3808,7 +3862,7 @@ async function contextoFiltrao() {
       L.push("Posições (ativo | tipo | quantidade | preço médio | cotação | resultado | % da carteira | preço teto):");
       for (const p of pos) {
         const a = S.porTicker[p.ticker], d = S.det[p.ticker], teto = d ? precoTeto(d) : null;
-        L.push(`${p.ticker} | ${a?.tipo === "fii" ? "FII" : "ação"} | ${qtdF(p.qtd)} | ${brl(p.pm)} | ${brl(p.preco)} | ${pct(p.custo ? (p.valor - p.custo) / p.custo : null, 1, true)} | ${pct(r.total ? p.valor / r.total : null, 1)} | ${teto ? brl(teto) : "–"}`);
+        L.push(`${p.ticker} | ${classe(a?.tipo).rotulo} | ${qtdF(p.qtd)} | ${brl(p.pm)} | ${brl(p.preco)} | ${pct(p.custo ? (p.valor - p.custo) / p.custo : null, 1, true)} | ${pct(r.total ? p.valor / r.total : null, 1)} | ${teto ? brl(teto) : "–"}`);
       }
     }
   }
