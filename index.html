@@ -3479,7 +3479,7 @@ rotas.imposto = async (el) => {
           <td>${m.compC + m.compF ? brl(m.compC + m.compF) : "–"}</td>
           <td><b>${m.darf ? brl(m.darf) : "–"}</b>${!m.darf && m.pendente ? `<small class="fraco">${brl(m.pendente)} fica para o mês seguinte</small>` : ""}</td>
           <td>${m.darf ? dataBR(m.venc) : "–"}</td></tr>`).join("")}</tbody></table></div>
-        <p class="fraco" style="margin:10px 0 0">DARF abaixo de R$ 10 não é pago: soma com o do mês seguinte. O vencimento é o último dia útil do mês seguinte, sem contar feriados. Na declaração, o resultado de cada mês vai na ficha Renda Variável, em Operações comuns, e o lucro isento em Rendimentos Isentos e Não Tributáveis.</p></div>` : vazioTxt}`;
+        <p class="fraco" style="margin:10px 0 0">DARF abaixo de R$ 10 não é pago: soma com o do mês seguinte. O vencimento é o último dia útil do mês seguinte, sem contar feriados. Na declaração, o resultado de cada mês vai na ficha Renda Variável, em Operações comuns, e o lucro isento em Rendimentos Isentos e Não Tributáveis.</p></div>` : `<div class="painel vazio"><p>Nenhuma venda em ${ano}. O imposto só aparece no mês em que você vende com lucro.</p></div>`}`;
   } else if (UIR.aba === "bens") {
     const linhas = await bensIR(c, ano);
     if (location.hash !== "#imposto") return;
