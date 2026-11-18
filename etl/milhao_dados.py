@@ -156,7 +156,8 @@ def ler_cotahist(texto: str) -> list[dict]:
             tk = ln[12:24].strip()
             if len(item["exemplos"]) < 12 and tk not in item["exemplos"]:
                 item["exemplos"].append(tk)
-        if tpmerc != "010" or codbdi not in ("02", "12"):  # lote padrão e FII
+        # 02 lote padrão (ações e parte dos BDRs), 12 FII, 13 Fiagro, 14 ETF, 34/36 BDRs
+        if tpmerc != "010" or codbdi not in ("02", "12", "13", "14", "34", "36"):
             continue
         linhas.append({
             "data": ln[2:10],
@@ -173,6 +174,19 @@ def ler_cotahist(texto: str) -> list[dict]:
             "isin": ln[230:242].strip(),
         })
     return linhas
+
+
+def tipo_ativo(bdi: str, especi: str) -> str:
+    """Classe do ativo pelo código BDI e pela especificação do COTAHIST."""
+    if bdi == "12":
+        return "fii"
+    if bdi == "13":
+        return "fiagro"
+    if bdi == "14":
+        return "etf"
+    if bdi in ("34", "36") or (especi or "").startswith("DR"):
+        return "bdr"
+    return "acao"
 
 
 def carregar_cotacoes(fonte: Fonte, anos: int) -> pd.DataFrame:
@@ -820,7 +834,7 @@ def montar_indicadores(fonte: Fonte) -> dict | None:
 
 def montar_agenda(detalhes: dict, hoje: dt.date) -> dict:
     """Agenda de proventos do mercado: o que já foi anunciado e o radar (meses em que cada ação
-    costuma ter data com, pelo histórico dos últimos 3 anos). Projeção, não promessa."""
+    costuma ter data com, pelo histórico de até 3 anos que a base tiver). Projeção, não promessa."""
     inicio = (hoje - dt.timedelta(days=45)).isoformat()
     anunciados, radar = [], []
     for tk, d in detalhes.items():
@@ -833,23 +847,25 @@ def montar_agenda(detalhes: dict, hoje: dt.date) -> dict:
                                    "valor": r(p["valor"], 6), "dy": r(div(p["valor"], preco))})
         if d.get("tipo") != "acao":
             continue
-        # meses com data com em cada um dos 3 anos fechados anteriores
-        anos = [hoje.year - k for k in (1, 2, 3)]
-        meses = defaultdict(lambda: defaultdict(float))
+        # valor com data com em cada mês (AAAA-MM) do histórico
+        por_mes = defaultdict(float)
         for p in provs:
-            a, m = int(p["data_com"][:4]), int(p["data_com"][5:7])
-            if a in anos:
-                meses[m][a] += p["valor"]
-        ja = {p["data_com"][:7] for p in provs if p["data_com"] >= hoje.replace(day=1).isoformat()}
+            por_mes[p["data_com"][:7]] += p["valor"]
+        ja = {m for m in por_mes if m >= hoje.replace(day=1).isoformat()[:7]}
+        if not por_mes:
+            continue
+        cobertura = min(por_mes)  # até onde vai o histórico desta ação
         for k in range(0, 12):
             mes_n = (hoje.month - 1 + k) % 12 + 1
             ano_n = hoje.year + (hoje.month - 1 + k) // 12
             chave = f"{ano_n}-{mes_n:02d}"
-            vezes = len(meses[mes_n])
-            if vezes >= 2 and chave not in ja:
-                radar.append({"t": tk, "mes": chave, "anos": vezes,
-                              "valor": r(sum(meses[mes_n].values()) / vezes, 6),
-                              "dy": r(div(sum(meses[mes_n].values()) / vezes, preco))})
+            # mesmo mês nos até 3 anos anteriores que a base cobre (a B3 costuma trazer só o último ano)
+            olhados = [f"{ano_n - j}-{mes_n:02d}" for j in (1, 2, 3)
+                       if f"{ano_n - j}-{mes_n:02d}" >= cobertura and f"{ano_n - j}-{mes_n:02d}" < hoje.isoformat()[:7]]
+            achou = [por_mes[m] for m in olhados if por_mes.get(m)]
+            if olhados and len(achou) >= min(2, len(olhados)) and chave not in ja:
+                radar.append({"t": tk, "mes": chave, "anos": len(achou), "de": len(olhados),
+                              "valor": r(sum(achou) / len(achou), 6), "dy": r(div(sum(achou) / len(achou), preco))})
     anunciados.sort(key=lambda x: (x["data_com"], x["t"]))
     radar.sort(key=lambda x: (x["mes"], -(x["anos"]), x["t"]))
     return {"gerado_em": hoje.isoformat(), "anunciados": anunciados, "radar": radar}
@@ -924,7 +940,10 @@ def main() -> None:
     ultimos = cot.sort_values("data").groupby("ticker").tail(1).set_index("ticker")
     emissores = {}
     for tk, row in ultimos.iterrows():
-        emissores[tk[:4]] = "fii" if row["bdi"] == "12" else emissores.get(tk[:4], "acao")
+        tp = tipo_ativo(row["bdi"], row["especi"])
+        if tp in ("etf", "bdr"):  # sem consulta de proventos na B3 por enquanto
+            continue
+        emissores[tk[:4]] = "fii" if tp in ("fii", "fiagro") else emissores.get(tk[:4], "acao")
     dinheiro, eventos = carregar_proventos(fonte, emissores)
 
     print("5/5 montando arquivos", flush=True)
@@ -937,7 +956,10 @@ def main() -> None:
     lista_ativos, detalhes = [], {}
     for tk, grupo in cot.groupby("ticker"):
         u = grupo.iloc[-1]
-        isin, tipo = u["isin"], ("fii" if u["bdi"] == "12" else "acao")
+        isin, tipo = u["isin"], tipo_ativo(u["bdi"], u["especi"])
+        liq = grupo.tail(21)["volume"].mean()
+        if tipo == "bdr" and not liq >= 50_000:  # só BDRs com negócio de verdade (média de R$ 50 mil por dia)
+            continue
         pontos = serie_preco(grupo, eventos.get(isin, []))
         if len(pontos) >= 5:
             (saida / "ohlc" / f"{tk}.json").write_text(json.dumps(
@@ -945,9 +967,16 @@ def main() -> None:
         if len(pontos) < 5:
             continue
         preco = pontos[-1][1]
-        liq = grupo.tail(21)["volume"].mean()
         prov = dinheiro.get(isin, [])
-        if tipo == "fii":
+        if tipo == "fiagro":
+            det = montar_fii(tk, preco, pontos, {}, prov)
+            nome, setor = u["nome"], "Fiagros"
+        elif tipo in ("etf", "bdr"):
+            lista_p = sorted(prov, key=lambda p: p.get("data_com") or "", reverse=True)
+            det = {"ind": {"dy": r(div(proventos_12m(lista_p, pontos[-1][0]), preco)) if lista_p else None},
+                   "proventos": lista_p[:120]}
+            nome, setor = u["nome"], "ETFs" if tipo == "etf" else "BDRs"
+        elif tipo == "fii":
             info = fii_info.get(isin, {})
             if not prov and info.get("dy_mes") and info.get("vp_cota"):
                 # o informe traz o DY do mês sobre o valor patrimonial; aceita fração ou percentual
