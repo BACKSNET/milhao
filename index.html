@@ -514,6 +514,11 @@ details.ajustar .painel{border:none;padding:0}
 .cal-item{display:block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 5px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-item.com{color:var(--verde);background:var(--verde-claro)}
 .cal-item.pag{color:#8A6416;background:var(--ouro-claro)}
+.ir-escolhas{align-items:flex-end}.ir-escolhas .campo{min-width:150px}
+.ir-tabela td small{display:block;font-size:12px;margin-top:2px}
+.ir-texto{min-width:280px;max-width:420px;white-space:normal}.ir-texto span{display:block;margin-bottom:4px;line-height:1.4}
+.ir-trava h2{display:flex;align-items:center;gap:8px}.ir-trava .cadeado{width:20px;height:20px}
+.ir-lista{margin:0 0 16px;padding-left:20px;line-height:1.7;color:var(--tinta-2)}
 .radar-mes{margin:18px 0 6px;font-size:16px}
 .radar-mes:first-of-type{margin-top:4px}
 .comparar-com{font-size:13px;color:var(--tinta-3);display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -1402,6 +1407,7 @@ function GraficoVelas(caixa) {
 
 /* ---------- ícones ---------- */
 const ICO = {
+  imposto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
   perfil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>',
   carteira: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2M3 10h18M7 6V4h10v2"/></svg>',
   proventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1 0-2-.5-2.5-1.5M12 6.5V8M12 16v1.5"/></svg>',
@@ -1637,7 +1643,7 @@ function telaCarteiras() {
   $("#raiz").innerHTML = `<header class="barra-topo"><div class="barra-dentro">
       <a href="#carteiras" class="marca-link" aria-label="Milhão, tela inicial">${logoHTML("pequena")}</a>
       <nav class="servicos" aria-label="Serviços do Milhão">
-        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ativos da bolsa")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("importar", "Importar da B3")}
+        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ativos da bolsa")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("imposto", "Imposto de Renda")}${servico("importar", "Importar da B3")}
       </nav>
       <div class="busca">${ICO.busca}
         <input type="search" id="busca" placeholder="Buscar ativo" aria-label="Buscar ativo" autocomplete="off">
@@ -1713,7 +1719,7 @@ function moldura(rota) {
       <a href="#carteiras" class="marca-link" aria-label="Milhão, voltar para a tela inicial">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
-        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("perfil", "Perfil")}
+        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("imposto", "Imposto de Renda")}${item("perfil", "Perfil")}
       </nav>
       <div class="rodape">
         <span>Cotações de fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span>
@@ -3329,6 +3335,181 @@ async function carregarIndicadores() {
   try { S.indicadores = await j("data/indicadores.json"); } catch (e) { S.indicadores = null; }
   return S.indicadores;
 }
+/* ---------- tela: imposto de renda (Ouro) ---------- */
+// Regras de 2026: ações 15% com isenção para vendas de até R$ 20 mil no mês; ETFs e BDRs 15% sem isenção;
+// FIIs e Fiagros 20% sem isenção; DARF 6015 até o último dia útil do mês seguinte, mínimo de R$ 10.
+const IR_FICHA = {
+  acao: ["03", "01", "Ações"], bdr: ["04", "04", "Ativos negociados em bolsa no Brasil (BDRs)"],
+  fii: ["07", "03", "Fundo de Investimento Imobiliário (FII)"], fiagro: ["07", "02", "Fiagro"], etf: ["07", "09", "Fundos de índice (ETFs)"],
+};
+const UIR = { ano: null, aba: "mensal", carteira: "todas" };
+const tipoIR = (t) => S.porTicker[t]?.tipo || "acao";
+const MESES_IR = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+function ultimoDiaUtil(ano, mes) { // mes de 1 a 12; não desconta feriados
+  const d = new Date(Date.UTC(ano, mes, 0));
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+function carteiraIR() {
+  if (UIR.carteira !== "todas") { const c = S.estado.carteiras.find((x) => x.id === UIR.carteira); if (c) return c; UIR.carteira = "todas"; }
+  return { nome: "Todas as carteiras", lancamentos: S.estado.carteiras.flatMap((c) => c.lancamentos) };
+}
+// vendas com o lucro pelo preço médio e a posição (quantidade e custo) em cada fim de ano
+function replayIR(c) {
+  const pos = {}, vendas = [], fimAno = {};
+  const lanc = ordenados(c);
+  const compras = new Set(lanc.filter((l) => l.tipo === "C").map((l) => l.ticker + "|" + l.data));
+  let anoAtual = lanc[0] ? +lanc[0].data.slice(0, 4) : null;
+  const fechar = (ate) => { while (anoAtual !== null && anoAtual < ate) { fimAno[anoAtual] = JSON.parse(JSON.stringify(pos)); anoAtual++; } };
+  for (const l of lanc) {
+    fechar(+l.data.slice(0, 4));
+    const p = pos[l.ticker] ??= { qtd: 0, custo: 0 };
+    if (l.tipo === "C" || l.tipo === "B") { p.custo += l.qtd * (l.preco || 0); p.qtd += l.qtd; }
+    else if (l.tipo === "G") { p.qtd = Math.max(p.qtd - l.qtd, 0); if (!p.qtd) p.custo = 0; }
+    else {
+      const pm = p.qtd ? p.custo / p.qtd : 0, q = Math.min(l.qtd, p.qtd);
+      vendas.push({ data: l.data, ticker: l.ticker, qtd: q, valor: q * l.preco, lucro: q * (l.preco - pm), mesmoDia: compras.has(l.ticker + "|" + l.data) });
+      p.custo -= q * pm; p.qtd = Math.round((p.qtd - q) * 1e6) / 1e6;
+    }
+  }
+  fechar(new Date().getFullYear() + 1);
+  return { vendas, fimAno };
+}
+function apuracaoIR(c, ano) {
+  const { vendas } = replayIR(c);
+  const primeiro = vendas.length ? +vendas[0].data.slice(0, 4) : ano;
+  let prejC = 0, prejF = 0, pendente = 0, saida = [];
+  for (let a = Math.min(primeiro, ano); a <= ano; a++) for (let m = 1; m <= 12; m++) {
+    const chave = `${a}-${String(m).padStart(2, "0")}`;
+    const vs = vendas.filter((v) => v.data.startsWith(chave));
+    const soma = (f) => vs.filter(f).reduce((s, v) => s + v.lucro, 0);
+    const vAcoes = vs.filter((v) => tipoIR(v.ticker) === "acao").reduce((s, v) => s + v.valor, 0);
+    const lAcoes = soma((v) => tipoIR(v.ticker) === "acao");
+    const lOutros = soma((v) => ["etf", "bdr"].includes(tipoIR(v.ticker)));
+    const lFundos = soma((v) => ehFundo(tipoIR(v.ticker)));
+    const isento = vAcoes <= 20000, ganhoIsento = isento && lAcoes > 0 ? lAcoes : 0;
+    let baseC = (isento ? Math.min(lAcoes, 0) : lAcoes) + lOutros, baseF = lFundos;
+    const compC = baseC > 0 ? Math.min(baseC, prejC) : 0, compF = baseF > 0 ? Math.min(baseF, prejF) : 0;
+    if (baseC > 0) { baseC -= compC; prejC -= compC; } else { prejC -= baseC; baseC = 0; }
+    if (baseF > 0) { baseF -= compF; prejF -= compF; } else { prejF -= baseF; baseF = 0; }
+    const devido = baseC * 0.15 + baseF * 0.2, total = devido + pendente;
+    let darf = 0;
+    if (total >= 10) { darf = total; pendente = 0; } else pendente = total;
+    const venc = m === 12 ? ultimoDiaUtil(a + 1, 1) : ultimoDiaUtil(a, m + 1);
+    if (a === ano) saida.push({ mes: m, chave, n: vs.length, vAcoes, lAcoes, lOutros, lFundos, isento, ganhoIsento, compC, compF, baseC, baseF,
+      devido, darf, pendente, venc, prejC, prejF, mesmoDia: vs.some((v) => v.mesmoDia) });
+  }
+  return saida;
+}
+async function bensIR(c, ano) {
+  const { fimAno } = replayIR(c);
+  const agora = fimAno[ano] || {}, antes = fimAno[ano - 1] || {};
+  const tickers = [...new Set([...Object.keys(agora), ...Object.keys(antes)])].filter((t) => (agora[t]?.qtd || 0) > 0 || (antes[t]?.qtd || 0) > 0).sort();
+  const linhas = [];
+  for (const t of tickers) {
+    let d = null; try { d = await detalhe(t); } catch (e) { /* fora da base */ }
+    const tipo = d?.tipo || tipoIR(t), ficha = IR_FICHA[tipo] || IR_FICHA.acao, a = agora[t] || { qtd: 0, custo: 0 };
+    const cnpj = d?.cnpj || d?.fundo?.cnpj || "";
+    const nome = d?.nome || S.porTicker[t]?.n || t;
+    const texto = a.qtd > 0
+      ? `${qtdF(a.qtd)} ${classe(tipo).unidade} de ${t} (${nome})${cnpj ? ", CNPJ " + cnpj : ""}, ao preço médio de ${brl(a.custo / a.qtd)}.`
+      : `${t} (${nome})${cnpj ? ", CNPJ " + cnpj : ""}: posição zerada em ${ano}.`;
+    linhas.push({ t, tipo, ficha, cnpj, nome, texto, antes: antes[t]?.qtd > 0 ? antes[t].custo : 0, agora: a.qtd > 0 ? a.custo : 0 });
+  }
+  return linhas;
+}
+async function rendimentosIR(c, ano) {
+  const provs = (await proventosDaCarteira(c)).filter((p) => p.recebido && (p.pagamento || "").startsWith(String(ano)));
+  const grupos = {};
+  for (const p of provs) {
+    const tipo = tipoIR(p.ticker), jcp = /jcp|juros/i.test(p.tipo || "");
+    const cat = jcp ? "jcp" : ehFundo(tipo) ? "fundo" : tipo === "bdr" ? "bdr" : "dividendo";
+    const g = grupos[cat + "|" + p.ticker] ??= { cat, t: p.ticker, valor: 0 };
+    g.valor += p.total;
+  }
+  // regra de 2026 (Lei 15.270/2025): mais de R$ 50 mil no mês da mesma empresa tem 10% retido na fonte
+  const porMes = {};
+  for (const p of provs) if (!/jcp|juros/i.test(p.tipo || "") && tipoIR(p.ticker) === "acao") {
+    const k = p.pagamento.slice(0, 7) + "|" + p.ticker.slice(0, 4); porMes[k] = (porMes[k] || 0) + p.total;
+  }
+  const acima = ano >= 2026 ? Object.entries(porMes).filter(([, v]) => v > 50000).map(([k, v]) => ({ mes: k.split("|")[0], emp: k.split("|")[1], v })) : [];
+  return { linhas: Object.values(grupos).sort((a, b) => b.valor - a.valor), acima, total: provs.reduce((s, p) => s + p.total, 0) };
+}
+rotas.imposto = async (el) => {
+  const anoHoje = new Date().getFullYear();
+  if (!ehOuro()) {
+    el.innerHTML = `<div class="cabeca"><div><h1>Imposto de Renda</h1><p class="sutil" style="margin:6px 0 0">O Milhão calcula o imposto das suas vendas mês a mês e monta o que vai na declaração.</p></div></div>
+      <div class="painel ir-trava"><h2>${ICO_CADEADO} Recurso do Milhão Ouro</h2>
+        <ul class="ir-lista"><li>DARF de cada mês, com a isenção de R$ 20 mil das ações e a compensação de prejuízos</li><li>Bens e direitos em 31/12, com grupo, código, CNPJ e o texto da discriminação pronto para copiar</li><li>Dividendos, rendimentos de FII e JCP separados como pede a declaração</li></ul>
+        <div class="acoes"><button class="btn primario" id="ir-ouro">Conhecer o Milhão Ouro</button></div></div>`;
+    $("#ir-ouro").onclick = () => pedirOuro("imposto");
+    return;
+  }
+  const todos = S.estado.carteiras.flatMap((c) => c.lancamentos);
+  const anos = [...new Set(todos.map((l) => +l.data.slice(0, 4)))].filter((a) => a <= anoHoje);
+  if (!anos.includes(anoHoje)) anos.push(anoHoje);
+  anos.sort((a, b) => b - a);
+  UIR.ano ??= new Date().getMonth() < 5 && anos.includes(anoHoje - 1) ? anoHoje - 1 : anoHoje;
+  const c = carteiraIR(), ano = UIR.ano;
+  el.innerHTML = `<div class="cabeca"><div><h1>Imposto de Renda</h1><p class="sutil" style="margin:6px 0 0">Calculado com os lançamentos ${S.estado.carteiras.length > 1 && UIR.carteira === "todas" ? "de todas as suas carteiras" : "da carteira"}. Confira com as notas de corretagem e o informe de rendimentos.</p></div>
+      <div class="acoes ir-escolhas">${S.estado.carteiras.length > 1 ? `<label class="campo">Carteira<select id="ir-carteira"><option value="todas">Todas as carteiras</option>${S.estado.carteiras.map((x) => `<option value="${x.id}" ${UIR.carteira === x.id ? "selected" : ""}>${esc(x.nome)}</option>`).join("")}</select></label>` : ""}
+        <label class="campo">Ano<select id="ir-ano">${anos.map((a) => `<option ${a === ano ? "selected" : ""}>${a}</option>`).join("")}</select></label></div></div>
+    <div class="abas" role="tablist">${[["mensal", "Imposto mês a mês"], ["bens", "Bens e direitos"], ["rendimentos", "Proventos"]].map(([k, n]) => `<button role="tab" data-aba-ir="${k}" aria-selected="${UIR.aba === k}">${n}</button>`).join("")}</div>
+    <div id="ir-corpo"><p class="fraco">Calculando…</p></div>
+    <p class="fraco" style="margin-top:16px">Cálculo de apoio pelo preço médio, sem taxas da corretora e da B3 (que podem entrar no custo e reduzir o lucro). Compras e vendas do mesmo ativo no mesmo dia (day trade) pagam 20% e não entram na isenção: o Milhão avisa quando encontra, mas calcula como operação comum. Não é consultoria tributária.</p>`;
+  $("#ir-ano").onchange = (e) => { UIR.ano = +e.target.value; render(); };
+  if ($("#ir-carteira")) $("#ir-carteira").onchange = (e) => { UIR.carteira = e.target.value; render(); };
+  $$("[data-aba-ir]").forEach((b) => b.onclick = () => { UIR.aba = b.dataset.abaIr; render(); });
+  const corpo = $("#ir-corpo");
+  const vazioTxt = `<div class="painel vazio"><p>Nenhuma operação em ${ano}. Importe da B3 ou lance as suas compras e vendas.</p></div>`;
+  if (UIR.aba === "mensal") {
+    const meses = apuracaoIR(c, ano), com = meses.filter((m) => m.n);
+    const totalDarf = meses.reduce((s, m) => s + m.darf, 0), isento = meses.reduce((s, m) => s + m.ganhoIsento, 0), fim = meses.at(-1);
+    const dia = meses.filter((m) => m.mesmoDia).map((m) => MESES_IR[m.mes - 1]);
+    corpo.innerHTML = `<div class="numeros">
+        <div><span>DARFs no ano</span><strong>${brl(totalDarf)}</strong><small class="fraco">código 6015</small></div>
+        <div><span>Lucro isento em ações</span><strong class="alta">${brl(isento)}</strong><small class="fraco">meses com vendas até R$ 20 mil</small></div>
+        <div><span>Prejuízo a compensar</span><strong>${brl(fim.prejC)}</strong><small class="fraco">ações, ETFs e BDRs</small></div>
+        <div><span>Prejuízo a compensar</span><strong>${brl(fim.prejF)}</strong><small class="fraco">FIIs e Fiagros</small></div></div>
+      ${dia.length ? `<p class="imp-nota" style="margin:14px 0">Encontrei compra e venda do mesmo ativo no mesmo dia em ${dia.join(", ")}. Se foi day trade, o imposto é de 20% e precisa ser apurado à parte.</p>` : ""}
+      ${com.length ? `<div class="painel"><h2>Mês a mês</h2><div class="rolagem"><table class="ir-tabela"><thead><tr><th class="esq">Mês</th><th>Vendas de ações</th><th>Resultado em ações</th><th>ETFs e BDRs</th><th>FIIs e Fiagros</th><th>Prejuízo compensado</th><th>DARF</th><th>Vencimento</th></tr></thead>
+        <tbody>${com.map((m) => `<tr><td class="esq">${maiuscula(MESES_IR[m.mes - 1])}</td><td>${m.vAcoes ? brl(m.vAcoes) : "–"}</td>
+          <td>${m.vAcoes ? `<span class="${cls(m.lAcoes)}">${brl(m.lAcoes)}</span>` : "–"}${m.ganhoIsento ? `<small class="alta">isento</small>` : ""}</td>
+          <td class="${cls(m.lOutros)}">${m.lOutros ? brl(m.lOutros) : "–"}</td><td class="${cls(m.lFundos)}">${m.lFundos ? brl(m.lFundos) : "–"}</td>
+          <td>${m.compC + m.compF ? brl(m.compC + m.compF) : "–"}</td>
+          <td><b>${m.darf ? brl(m.darf) : "–"}</b>${!m.darf && m.pendente ? `<small class="fraco">${brl(m.pendente)} fica para o mês seguinte</small>` : ""}</td>
+          <td>${m.darf ? dataBR(m.venc) : "–"}</td></tr>`).join("")}</tbody></table></div>
+        <p class="fraco" style="margin:10px 0 0">DARF abaixo de R$ 10 não é pago: soma com o do mês seguinte. O vencimento é o último dia útil do mês seguinte, sem contar feriados. Na declaração, o resultado de cada mês vai na ficha Renda Variável, em Operações comuns, e o lucro isento em Rendimentos Isentos e Não Tributáveis.</p></div>` : vazioTxt}`;
+  } else if (UIR.aba === "bens") {
+    const linhas = await bensIR(c, ano);
+    if (location.hash !== "#imposto") return;
+    corpo.innerHTML = linhas.length ? `<div class="painel"><h2>Bens e direitos em 31/12/${ano}</h2><p class="sutil" style="margin:-4px 0 12px">Na declaração vai o custo de compra, não o valor de mercado. Um item para cada ativo.</p>
+      <div class="rolagem"><table class="ir-tabela"><thead><tr><th class="esq">Ativo</th><th class="esq">Grupo e código</th><th class="esq">Discriminação</th><th>31/12/${ano - 1}</th><th>31/12/${ano}</th></tr></thead>
+      <tbody>${linhas.map((l, i) => `<tr><td class="esq"><a class="tk" href="#ativo-${l.t}">${l.t}</a><small>${esc(classe(l.tipo).nome)}</small></td>
+        <td class="esq">${l.ficha[0]} / ${l.ficha[1]}<small>${esc(l.ficha[2])}</small></td>
+        <td class="esq ir-texto"><span>${esc(l.texto)}</span><button class="btn texto" data-copiar="${i}">Copiar</button></td>
+        <td>${brl(l.antes)}</td><td><b>${brl(l.agora)}</b></td></tr>`).join("")}</tbody></table></div>
+      <p class="fraco" style="margin:10px 0 0">Confira o grupo e o código no programa da Receita do ano: eles mudam de vez em quando. ETF de renda fixa usa outro código.</p></div>` : vazioTxt;
+    $$("[data-copiar]").forEach((b) => b.onclick = async () => {
+      const t = linhas[+b.dataset.copiar].texto;
+      try { await navigator.clipboard.writeText(t); aviso("Discriminação copiada"); } catch (e) { aviso("Não consegui copiar. Selecione o texto e copie."); }
+    });
+  } else {
+    const r = await rendimentosIR(c, ano);
+    if (location.hash !== "#imposto") return;
+    const de = (cat) => r.linhas.filter((l) => l.cat === cat);
+    const bloco = (titulo, ficha, itens, f = (v) => v, extra = "") => itens.length ? `<div class="painel"><div class="cabeca" style="margin-bottom:6px"><h2 style="margin:0">${titulo}</h2><b>${brl(itens.reduce((s, l) => s + f(l.valor), 0))}</b></div>
+      <p class="sutil" style="margin:0 0 10px">${ficha}</p><div class="rolagem"><table><tbody>${itens.map((l) => `<tr><td class="esq"><a class="tk" href="#ativo-${l.t}">${l.t}</a><small>${esc(S.porTicker[l.t]?.n || "")}</small></td><td>${brl(f(l.valor))}</td></tr>`).join("")}</tbody></table></div>${extra}</div>` : "";
+    corpo.innerHTML = r.linhas.length ? `${r.acima.length ? `<p class="imp-nota" style="margin:0 0 14px">Desde 2026, a empresa retém 10% de IR quando paga mais de R$ 50 mil de dividendos no mesmo mês para a mesma pessoa (Lei 15.270/2025). Isso aconteceu em: ${r.acima.map((x) => `${x.emp} em ${MESES_IR[+x.mes.slice(5) - 1]} (${brl(x.v)})`).join(", ")}. Confira o informe de rendimentos da empresa.</p>` : ""}
+      <div class="grade g-2">${bloco("Dividendos", "Rendimentos Isentos e Não Tributáveis, código 09 (lucros e dividendos recebidos).", de("dividendo"))}
+      ${bloco("Rendimentos de FIIs e Fiagros", "Rendimentos Isentos e Não Tributáveis. Confira no informe do fundo a linha indicada para o ano.", de("fundo"))}
+      ${bloco("Juros sobre capital próprio", "Rendimentos Sujeitos à Tributação Exclusiva, código 10. Valor líquido, já sem os 15% retidos na fonte.", de("jcp"), (v) => v * 0.85,
+        `<p class="fraco" style="margin:10px 0 0">Valor bruto informado pela B3: ${brl(de("jcp").reduce((s, l) => s + l.valor, 0))}. O líquido é uma estimativa: vale o que estiver no informe da empresa.</p>`)}
+      ${bloco("Dividendos de BDRs", "Vêm de empresas de fora: são tributáveis e entram no Carnê-Leão. Confira o informe da corretora.", de("bdr"))}</div>
+      <p class="fraco">Proventos pagos em ${ano} pela quantidade que você tinha na data com, pela base de proventos da B3. Total: ${brl(r.total)}.</p>`
+      : `<div class="painel vazio"><p>Nenhum provento pago em ${ano} para os ativos da carteira.</p></div>`;
+  }
+};
 const ETF_REFERENCIA = { ibov: ["BOVA11", "Ibovespa"], ifix: ["XFIX11", "IFIX"] };
 rotas.indicadores = async (el) => {
   el.innerHTML = `<p class="fraco">Carregando…</p>`;
@@ -3488,6 +3669,7 @@ async function carregarPlano() {
 const MOTIVOS_OURO = {
   carteiras: "No plano Grátis dá para ter 1 carteira. Com o Milhão Ouro você cria quantas quiser.",
   analise: "Médias móveis, Bollinger, IFR, Medir e Marcar preço fazem parte da Análise avançada do Milhão Ouro.",
+  imposto: "O cálculo do Imposto de Renda (DARF de cada mês, bens e direitos e proventos para a declaração) faz parte do Milhão Ouro.",
 };
 async function pedirOuro(motivo) {
   const ok = await perguntar({ titulo: "Recurso do Milhão Ouro", texto: `${MOTIVOS_OURO[motivo] || ""} Custa ${brl(PLANO_OURO.preco)} por mês e você cancela quando quiser.`, botao: "Conhecer o Milhão Ouro" });
