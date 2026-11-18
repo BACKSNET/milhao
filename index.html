@@ -390,7 +390,9 @@ dialog.largo{width:min(720px,94vw)}
 .imp-tabela{max-height:300px;overflow:auto;border:1px solid var(--linha-2);border-radius:8px}
 .imp-tabela input{width:110px;padding:5px 8px;text-align:right}
 .imp-nota{background:var(--ouro-claro);color:#6B4D10;border-radius:8px;padding:10px 12px;font-size:13.5px;margin:0}
+#imp-corpo{display:flex;flex-direction:column;gap:12px}
 .imp-check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.imp-check input{margin:3px 0 0;flex:none;width:16px;height:16px;accent-color:var(--verde)}
 .imp-ativos{list-style:none;margin:0;padding:0;border:1px solid var(--linha-2);border-radius:8px;max-height:260px;overflow:auto}
 .imp-ativos li+li{border-top:1px solid var(--linha-2)}
 .imp-ativos label{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-size:14px}
@@ -403,6 +405,14 @@ dialog.largo{width:min(720px,94vw)}
 .imp-cabeca{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:2px 0 -6px}
 .imp-cabeca h3{margin:0}
 .imp-tabela tr.excluido td{opacity:.4}
+.imp-final-caixa{max-height:340px}
+.imp-final td small{display:block;color:var(--tinta-3);font-size:12px;font-weight:400;margin-top:1px}
+.imp-final td:first-child,.imp-final th:first-child{width:28px;padding-right:0}
+.imp-final input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:var(--verde)}
+.imp-final tr.excluido td{opacity:1}.imp-final tr.excluido td:not(:first-child){opacity:.45;text-decoration:line-through}
+.imp-dif{color:var(--ouro);font-weight:600}
+.imp-aj{color:var(--tinta-2)}
+.imp-fora summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--tinta-2);margin-bottom:8px}
 /* modo escuro: o que usa cor fixa */
 [data-tema=escuro] .entrada-arte{background:#0A120F}
 [data-tema=escuro] .entrada-arte::after{background:linear-gradient(transparent,#0A120F 65%)}
@@ -448,6 +458,13 @@ html.tema-suave,html.tema-suave *,html.tema-suave *::before,html.tema-suave *::a
 .cartoes p{margin:0;font-size:13.5px;color:var(--tinta-2)}
 .cartoes p a{color:var(--verde);font-weight:600}
 .cartoes em{display:block;font-style:normal;font-size:13px;font-weight:600;margin-bottom:4px}
+#leitura{margin-top:24px}
+/* leitura da Análise: sem caixa sobrando sozinha. 5 caixas = 2 em cima e 3 embaixo; 4 = 2 e 2; 3 = uma linha */
+.leitura-cartoes{grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;margin-bottom:12px}
+.leitura-cartoes > div{grid-column:span 2}
+.leitura-cartoes.n5 > div:nth-child(-n+2),.leitura-cartoes.n4 > div{grid-column:span 3}
+.leitura-cartoes strong{font-size:22px;line-height:1.2;margin:4px 0 6px}
+@media (max-width:640px){.leitura-cartoes.leitura-cartoes > div:nth-child(n){grid-column:1 / -1}}
 .cartoes.c3{margin-bottom:0}.cartoes.c3 > div{background:var(--papel);border-color:var(--linha-2)}
 .pares{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .pares a{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--linha-2);border-radius:8px;text-decoration:none}
@@ -2095,7 +2112,7 @@ async function abasXlsx(buf) {
         let v;
         if (t === "inlineStr") v = [...c.getElementsByTagName("t")].map((x) => x.textContent).join("");
         else v = c.getElementsByTagName("v")[0]?.textContent ?? "";
-        cel[col >= 0 ? col : cel.length] = t === "s" ? textos[+v] : v;
+        cel[col >= 0 ? col : cel.length] = t === "s" ? textos[+v] : (!t || t === "n") && v !== "" && Number.isFinite(+v) ? +v : v;
       }
       return Array.from(cel, (x) => x ?? "");
     });
@@ -2113,8 +2130,9 @@ function numeroBR(v) {
   if (typeof v === "number") return v;
   const s = String(v ?? "").replace(/R\$|\s/g, "");
   if (!s || s === "-") return NaN;
-  if (/^-?\d+(\.\d+)?(e-?\d+)?$/i.test(s)) return +s;
-  return +s.replace(/\./g, "").replace(",", ".");
+  if (s.includes(",")) return +s.replace(/\./g, "").replace(",", ".");   // 1.234,56
+  if (/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(s)) return +s.replace(/\./g, "");  // 1.500 = mil e quinhentos
+  return +s;
 }
 function dataImport(v) {
   const s = String(v ?? "").trim();
@@ -2255,24 +2273,27 @@ const plural = (n, um, varios) => `${F.n0.format(n)} ${n === 1 ? um : varios}`;
 
 /* passo 1: explica de onde baixar; passo 2: mostra o que vai entrar e pede confirmação */
 function abrirImportacao() {
-  const dlg = $("#dlg-importar");
+  const dlg = $("#dlg-importar"), cs = S.estado.carteiras;
   $("#imp-titulo").textContent = "Importar da B3";
   $("#imp-corpo").innerHTML = `
-    <p class="sutil" style="margin:0">Baixe suas planilhas na Área do Investidor da B3 e traga para cá. Dá para escolher mais de um arquivo de uma vez, e o que já estiver na carteira não entra de novo.</p>
+    ${cs.length > 1 ? `<label class="campo">Importar para a carteira<select id="imp-carteira">${cs.map((x) => `<option value="${esc(x.id)}" ${x.id === S.estado.ativa ? "selected" : ""}>${esc(x.nome)}</option>`).join("")}</select></label>` : ""}
+    <p class="sutil" style="margin:0">Você vai precisar de duas planilhas da Área do Investidor da B3:</p>
     <ol class="passos">
-      <li>Entre em <a href="https://www.investidor.b3.com.br" target="_blank" rel="noopener">investidor.b3.com.br</a> com sua conta gov.br ou CPF.</li>
-      <li>Vá em <b>Extratos</b>, escolha <b>Negociação</b>, coloque o período <b>desde a sua primeira compra</b> e baixe o Excel.</li>
-      <li>Baixe também a planilha de <b>Posição</b> de hoje e selecione as duas juntas. Assim o Milhão confere se as quantidades ficaram iguais às da B3.</li>
+      <li>Entre em <a href="https://www.investidor.b3.com.br" target="_blank" rel="noopener">investidor.b3.com.br</a> com sua conta gov.br.</li>
+      <li>Em <b>Extratos</b>, abra <b>Movimentação</b>, escolha o período <b>desde a sua primeira compra</b> e baixe em Excel. Se o site não deixar um período tão longo, baixe em partes e mande todas.</li>
+      <li>Ainda em <b>Extratos</b>, abra <b>Posição</b> e baixe a de hoje.</li>
+      <li>Volte aqui, clique em <b>Escolher planilhas</b> e selecione os arquivos juntos.</li>
     </ol>
-    <ul class="imp-resumo">
-      <li><span><b>Negociação</b>: suas compras e vendas, com a data do pregão.</span></li>
-      <li><span><b>Movimentação</b>: compras e vendas mais desdobramentos, bonificações e grupamentos.</span></li>
-      <li><span><b>Posição</b>: o que você tem hoje, sem o preço que pagou.</span></li>
-    </ul>
-    <p class="fraco" style="margin:0">Os arquivos são lidos aqui no seu navegador e não saem do seu computador.</p>`;
+    <p class="fraco" style="margin:0">A Movimentação traz compras, vendas, desdobramentos e bonificações; a Posição confere as quantidades. Se você usa o Imposto de Renda do Milhão, mande também a de <b>Negociação</b>: ela tem o dia exato de cada compra e venda.</p>
+    <p class="fraco" style="margin:0">Os arquivos são lidos aqui no seu navegador e não saem do seu computador. O que já estiver na carteira não entra de novo.</p>`;
   $("#imp-ok").textContent = "Escolher planilhas"; $("#imp-ok").disabled = false;
   dlg.returnValue = ""; dlg.showModal();
-  dlg.onclose = () => { if (dlg.returnValue === "ok") $("#arquivo-importar").click(); };
+  dlg.onclose = () => {
+    if (dlg.returnValue !== "ok") return;
+    const sel = $("#imp-carteira");
+    if (sel && sel.value !== S.estado.ativa) { S.estado.ativa = sel.value; salvar(); if (location.hash === "#carteira") render(); }
+    $("#arquivo-importar").click();
+  };
 }
 function previaImportacao(tudo) {
   const c = carteira(), dlg = $("#dlg-importar");
@@ -2304,144 +2325,156 @@ function previaImportacao(tudo) {
 
   // Posição: entra só o que a carteira ainda não tem
   const atual = Object.fromEntries(posicoes(c).map((p) => [p.ticker, p.qtd]));
-  const posNovas = tudo.posicao.filter((p) => !atual[p.ticker] && !novos.some((l) => l.ticker === p.ticker));
-  // com a planilha de Posição, confere como a carteira fica depois de importar e iguala à B3
+  const posNovas = tudo.posicao.filter((p) => !atual[p.ticker] && !novos.some((l) => l.ticker === p.ticker)).map((p) => ({ ...p, pm: null }));
+  // com a planilha de Posição, mostra como cada ativo fica e iguala as quantidades às da B3
   const temPosicao = tudo.tipos.has("posicao");
   const naB3 = Object.fromEntries(tudo.posicao.map((p) => [p.ticker, p]));
-  const ajustesPosicao = (fora = new Set(), trocar = true) => {
-    if (!temPosicao) return [];
-    const sai = trocar ? new Set(movTrocavel.map((l) => l.id)) : new Set();
-    const lanc = [...c.lancamentos.filter((l) => !sai.has(l.id)), ...novos.filter((l) => !fora.has(l.ticker)),
-      ...posNovas.filter((p) => !fora.has(p.ticker)).map((p) => ({ id: "pos", ticker: p.ticker, tipo: "C", data: hojeISO(), qtd: p.qtd, preco: p.preco }))];
-    const sim = Object.fromEntries(posicoes({ lancamentos: lanc }).map((p) => [p.ticker, p]));
+  const hoje = hojeISO();
+  // monta a carteira como ficaria depois de importar. A diferença para a B3 quase sempre é desdobramento,
+  // bonificação ou grupamento (a Negociação não traz eventos): o que falta entra sem custo e o que sobra
+  // sai sem mexer no valor investido, como esses eventos fazem
+  // um "Ajuste pela posição da B3" feito antes saiu de um evento que a planilha não trazia; quando o evento
+  // de verdade chega pela Movimentação, o ajuste sai para não contar em dobro
+  const ajAntigos = c.lancamentos.filter((l) => l.evento === "Ajuste pela posição da B3"
+    && novos.some((n) => n.ticker === l.ticker && (n.tipo === "B" || n.tipo === "G")));
+  const montar = (fora, trocar, ajustar) => {
+    const sai = new Set([...(trocar ? movTrocavel : []), ...ajAntigos.filter((l) => !fora.has(l.ticker))].map((l) => l.id));
+    const base = [...c.lancamentos.filter((l) => !sai.has(l.id)), ...novos.filter((l) => !fora.has(l.ticker)),
+      ...posNovas.filter((p) => !fora.has(p.ticker)).map((p) => ({ id: "pos", ticker: p.ticker, tipo: "C", data: hoje, qtd: p.qtd, preco: p.pm ?? p.preco }))];
+    if (!temPosicao) return { lanc: base, ajustes: [] };
+    const sim = Object.fromEntries(posicoes({ lancamentos: base }).map((p) => [p.ticker, p]));
     const tickers = new Set([...Object.keys(naB3), ...Object.keys(sim).filter((t) => sim[t].qtd > 0)]);
-    return [...tickers].filter((t) => !fora.has(t)).map((t) => ({ ticker: t, de: sim[t]?.qtd || 0, para: naB3[t]?.qtd || 0,
-      pm: sim[t]?.pm || 0, preco: naB3[t]?.preco })).filter((a) => Math.abs(a.para - a.de) > 1e-6).sort((a, b) => a.ticker.localeCompare(b.ticker));
+    const ajustes = [...tickers].filter((t) => !fora.has(t)).map((t) => ({ ticker: t, de: sim[t]?.qtd || 0, para: naB3[t]?.qtd || 0 }))
+      .filter((a) => Math.abs(a.para - a.de) > 1e-6).sort((a, b) => a.ticker.localeCompare(b.ticker));
+    if (!ajustar) return { lanc: base, ajustes };
+    return { ajustes, lanc: [...base, ...ajustes.map((a) => ({ id: "aj", ticker: a.ticker, tipo: a.para > a.de ? "B" : "G", data: hoje, qtd: Math.abs(a.para - a.de), preco: 0 }))] };
   };
-  const tabelaAjustes = (aj) => `<div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Ficaria no Milhão</th><th>Na B3 hoje</th></tr></thead><tbody>
-    ${aj.map((a) => `<tr><td><b>${esc(a.ticker)}</b></td><td>${qtdF(a.de)}</td><td><b>${qtdF(a.para)}</b></td></tr>`).join("")}</tbody></table></div>`;
-  const ajustes0 = ajustesPosicao();
-
-  const resumoItens = (fora = new Set()) => {
-    const ls = novos.filter((l) => !fora.has(l.ticker)), conta = (f) => ls.filter(f).length, itens = [];
-    const nAt = conta((l) => l.evento === "Atualização na B3"), nPos = posNovas.filter((p) => !fora.has(p.ticker)).length;
-    const nC = conta((l) => l.tipo === "C") - nAt, nV = conta((l) => l.tipo === "V"), nE = conta((l) => l.tipo === "B" || l.tipo === "G");
-    if (nC) itens.push(["Compras", nC]); if (nV) itens.push(["Vendas", nV]);
-    if (nE) itens.push(["Desdobramentos, bonificações e grupamentos", nE]);
-    if (nAt) itens.push(["Ativos que entraram na conta (Atualização)", nAt]);
-    if (nPos) itens.push(["Ativos da planilha de posição", nPos]);
-    return itens.length ? `<ul class="imp-resumo">${itens.map(([k, v]) => `<li><span>${esc(k)}</span><b>${F.n0.format(v)}</b></li>`).join("")}</ul>` : "";
-  };
+  const ajustes0 = montar(new Set(), true, true).ajustes;
+  const listaTexto = (xs) => xs.length > 1 ? xs.slice(0, -1).join(", ") + " e " + xs.at(-1) : xs[0] || "";
+  const partes = (() => {
+    const conta = (f) => novos.filter(f).length;
+    const nAt = conta((l) => l.evento === "Atualização na B3"), nC = conta((l) => l.tipo === "C") - nAt;
+    const nV = conta((l) => l.tipo === "V"), nE = conta((l) => l.tipo === "B" || l.tipo === "G");
+    return [nC && plural(nC, "compra", "compras"), nV && plural(nV, "venda", "vendas"),
+      nE && plural(nE, "desdobramento, bonificação ou grupamento", "desdobramentos, bonificações ou grupamentos"),
+      nAt && plural(nAt, "entrada por atualização", "entradas por atualização"),
+      posNovas.length && plural(posNovas.length, "ativo que só aparece na posição", "ativos que só aparecem na posição")].filter(Boolean);
+  })();
   const fora = [];
   if (repetidos > 0) fora.push(["Repetidos (já na carteira ou em mais de um arquivo)", repetidos]);
   if (pulados) fora.push(["Compras e vendas da Movimentação que já vêm da Negociação", pulados]);
   if (tudo.proventos) fora.push(["Proventos (o Milhão calcula pelos dados da B3)", tudo.proventos]);
   if (tudo.foraBolsa) fora.push(["Tesouro, renda fixa, opções e outros que o Milhão não acompanha", tudo.foraBolsa]);
   for (const [k, v] of Object.entries(tudo.outros)) fora.push([k, v]);
+  const naoLidos = tudo.arquivos.filter((a) => !a.usou).map((a) => a.nome);
   const semCot = [...new Set([...novos.map((l) => l.ticker), ...posNovas.map((p) => p.ticker)])].filter((t) => !S.porTicker[t]);
   const total = novos.length + posNovas.length + ajustes0.length;
-  // um resumo por ativo, para você tirar o que não quer trazer
+  // o que muda em cada ativo, em uma linha
   const porAtivo = new Map();
   const somar = (t, k, n = 1) => { const a = porAtivo.get(t) ?? {}; a[k] = (a[k] || 0) + n; porAtivo.set(t, a); };
   for (const l of novos) somar(l.ticker, l.evento === "Atualização na B3" ? "at" : l.tipo === "C" ? "c" : l.tipo === "V" ? "v" : "e");
-  for (const p of posNovas) somar(p.ticker, "pos", p.qtd);
+  for (const p of posNovas) somar(p.ticker, "pos");
   const descAtivo = (a) => [a.c && plural(a.c, "compra", "compras"), a.v && plural(a.v, "venda", "vendas"),
-    a.e && plural(a.e, "evento", "eventos"), a.at && plural(a.at, "entrada", "entradas"), a.pos && `${qtdF(a.pos)} na posição de hoje`].filter(Boolean).join(", ");
-  const ativosImp = [...porAtivo.keys()].sort();
+    a.e && plural(a.e, "evento", "eventos"), a.at && plural(a.at, "entrada", "entradas"), a.pos && "da posição de hoje"].filter(Boolean).join(", ");
+  const linhasTk = [...new Set([...porAtivo.keys(), ...ajustes0.map((a) => a.ticker)])].sort();
   const excluidos = new Set();
 
-  $("#imp-titulo").textContent = total ? `Importar ${plural(total, "item", "itens")} para ${c.nome}` : "Nada novo para importar";
+  $("#imp-titulo").textContent = total ? `Importar para ${c.nome}` : "Nada novo para importar";
   $("#imp-corpo").innerHTML = `
-    <div id="imp-itens" style="display:contents">${resumoItens()}</div>
-    ${ativosImp.length ? `<div class="imp-cabeca"><h3>Ativos que vão entrar</h3>${ativosImp.length > 1 ? `<button type="button" class="btn texto" id="imp-todos" style="padding:2px 4px">Desmarcar todos</button>` : ""}</div>
-      <p class="fraco" style="margin:0">Desmarque o ativo que você não quer trazer para a carteira.</p>
-      <ul class="imp-ativos">${ativosImp.map((t) => `<li><label><input type="checkbox" data-ativo="${esc(t)}" checked><b>${esc(t)}</b><span>${descAtivo(porAtivo.get(t))}</span></label></li>`).join("")}</ul>` : ""}
+    ${partes.length ? `<p class="sutil" style="margin:0">Nas planilhas: ${listaTexto(partes)}.</p>` : ""}
+    ${naoLidos.length ? `<p class="imp-nota">Não reconheci ${naoLidos.length === 1 ? "o arquivo" : "os arquivos"} ${esc(listaTexto(naoLidos))}. Use as planilhas de Movimentação, Negociação ou Posição baixadas da B3.</p>` : ""}
+    ${linhasTk.length ? `<div class="imp-cabeca"><h3>Como a carteira vai ficar</h3>${linhasTk.length > 1 ? `<button type="button" class="btn texto" id="imp-todos" style="padding:2px 4px">Desmarcar todos</button>` : ""}</div>
+      <p class="fraco" style="margin:0">Confira com a sua corretora. Desmarque o ativo que você não quer trazer.</p>
+      <div class="imp-tabela imp-final-caixa"><table class="imp-final"><thead><tr><th></th><th class="esq">Ativo</th><th>Quantidade</th><th>Preço médio</th>${temPosicao ? "<th>Posição na B3</th>" : ""}</tr></thead>
+      <tbody id="imp-final"></tbody></table></div>` : ""}
     ${!total ? `<p class="imp-nota">${repetidos > 0 ? "Tudo o que dá para importar dessa planilha já está na carteira."
         : tudo.tipos.has("movimentacao") && !tudo.tipos.has("negociacao") && !tudo.tipos.has("posicao")
-        ? "A planilha de Movimentação só mostra o que aconteceu no período que você escolheu na B3, e nesse período não houve compra nem venda. Para trazer o que você já tem, baixe a planilha de <b>Posição</b> (o retrato de hoje) ou a de <b>Negociação</b> com um período maior, desde a sua primeira compra."
-        : "Nada nessa planilha é compra, venda ou ativo que a carteira ainda não tenha. Confira o período escolhido na B3 ou tente a planilha de <b>Posição</b>, que traz o que você tem hoje."}</p>` : ""}
+        ? "A planilha de Movimentação só mostra o que aconteceu no período que você escolheu na B3, e nesse período não houve compra nem venda. Baixe de novo com o período desde a sua primeira compra, ou mande a planilha de <b>Posição</b> (o retrato de hoje)."
+        : "Nada nessa planilha é compra, venda ou ativo que a carteira ainda não tenha. Confira o período escolhido na B3 ou mande a planilha de <b>Posição</b>, que traz o que você tem hoje."}</p>` : ""}
     ${semPreco.length ? `<p class="imp-nota">A B3 não informa o preço destas entradas. Sugerimos o fechamento do dia; se você pagou outro valor (numa subscrição, por exemplo), troque aqui.</p>
       <div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Data</th><th>Quantidade</th><th>Preço (R$)</th></tr></thead><tbody>
       ${semPreco.map((l, k) => `<tr data-linha-tk="${esc(l.ticker)}"><td><b>${esc(l.ticker)}</b></td><td>${dataBR(l.data)}</td><td>${F.n0.format(l.qtd)}</td>
         <td><input type="number" step="0.01" min="0" data-sp="${k}" value="${(+l.preco || 0).toFixed(2)}" aria-label="Preço de ${esc(l.ticker)} em ${dataBR(l.data)}"></td></tr>`).join("")}
       </tbody></table></div>` : ""}
-    ${posNovas.length ? `<p class="imp-nota">A planilha de posição não traz o preço que você pagou. Coloque o preço médio de cada ativo (veja na sua corretora) para o resultado da carteira sair certo. Se deixar como está, o Milhão usa a cotação da planilha e a carteira começa em zero a zero.</p>
+    ${posNovas.length ? `<p class="imp-nota">Estes ativos só aparecem na planilha de Posição, que não traz o preço que você pagou. Coloque o preço médio de cada um (veja na sua corretora). Se deixar como está, o Milhão usa a cotação da planilha e o ativo começa sem ganho nem perda.</p>
       <div class="imp-tabela"><table><thead><tr><th>Ativo</th><th>Quantidade</th><th>Preço médio (R$)</th></tr></thead><tbody>
       ${posNovas.map((p, k) => `<tr data-linha-tk="${esc(p.ticker)}"><td><b>${esc(p.ticker)}</b></td><td>${F.n0.format(p.qtd)}</td>
         <td><input type="number" step="0.01" min="0" data-pm="${k}" value="${(+p.preco || 0).toFixed(2)}" aria-label="Preço médio de ${esc(p.ticker)}"></td></tr>`).join("")}
       </tbody></table></div>` : ""}
     ${movTrocavel.length && tudo.tipos.has("negociacao") ? `<label class="imp-check"><input type="checkbox" id="imp-trocar" checked>
       <span>Trocar as ${plural(movTrocavel.length, "compra ou venda", "compras e vendas")} que vieram da Movimentação pelas da Negociação, que têm a data do pregão. Assim nada fica em dobro.</span></label>` : ""}
-    <div id="imp-ajuste" class="imp-ajuste" ${ajustes0.length ? "" : "hidden"}>
-      <h3 style="margin:0">Quantidades diferentes da sua posição na B3</h3>
-      <p class="imp-nota" style="margin:0">Depois de importar, estes ativos não ficariam iguais à planilha de Posição. Isso acontece quando compras ou vendas ficaram fora do período baixado, ou por eventos como incorporação e troca de código.</p>
-      <div id="imp-ajuste-tabela">${tabelaAjustes(ajustes0)}</div>
-      <label class="imp-check"><input type="checkbox" id="imp-ajustar" checked><span>Deixar as quantidades iguais às da B3 hoje. O ajuste entra como um lançamento "Ajuste pela posição da B3", sem mudar o preço médio nem o resultado.</span></label>
-      <p class="fraco" style="margin:0">Para o preço médio ficar exato, importe a Negociação desde a sua primeira compra.</p>
-    </div>
-    ${!temPosicao && novos.some((l) => l.tipo === "C" || l.tipo === "V") ? `<p class="fraco" style="margin:0">Dica: selecione junto a planilha de <b>Posição</b> de hoje. Assim o Milhão confere se as quantidades ficaram iguais às da B3.</p>` : ""}
-    ${fora.length ? `<h3 style="margin:2px 0 -6px">Fica de fora</h3><ul class="imp-resumo">${fora.map(([k, v]) => `<li class="fora"><span>${esc(k)}</span><span>${F.n0.format(v)}</span></li>`).join("")}</ul>` : ""}
+    ${ajustes0.length ? `<label class="imp-check"><input type="checkbox" id="imp-ajustar" checked><span>Igualar as quantidades às da B3. A diferença quase sempre é desdobramento, bonificação ou grupamento: o que falta entra sem custo e o que sobra sai sem mudar o valor investido.</span></label>
+      <p class="fraco" style="margin:-8px 0 0 25px">Se a diferença for uma compra ou venda de antes do período baixado, desmarque e importe a Movimentação desse período.</p>` : ""}
+    ${!temPosicao && novos.some((l) => l.tipo === "C" || l.tipo === "V") ? `<p class="fraco" style="margin:0">Dica: mande junto a planilha de <b>Posição</b> de hoje. Assim o Milhão confere se as quantidades ficaram iguais às da B3.</p>` : ""}
+    ${fora.length ? `<details class="imp-fora"><summary>Fica de fora: ${plural(fora.reduce((s, [, v]) => s + v, 0), "linha", "linhas")}</summary>
+      <ul class="imp-resumo">${fora.map(([k, v]) => `<li class="fora"><span>${esc(k)}</span><span>${F.n0.format(v)}</span></li>`).join("")}</ul></details>` : ""}
     ${semCot.length ? `<p class="fraco" style="margin:0">Sem cotação na base do Milhão: ${esc(semCot.slice(0, 8).join(", "))}${semCot.length > 8 ? "…" : ""}. Eles entram na carteira, mas sem valor atual.</p>` : ""}`;
-  $("#imp-ok").textContent = total ? `Importar ${plural(total, "item", "itens")}` : "Escolher outra planilha";
+  $("#imp-ok").textContent = total ? "Importar" : "Escolher outra planilha";
   $("#imp-ok").disabled = false;
-  const ajustesAtuais = () => ($("#imp-ajustar")?.checked ? ajustesPosicao(excluidos, $("#imp-trocar")?.checked ?? false) : []);
-  const contarMarcados = () => novos.filter((l) => !excluidos.has(l.ticker)).length + posNovas.filter((p) => !excluidos.has(p.ticker)).length + ajustesAtuais().length;
-  const atualizarMarcados = () => {
-    if (temPosicao) {
-      const aj = ajustesPosicao(excluidos, $("#imp-trocar")?.checked ?? false);
-      $("#imp-ajuste").hidden = !aj.length; $("#imp-ajuste-tabela").innerHTML = tabelaAjustes(aj);
+  // redesenha a tabela final a cada mudança (ativo marcado, preço digitado, igualar ou trocar)
+  const pintar = () => {
+    $$("[data-sp]").forEach((inp) => { const v = numeroBR(inp.value); if (Number.isFinite(v) && v >= 0) semPreco[+inp.dataset.sp].preco = v; });
+    $$("[data-pm]").forEach((inp) => { const v = numeroBR(inp.value); posNovas[+inp.dataset.pm].pm = Number.isFinite(v) && v >= 0 ? v : null; });
+    const trocar = $("#imp-trocar")?.checked ?? false, ajustar = $("#imp-ajustar")?.checked ?? false;
+    const { lanc, ajustes } = montar(excluidos, trocar, ajustar);
+    const fim = Object.fromEntries(posicoes({ lancamentos: lanc }).map((p) => [p.ticker, p]));
+    const aj = Object.fromEntries(ajustes.map((a) => [a.ticker, a]));
+    const corpo = $("#imp-final");
+    if (corpo) {
+      corpo.innerHTML = linhasTk.map((t) => {
+        const sai = excluidos.has(t), p = fim[t], b3 = naB3[t]?.qtd ?? 0;
+        const st = sai ? "–" : aj[t] && ajustar ? `<span class="imp-aj">igualada (era ${qtdF(aj[t].de)})</span>`
+          : Math.abs((p?.qtd || 0) - b3) < 1e-6 ? `<span class="alta">confere</span>` : `<span class="imp-dif">${qtdF(b3)} na B3</span>`;
+        return `<tr class="${sai ? "excluido" : ""}"><td><input type="checkbox" data-ativo="${esc(t)}" ${sai ? "" : "checked"} aria-label="Trazer ${esc(t)}"></td>
+          <td class="esq"><b>${esc(t)}</b><small>${porAtivo.has(t) ? descAtivo(porAtivo.get(t)) : "só a diferença para a B3"}</small></td>
+          <td>${sai ? "–" : qtdF(p?.qtd || 0)}</td><td>${sai || !(p?.qtd > 0) ? "–" : brl(p.pm)}</td>${temPosicao ? `<td>${st}</td>` : ""}</tr>`;
+      }).join("");
+      $$("[data-ativo]", corpo).forEach((cx) => cx.onchange = () => { cx.checked ? excluidos.delete(cx.dataset.ativo) : excluidos.add(cx.dataset.ativo); pintar(); });
     }
-    const n = contarMarcados();
-    $("#imp-titulo").textContent = n ? `Importar ${plural(n, "item", "itens")} para ${c.nome}` : "Nenhum ativo marcado";
-    $("#imp-ok").textContent = n ? `Importar ${plural(n, "item", "itens")}` : "Importar";
-    $("#imp-ok").disabled = !n;
-    $("#imp-itens").innerHTML = resumoItens(excluidos);
     $$("[data-linha-tk]").forEach((tr) => tr.classList.toggle("excluido", excluidos.has(tr.dataset.linhaTk)));
-    if ($("#imp-todos")) $("#imp-todos").textContent = excluidos.size === ativosImp.length ? "Marcar todos" : "Desmarcar todos";
+    const n = linhasTk.filter((t) => !excluidos.has(t)).length;
+    if (total) { $("#imp-ok").textContent = n ? `Importar ${plural(n, "ativo", "ativos")}` : "Importar"; $("#imp-ok").disabled = !n; }
+    if ($("#imp-todos")) $("#imp-todos").textContent = excluidos.size === linhasTk.length ? "Marcar todos" : "Desmarcar todos";
   };
-  $$("[data-ativo]").forEach((cx) => cx.onchange = () => { cx.checked ? excluidos.delete(cx.dataset.ativo) : excluidos.add(cx.dataset.ativo); atualizarMarcados(); });
-  if ($("#imp-ajustar")) $("#imp-ajustar").onchange = atualizarMarcados;
-  if ($("#imp-trocar")) $("#imp-trocar").onchange = atualizarMarcados;
-  if (temPosicao) atualizarMarcados();
+  $$("[data-sp], [data-pm]").forEach((inp) => inp.oninput = pintar);
+  if ($("#imp-ajustar")) $("#imp-ajustar").onchange = pintar;
+  if ($("#imp-trocar")) $("#imp-trocar").onchange = pintar;
   if ($("#imp-todos")) $("#imp-todos").onclick = () => {
-    const marcar = excluidos.size === ativosImp.length;
-    $$("[data-ativo]").forEach((cx) => { cx.checked = marcar; marcar ? excluidos.delete(cx.dataset.ativo) : excluidos.add(cx.dataset.ativo); });
-    atualizarMarcados();
+    const marcar = excluidos.size === linhasTk.length;
+    for (const t of linhasTk) marcar ? excluidos.delete(t) : excluidos.add(t);
+    pintar();
   };
+  pintar();
   dlg.returnValue = ""; if (!dlg.open) dlg.showModal();
   dlg.onclose = () => {
     $("#imp-ok").disabled = false;
     if (dlg.returnValue === "ok" && !total) { $("#arquivo-importar").click(); return; }
-    if (dlg.returnValue !== "ok" || !total || !contarMarcados()) return;
-    const ajustes = ajustesAtuais();   // calculado antes de mexer nas listas
-    $$("[data-sp]").forEach((inp) => { const v = numeroBR(inp.value); if (Number.isFinite(v) && v >= 0) semPreco[+inp.dataset.sp].preco = v; });
+    const nAtivos = linhasTk.filter((t) => !excluidos.has(t)).length;
+    if (dlg.returnValue !== "ok" || !total || !nAtivos) return;
+    pintar();   // lê os preços digitados
+    const trocar = $("#imp-trocar")?.checked ?? false, ajustar = $("#imp-ajustar")?.checked ?? false;
+    const ajustes = ajustar ? montar(excluidos, trocar, false).ajustes : [];   // calculado antes de mexer nas listas
     for (const l of novos) delete l.semPreco;
-    novos = novos.filter((l) => !excluidos.has(l.ticker));
-    if ($("#imp-trocar")?.checked) {
-      const sai = new Set(movTrocavel.filter((l) => !excluidos.has(l.ticker)).map((l) => l.id));
-      c.lancamentos = c.lancamentos.filter((l) => !sai.has(l.id));
-    }
-    const hoje = hojeISO();
-    $$("[data-pm]").forEach((inp) => {
-      const p = posNovas[+inp.dataset.pm], pm = numeroBR(inp.value);
-      if (excluidos.has(p.ticker)) return;
-      novos.push({ id: novoId(), ticker: p.ticker, tipo: "C", data: hoje, qtd: p.qtd,
-        preco: Number.isFinite(pm) && pm >= 0 ? pm : p.preco, origem: "b3-posicao", evento: "Posição na B3" });
-    });
-    c.lancamentos.push(...novos);
-    // ajuste pela posição: entra ou sai pelo preço médio de agora, então não muda o preço médio nem gera resultado
+    const entram = novos.filter((l) => !excluidos.has(l.ticker));
+    const sai = new Set([...(trocar ? movTrocavel : []), ...ajAntigos].filter((l) => !excluidos.has(l.ticker)).map((l) => l.id));
+    c.lancamentos = c.lancamentos.filter((l) => !sai.has(l.id));
+    for (const p of posNovas) if (!excluidos.has(p.ticker))
+      entram.push({ id: novoId(), ticker: p.ticker, tipo: "C", data: hoje, qtd: p.qtd, preco: p.pm ?? p.preco, origem: "b3-posicao", evento: "Posição na B3" });
+    c.lancamentos.push(...entram);
+    // igualar à B3: entra sem custo ou sai sem mudar o valor investido (como desdobramento, bonificação e grupamento)
+    let nAj = 0;
     if (ajustes.length) {
       const agora = Object.fromEntries(posicoes(c).map((p) => [p.ticker, p]));
       for (const a of ajustes) {
         const d = Math.round((a.para - (agora[a.ticker]?.qtd || 0)) * 1e6) / 1e6;
         if (!d) continue;
-        const pm = agora[a.ticker]?.pm > 0 ? agora[a.ticker].pm : (Number.isFinite(a.preco) && a.preco > 0 ? a.preco : (precoAtual(a.ticker) ?? 0));
-        c.lancamentos.push({ id: novoId(), ticker: a.ticker, tipo: d > 0 ? "C" : "V", data: hoje, qtd: Math.abs(d), preco: +pm.toFixed(6),
+        c.lancamentos.push({ id: novoId(), ticker: a.ticker, tipo: d > 0 ? "B" : "G", data: hoje, qtd: Math.abs(d), preco: 0,
           origem: "b3-posicao", evento: "Ajuste pela posição da B3" });
+        nAj++;
       }
     }
     salvar();
-    aviso(`${plural(novos.length, "item importado", "itens importados")} para ${c.nome}${ajustes.length ? `, com ${plural(ajustes.length, "ativo ajustado", "ativos ajustados")} à posição da B3` : ""}`);
+    aviso(`${plural(nAtivos, "ativo atualizado", "ativos atualizados")} em ${c.nome}${nAj ? `, ${plural(nAj, "igualado", "igualados")} à posição da B3` : ""}`);
     if (location.hash === "#carteira") render(); else ir("#carteira");
   };
 }
@@ -3178,8 +3211,9 @@ function leituraGrafico(dados, pos, teto, d) {
   if (teto) cartoes.push(["Preço teto", brl(teto), `Pelo ${d?.banco ? "modelo de dividendos" : "fluxo de caixa"}, com ${pct(margemSeguranca(), 0)} de margem. Hoje está <b class="${ult <= teto ? "alta" : "baixa"}">${ult <= teto ? "abaixo do teto" : "acima do teto"}</b>.`]);
   cartoes.push(["Tendência", tendencia[0], tendencia[1]]);
   cartoes.push(["IFR de 14 dias", ifrTxt[0], ifrTxt[1]]);
-  cartoes.push(["Últimas 52 semanas", `${brl(min52)} a ${brl(max52)}`, onde === null ? "" : `Hoje está a ${pct(onde, 0)} do caminho entre a mínima e a máxima do ano.`]);
-  return `<div class="cartoes">${cartoes.map(([nm, v, tx]) => `<div><span>${nm}</span><strong>${v}</strong><p>${tx}</p></div>`).join("")}</div>
+  const inteiro = (v) => brl(v).replace(/\s/g, "\u00a0");   // "R$ 21,06" não quebra no meio
+  cartoes.push(["Últimas 52 semanas", `${inteiro(min52)} a ${inteiro(max52)}`, onde === null ? "" : `Hoje está a ${pct(onde, 0)} do caminho entre a mínima e a máxima do ano.`]);
+  return `<div class="cartoes leitura-cartoes n${cartoes.length}">${cartoes.map(([nm, v, tx]) => `<div><span>${nm}</span><strong>${v}</strong><p>${tx}</p></div>`).join("")}</div>
     <p class="fraco" style="margin:0">Leitura automática dos números do gráfico. Não é recomendação de compra ou venda.</p>`;
 }
 
