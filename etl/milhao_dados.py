@@ -68,7 +68,9 @@ class Fonte:
             self.sessao.headers["User-Agent"] = "Mozilla/5.0 (Milhao robo de dados)"
 
     def baixar(self, url: str, nome: str | None = None, cache_dias: float = 0.5,
-               tentativas: int = 3, timeout: int = 120, silencioso: bool = False) -> bytes | None:
+               tentativas: int = 3, timeout: int = 120, silencioso: bool = False,
+               guardar: bool = True) -> bytes | None:
+        """guardar=False: arquivos enormes que mudam todo dia não vão para o cache (ele tem limite)."""
         nome = nome or url.rsplit("/", 1)[-1]
         if self.local:
             p = self.local / nome
@@ -83,7 +85,7 @@ class Fonte:
                 if r.status_code == 404:
                     return None
                 r.raise_for_status()
-                if self.cache:
+                if self.cache and guardar:
                     (self.cache / nome).write_bytes(r.content)
                 return r.content
             except Exception as e:  # noqa: BLE001
@@ -1041,6 +1043,14 @@ def main() -> None:
     if indicadores:
         (saida / "indicadores.json").write_text(json.dumps(limpar(indicadores), ensure_ascii=False, separators=(",", ":")),
                                                 encoding="utf-8")
+    # Consolidador de carteira: renda fixa, Tesouro, fundos e cripto (módulo à parte; falha sem derrubar o resto)
+    consolidado = {}
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import consolidador
+        consolidado = consolidador.gerar(fonte, saida, HOJE, aviso)
+    except Exception as e:  # noqa: BLE001
+        aviso(f"consolidador: {e}")
     (saida / "codigos_bdi.json").write_text(json.dumps(dict(sorted(CODIGOS_BDI.items(), key=lambda kv: -kv[1]["linhas"])),
                                                        ensure_ascii=False, indent=1), encoding="utf-8")
     (saida / "agenda.json").write_text(json.dumps(limpar(montar_agenda(detalhes, ultimo_pregao.date())), ensure_ascii=False,
@@ -1052,7 +1062,9 @@ def main() -> None:
         "ultimo_pregao": ultimo_pregao.date().isoformat(),
         "ativos": len(lista_ativos),
         "indicadores": [{"chave": k, "nome": n, "grupo": g, "formato": f} for k, n, g, f in INDICADORES],
-        "fontes": ["B3 COTAHIST", "CVM DFP/ITR/FCA", "CVM Informe Mensal FII", "B3 proventos"],
+        "fontes": ["B3 COTAHIST", "CVM DFP/ITR/FCA", "CVM Informe Mensal FII", "B3 proventos",
+                   "Banco Central SGS", "Tesouro Transparente", "CVM Informe Diário de Fundos", "CoinGecko"],
+        "consolidador": consolidado,
         "demo": bool(a.fonte_local and "fixtures" in str(a.fonte_local)),
         "avisos": AVISOS,
     }, ensure_ascii=False, indent=1), encoding="utf-8")
