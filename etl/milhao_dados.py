@@ -674,8 +674,9 @@ def montar_acao(t, preco, pontos, cad, dem, capital, provs) -> dict:
     hoje_iso = pontos[-1][0]
     prov12 = proventos_12m(lista, hoje_iso)
     por_ano = proventos_por_ano(lista)
-    anos5 = [por_ano.get(a, 0) for a in range(HOJE.year - 5, HOJE.year)]
-    media5 = sum(anos5) / 5 if any(anos5) else None
+    # média dos últimos 5 anos fechados, mas só dos anos que a B3 informa (ela costuma mandar pouco histórico)
+    anos5 = [v for v in (por_ano.get(a, 0) for a in range(HOJE.year - 5, HOJE.year)) if v > 0]
+    media5 = sum(anos5) / len(anos5) if anos5 else None
 
     ind = {
         "pl": div(preco, lpa) if lpa and lpa > 0 else None, "pvp": div(preco, vpa),
@@ -697,7 +698,9 @@ def montar_acao(t, preco, pontos, cad, dem, capital, provs) -> dict:
     ind["cagr_rec"], ind["cagr_luc"] = cagr(rec_a), cagr(luc_a)
 
     graham = math.sqrt(22.5 * lpa * vpa) if lpa and vpa and lpa > 0 and vpa > 0 else None
-    bazin = media5 / 0.06 if media5 else None
+    # Bazin: com menos de 3 anos de histórico, vale o pago nos últimos 12 meses
+    base_bazin = prov12 if (len(anos5) < 3 and prov12) else media5
+    bazin = base_bazin / 0.06 if base_bazin else None
 
     # checklist com o que dá para calcular a partir das fontes abertas
     anos_bolsa = (dt.date.fromisoformat(hoje_iso) - dt.date.fromisoformat(pontos[0][0])).days / 365
