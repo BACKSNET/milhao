@@ -459,6 +459,36 @@ html.tema-suave,html.tema-suave *,html.tema-suave *::before,html.tema-suave *::a
 .cartoes p a{color:var(--verde);font-weight:600}
 .cartoes em{display:block;font-style:normal;font-size:13px;font-weight:600;margin-bottom:4px}
 #leitura{margin-top:24px}
+.metas-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:18px}
+.metas-grade > .meta-card{display:flex;flex-direction:column;gap:12px;margin:0}
+.meta-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.meta-topo h2{margin:0}.meta-topo p{margin:4px 0 0}
+.selo-meta{font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--papel);color:var(--tinta-2);white-space:nowrap}
+.selo-meta.ok{background:var(--verde-claro);color:var(--verde)}
+.selo-meta.alerta{background:var(--ouro-claro);color:var(--ouro)}
+.meta-num{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.meta-num strong{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.meta-num span{color:var(--tinta-2)}
+.meta-barra{height:10px;border-radius:99px;background:var(--linha-2);overflow:hidden}
+.meta-barra span{display:block;height:100%;border-radius:99px;background:var(--verde);transition:width .6s ease}
+.meta-acoes{margin-top:auto;justify-content:flex-start}.meta-acoes .perigo{margin-left:0}
+.meta-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:end}
+.meta-form .acoes{grid-column:1/-1;justify-content:flex-end}
+.meta-sugestoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.meta-sugestao{display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;padding:16px;border:1px solid var(--linha);border-radius:var(--r);background:var(--branco);color:var(--tinta);cursor:pointer;transition:border-color .15s}
+.meta-sugestao:hover{border-color:var(--verde)}.meta-sugestao span{color:var(--tinta-2);font-size:13.5px}
+.milhao-prazo{margin:14px 0 12px;font-size:14px;color:var(--tinta-2)}
+.milhao-prazo input{width:64px;padding:4px 8px;margin:0 4px}
+.rumo{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(160px,1fr) auto;gap:24px;align-items:center;text-decoration:none;color:inherit;margin:20px 0 0;transition:border-color .15s}
+.rumo:hover{border-color:var(--verde)}
+.rumo-texto span{font-size:13px;color:var(--tinta-2)}
+.rumo-texto strong{display:block;font-size:22px;font-weight:800;margin:2px 0 4px}
+.rumo-texto strong small{font-size:14px;font-weight:600;color:var(--tinta-3)}
+.rumo-texto p{margin:0;font-size:13.5px;color:var(--tinta-2)}
+.rumo-barra{display:flex;align-items:center;gap:10px}.rumo-barra .meta-barra{flex:1}
+.rumo-barra em{font-style:normal;font-weight:700;font-size:14px}
+.rumo-link{color:var(--verde);font-weight:700;font-size:14px;white-space:nowrap}
+@media (max-width:760px){.rumo{grid-template-columns:1fr;gap:12px}}
 /* leitura da Análise: sem caixa sobrando sozinha. 5 caixas = 2 em cima e 3 embaixo; 4 = 2 e 2; 3 = uma linha */
 .leitura-cartoes{grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;margin-bottom:12px}
 .leitura-cartoes > div{grid-column:span 2}
@@ -1463,6 +1493,7 @@ function GraficoVelas(caixa) {
 
 /* ---------- ícones ---------- */
 const ICO = {
+  metas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
   imposto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
   perfil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>',
   carteira: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2M3 10h18M7 6V4h10v2"/></svg>',
@@ -1828,6 +1859,7 @@ function telaCarteiras() {
     </div>
     ${blocoAlocacao()}
     </div>
+    ${blocoRumo()}
     ${S.ativos.length ? blocoMercado() : ""}</main>${rodapeSite()}`;
   // mini gráfico da evolução de cada carteira nos últimos 3 meses
   for (const c of cs) {
@@ -1883,7 +1915,7 @@ function moldura(rota) {
       <a href="#carteiras" class="marca-link" aria-label="Milhão, voltar para a tela inicial">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
-        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("imposto", "Imposto de Renda")}${item("perfil", "Perfil")}
+        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("metas", "Metas")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("imposto", "Imposto de Renda")}${item("perfil", "Perfil")}
       </nav>
       <div class="rodape">
         <span>Cotações de fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span>
@@ -3254,6 +3286,10 @@ function blocoMercado() {
 rotas.ferramentas = async (el) => {
   await carregarIndicadores();
   if (!$("#conteudo") || location.hash !== "#ferramentas") return;
+  // a calculadora do milhão começa com os números de quem já tem carteira
+  const patHoje = patrimonioDe("todas"), mediaHoje = aporteMedio("todas"), temPat = patHoje > 0;
+  const iniPadrao = temPat ? Math.round(patHoje) : 25000, mesPadrao = mediaHoje > 0 ? Math.round(mediaHoje) : 1500;
+  const ipca = S.indicadores?.ipca?.["12m"] || null;
   el.innerHTML = `<div class="cabeca"><div><h1>Ferramentas</h1><p class="sutil" style="margin:6px 0 0">Simule juros, renda com dividendos, renda fixa e a sua reserva de emergência.</p></div></div>
     <div class="painel"><h2>Juros compostos</h2><div class="calc">
       <form id="f-juros">
@@ -3263,13 +3299,18 @@ rotas.ferramentas = async (el) => {
         <label class="campo">Prazo (anos)<input type="number" name="anos" value="15" min="1" max="60" step="1"></label>
       </form>
       <div><div class="numeros" id="r-juros"></div><div class="grafico" id="g-juros" style="margin-top:14px"></div></div></div></div>
-    <div class="painel"><h2>Quanto falta para o milhão</h2><div class="calc">
+    <div class="painel" id="calc-milhao"><h2>Quando chego no meu milhão</h2><div class="calc">
       <form id="f-milhao">
-        <label class="campo">Quanto você já tem (R$)<input type="number" name="ini" value="25000" min="0" step="1000"></label>
-        <label class="campo">Aporte mensal (R$)<input type="number" name="mes" value="1500" min="0" step="50"></label>
+        <label class="campo">Quanto você já tem (R$)<input type="number" name="ini" value="${iniPadrao}" min="0" step="any"></label>
+        <label class="campo">Aporte mensal (R$)<input type="number" name="mes" value="${mesPadrao}" min="0" step="any"></label>
         <label class="campo">Rentabilidade (% ao ano)<input type="number" name="taxa" value="10" step="0.1"></label>
+        <label class="campo">Meta (R$)<input type="number" name="meta" value="1000000" min="1" step="any"></label>
+        ${ipca ? `<label class="imp-check"><input type="checkbox" name="real"><span>Descontar a inflação (IPCA de ${pct(ipca, 1)} nos últimos 12 meses). Os valores ficam em dinheiro de hoje.</span></label>` : ""}
+        ${temPat ? `<p class="fraco" style="margin:0">Já preenchido com o seu patrimônio de hoje${aporteMedio("todas") > 0 ? " e a sua média de aportes dos últimos 12 meses" : ""}.</p>` : ""}
       </form>
-      <div id="r-milhao"></div></div></div>
+      <div><div id="r-milhao"></div><div class="grafico" id="g-milhao" style="margin-top:14px"></div>
+        <div class="milhao-prazo"><label>Quer chegar em <input type="number" id="m-anos" value="10" min="1" max="60" step="1" aria-label="Em quantos anos"> anos?</label> <span id="r-prazo"></span></div>
+        <button class="btn" id="m-virar-meta" type="button">Transformar em meta</button></div></div></div>
     ${ferramentasExtras()}`;
   const simular = (ini, mes, taxa, meses) => {
     const im = Math.pow(1 + taxa / 100, 1 / 12) - 1; let v = ini, inv = ini; const pts = [{ m: 0, v, inv }];
@@ -3282,16 +3323,196 @@ rotas.ferramentas = async (el) => {
     $("#r-juros").innerHTML = `<div><span>Valor final</span><strong class="alta">${brl(u.v, 0)}</strong></div><div><span>Total investido</span><strong>${brl(u.inv, 0)}</strong></div><div><span>Ganho com juros</span><strong>${brl(u.v - u.inv, 0)}</strong></div>`;
     graficoLinha($("#g-juros"), pts.map((p) => ({ d: rotulo(p.m), v: p.v })), { altura: 240, segunda: pts.map((p) => ({ d: rotulo(p.m), v: p.inv })), formato: (v) => compacto(v) });
   };
-  const milhao = () => {
-    const f = new FormData($("#f-milhao")), pts = simular(+f.get("ini"), +f.get("mes"), +f.get("taxa"), 12 * 80);
-    const k = pts.findIndex((p) => p.v >= 1e6);
-    $("#r-milhao").innerHTML = k < 0 ? `<p class="resultado-grande" style="color:var(--tinta-2)">Mais de 80 anos</p><p class="sutil">Aumente o aporte ou a rentabilidade para chegar lá.</p>`
-      : `<p class="sutil" style="margin:0">Você chega a R$ 1 milhão em</p><p class="resultado-grande" style="margin:4px 0">${Math.floor(k / 12)} anos e ${k % 12} ${k % 12 === 1 ? "mês" : "meses"}</p>
-         <p class="sutil">Por volta de ${new Date(rotulo(k)).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}. Até lá, você coloca ${brl(pts[k].inv, 0)} do bolso e os juros rendem ${brl(pts[k].v - pts[k].inv, 0)}.</p>`;
+  const lerMilhao = () => {
+    const f = new FormData($("#f-milhao")), real = !!f.get("real") && ipca;
+    const nominal = +f.get("taxa") / 100, taxa = real ? (1 + nominal) / (1 + ipca) - 1 : nominal;
+    return { ini: +f.get("ini") || 0, mes: +f.get("mes") || 0, meta: +f.get("meta") || 1e6, nominal, taxa, real };
   };
-  $("#f-juros").oninput = juros; $("#f-milhao").oninput = milhao; juros(); milhao();
+  const milhao = () => {
+    const { ini, mes, meta, taxa, real } = lerMilhao(), k = mesesAte(ini, mes, taxa, meta), nome = meta === 1e6 ? "R$ 1 milhão" : brl(meta, 0);
+    const pts = simular(ini, mes, taxa * 100, Math.min(Math.max(k ?? 360, 24) + 12, 600));
+    $("#r-milhao").innerHTML = k === 0 ? `<p class="resultado-grande" style="margin:0">Você já chegou lá</p><p class="sutil">Seu patrimônio já passou de ${nome}. Que tal uma meta maior?</p>`
+      : k == null ? `<p class="resultado-grande" style="color:var(--tinta-2);margin:0">Mais de 80 anos</p><p class="sutil">Aumente o aporte ou a rentabilidade para chegar a ${nome}.</p>`
+      : `<p class="sutil" style="margin:0">Você chega a ${nome} em</p><p class="resultado-grande" style="margin:4px 0">${duracao(k)}</p>
+         <p class="sutil" style="margin:0">Por volta de ${mesAno(mesDaqui(k))}. Até lá, você coloca ${brl(pts[k].inv, 0)} do bolso e os juros rendem ${brl(pts[k].v - pts[k].inv, 0)}${real ? ", tudo em dinheiro de hoje" : ""}.</p>`;
+    graficoLinha($("#g-milhao"), pts.map((p) => ({ d: rotulo(p.m), v: p.v })), { altura: 220, segunda: pts.map((p) => ({ d: rotulo(p.m), v: p.inv })), formato: (v) => compacto(v) });
+    prazoMilhao();
+  };
+  const prazoMilhao = () => {
+    const { ini, mes, meta, taxa } = lerMilhao(), anos = Math.max(1, Math.round(+$("#m-anos").value || 10));
+    const preciso = aporteParaChegar(ini, taxa, meta, anos * 12);
+    $("#r-prazo").innerHTML = preciso === 0 ? "Você chega lá mesmo sem aportar mais nada."
+      : preciso <= mes ? `Com ${brl(mes, 0)} por mês você já chega antes disso.`
+      : `Aporte <b>${brl(preciso, 0)} por mês</b> (${brl(preciso - mes, 0)} a mais que hoje).`;
+  };
+  $("#f-juros").oninput = juros; $("#f-milhao").oninput = milhao; $("#m-anos").oninput = prazoMilhao; juros(); milhao();
+  $("#m-virar-meta").onclick = () => {
+    const { mes, meta, nominal } = lerMilhao(), anos = Math.max(1, Math.round(+$("#m-anos").value || 10));
+    S.metaRascunho = { nome: meta === 1e6 ? "Meu primeiro milhão" : `Juntar ${brl(meta, 0)}`, tipo: "patrimonio", valor: meta, prazo: prazoEm(anos),
+      taxa: +(nominal * 100).toFixed(2), aporte: mes === mesPadrao && mediaHoje > 0 ? null : mes };
+    ir("#metas");
+  };
   ligarFerramentasExtras();
 };
+
+/* ---------- metas e o caminho até o milhão ---------- */
+const metas = () => (S.estado.metas ??= []);
+const carteirasDe = (escopo) => escopo && escopo !== "todas" ? S.estado.carteiras.filter((c) => c.id === escopo) : S.estado.carteiras;
+const patrimonioDe = (escopo) => carteirasDe(escopo).reduce((s, c) => s + posicoes(c).reduce((t, p) => t + (p.qtd > 0 ? p.valor || 0 : 0), 0), 0);
+// dinheiro novo por mês, em média, nos últimos 12 meses: compras menos vendas (sem as entradas da planilha de posição)
+function aporteMedio(escopo) {
+  const d = new Date(); d.setFullYear(d.getFullYear() - 1); const d0 = d.toISOString().slice(0, 10);
+  let liq = 0;
+  for (const c of carteirasDe(escopo)) for (const l of c.lancamentos) {
+    if (l.data < d0 || !(l.tipo === "C" || l.tipo === "V") || /Posição na B3|Ajuste pela posição/.test(l.evento || "")) continue;
+    liq += (l.tipo === "C" ? 1 : -1) * l.qtd * (l.preco || 0);
+  }
+  return Math.max(0, liq / 12);
+}
+const taxaMes = (anual) => Math.pow(1 + anual, 1 / 12) - 1;
+const pctTaxa = (t) => pct(t, Math.round(t * 1000) % 10 ? 1 : 0);   // 10% ao ano, 10,5% ao ano
+// meses até chegar no alvo, aportando todo mês (null se passar de 80 anos)
+function mesesAte(ini, mes, anual, alvo) {
+  if (ini >= alvo) return 0;
+  const i = taxaMes(anual); let v = ini;
+  for (let k = 1; k <= 960; k++) { v = v * (1 + i) + mes; if (v >= alvo) return k; }
+  return null;
+}
+// aporte por mês que leva de ini até o alvo em n meses
+function aporteParaChegar(ini, anual, alvo, n) {
+  if (n <= 0) return Infinity;
+  const i = taxaMes(anual), f = Math.pow(1 + i, n), falta = alvo - ini * f;
+  if (falta <= 0) return 0;
+  return i ? (falta * i) / (f - 1) : falta / n;
+}
+const mesDaqui = (m) => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + m); return d; };
+const mesAno = (d) => d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+const mesAnoDe = (aaaamm) => mesAno(new Date(aaaamm + "-01T12:00:00"));
+const duracao = (m) => [Math.floor(m / 12) && plural(Math.floor(m / 12), "ano", "anos"), m % 12 && plural(m % 12, "mês", "meses")].filter(Boolean).join(" e ") || "menos de um mês";
+const mesesAtePrazo = (prazo) => { const [a, m] = prazo.split("-").map(Number), h = new Date(); return (a - h.getFullYear()) * 12 + (m - 1 - h.getMonth()); };
+// proventos pagos nos últimos 12 meses, por mês
+async function rendaMensal(escopo) {
+  const d = new Date(); d.setFullYear(d.getFullYear() - 1); const d0 = d.toISOString().slice(0, 10), hoje = hojeISO();
+  let soma = 0;
+  for (const c of carteirasDe(escopo)) for (const p of await proventosDaCarteira(c)) if (p.pagamento && p.pagamento > d0 && p.pagamento <= hoje) soma += p.total;
+  return soma / 12;
+}
+async function avaliarMeta(m) {
+  const pat = patrimonioDe(m.carteira), aporte = m.aporte ?? aporteMedio(m.carteira), taxa = (m.taxa ?? 10) / 100;
+  let atual = pat, alvoPat = m.valor, dy = null, dyEstimado = false;
+  if (m.tipo === "renda") {
+    atual = await rendaMensal(m.carteira);
+    dy = pat > 0 && atual > 0 ? (atual * 12) / pat : null;
+    if (!dy) { dy = 0.08; dyEstimado = true; }   // sem histórico de proventos, supõe 8% ao ano
+    alvoPat = (m.valor * 12) / dy;
+  }
+  const prog = Math.min(1, Math.max(0, atual / m.valor));
+  const meses = mesesAte(pat, aporte, taxa, alvoPat);
+  const prazoM = m.prazo ? mesesAtePrazo(m.prazo) : null;
+  const precisa = prazoM > 0 ? aporteParaChegar(pat, taxa, alvoPat, prazoM) : null;
+  const status = prog >= 1 ? "feita" : meses == null ? "longe" : prazoM == null ? "sem-prazo" : meses <= prazoM ? "no-ritmo" : "atrasada";
+  return { pat, aporte, taxa, atual, alvoPat, dy, dyEstimado, prog, meses, prazoM, precisa, status };
+}
+const STATUS_META = { feita: ["Concluída", "ok"], "no-ritmo": ["No ritmo", "ok"], atrasada: ["Fora do ritmo", "alerta"], "sem-prazo": ["Sem prazo", ""], longe: ["Longe demais", "alerta"] };
+function cardMeta(m, a) {
+  const [st, tom] = STATUS_META[a.status], renda = m.tipo === "renda";
+  const onde = m.carteira && m.carteira !== "todas" ? `contando só ${esc(S.estado.carteiras.find((c) => c.id === m.carteira)?.nome || "uma carteira")}` : "somando todas as carteiras";
+  let proj;
+  if (a.status === "feita") proj = renda ? "Os proventos da carteira já pagam essa renda." : "Você já chegou lá.";
+  else if (a.meses == null) proj = `Com ${brl(a.aporte, 0)} por mês e ${pctTaxa(a.taxa)} ao ano, leva mais de 80 anos. Aumente o aporte ou o prazo.`;
+  else proj = `Com ${brl(a.aporte, 0)} por mês${m.aporte == null ? " (a sua média dos últimos 12 meses)" : ""} e ${pctTaxa(a.taxa)} ao ano, você chega lá em <b>${duracao(a.meses)}</b>, por volta de ${mesAno(mesDaqui(a.meses))}.`;
+  let prazo = "";
+  if (m.prazo && a.status !== "feita") {
+    prazo = a.prazoM <= 0 ? `O prazo (${mesAnoDe(m.prazo)}) já passou: edite a meta para escolher outro.`
+      : a.status === "no-ritmo" ? (a.prazoM - a.meses ? `Isso é ${duracao(a.prazoM - a.meses)} antes do prazo.` : "Bem no prazo.")
+      : `Para chegar até ${mesAnoDe(m.prazo)}, o aporte precisa ser de <b>${brl(a.precisa, 0)} por mês</b>.`;
+  }
+  const rendaTxt = renda ? `<p class="fraco" style="margin:0">Com ${pct(a.dy, 1)} de proventos ao ano${a.dyEstimado ? " (uma média de mercado, porque a carteira ainda não tem 12 meses de proventos)" : ", o que a carteira pagou nos últimos 12 meses"}, essa renda pede ${brl(a.alvoPat, 0)} investidos. Hoje são ${brl(a.pat, 0)}.</p>` : "";
+  return `<div class="painel meta-card">
+    <div class="meta-topo"><div><h2>${esc(m.nome)}</h2><p class="sutil">${renda ? `Renda de ${brl(m.valor, 0)} por mês com proventos` : `Patrimônio de ${brl(m.valor, 0)}`}, ${onde}${m.prazo ? `, até ${mesAnoDe(m.prazo)}` : ""}.</p></div>
+      <span class="selo-meta ${tom}">${st}</span></div>
+    <div class="meta-num"><strong>${pct(a.prog, a.prog < 0.1 ? 2 : 1)}</strong><span>${renda ? `${brl(a.atual, 0)} por mês hoje` : `${brl(a.pat, 0)} de ${brl(m.valor, 0)}`}</span></div>
+    <div class="meta-barra"><span style="width:${(a.prog * 100).toFixed(2)}%"></span></div>
+    <p style="margin:0">${proj} ${prazo}</p>${rendaTxt}
+    <div class="acoes meta-acoes"><button class="btn texto" data-editar-meta="${esc(m.id)}">Editar</button><button class="btn texto perigo" data-excluir-meta="${esc(m.id)}">Excluir</button></div>
+  </div>`;
+}
+const SUGESTOES_META = [
+  { nome: "Meu primeiro milhão", tipo: "patrimonio", valor: 1000000, anos: 15, texto: "Juntar R$ 1 milhão investido." },
+  { nome: "Renda extra com dividendos", tipo: "renda", valor: 3000, anos: 20, texto: "Receber R$ 3 mil por mês só com proventos." },
+  { nome: "Reserva para um sonho", tipo: "patrimonio", valor: 100000, anos: 5, texto: "Juntar R$ 100 mil em 5 anos." },
+];
+const prazoEm = (anos) => mesDaqui(anos * 12).toISOString().slice(0, 7);
+rotas.metas = async (el) => {
+  const lista = metas(), cs = S.estado.carteiras;
+  el.innerHTML = `<div class="cabeca"><div><h1>Metas</h1><p class="sutil" style="margin:6px 0 0">Diga aonde quer chegar. O Milhão mostra, pelo seu ritmo de aportes, quando você chega lá e quanto precisa guardar por mês.</p></div>
+      <div class="acoes"><button class="btn primario" id="nova-meta">Nova meta</button></div></div>
+    <div id="meta-form"></div>
+    <div id="metas-lista">${lista.length ? `<p class="fraco">Calculando…</p>` : `<div class="painel"><h2>Por onde começar</h2><p class="sutil" style="margin:0 0 14px">Escolha uma ideia e ajuste os números, ou crie a sua do zero.</p>
+      <div class="meta-sugestoes">${SUGESTOES_META.map((s, i) => `<button class="meta-sugestao" data-sugestao="${i}"><b>${esc(s.nome)}</b><span>${esc(s.texto)}</span></button>`).join("")}</div></div>`}</div>
+    <p class="fraco" style="margin-top:16px">Simulação com rentabilidade constante, que você escolhe em cada meta. Na bolsa, o retorno varia de ano para ano. Não é recomendação de investimento.</p>`;
+  const abrirForm = (m = {}) => {
+    const editando = !!m.id;
+    const opc = `<option value="todas">Todas as carteiras</option>${cs.map((c) => `<option value="${esc(c.id)}" ${m.carteira === c.id ? "selected" : ""}>${esc(c.nome)}</option>`).join("")}`;
+    $("#meta-form").innerHTML = `<div class="painel"><h2>${editando ? "Editar meta" : "Nova meta"}</h2>
+      <form id="f-meta" class="meta-form">
+        <label class="campo">Nome<input name="nome" required maxlength="60" value="${esc(m.nome || "")}" placeholder="Ex.: Meu primeiro milhão"></label>
+        <label class="campo">O que você quer<select name="tipo"><option value="patrimonio">Juntar um patrimônio</option><option value="renda" ${m.tipo === "renda" ? "selected" : ""}>Receber uma renda por mês com proventos</option></select></label>
+        <label class="campo"><span id="rot-valor">${m.tipo === "renda" ? "Renda por mês (R$)" : "Patrimônio (R$)"}</span><input type="number" name="valor" required min="1" step="any" value="${m.valor ?? ""}"></label>
+        <label class="campo">Até quando (opcional)<input type="month" name="prazo" value="${m.prazo || ""}" min="${hojeISO().slice(0, 7)}" placeholder="AAAA-MM"></label>
+        ${cs.length > 1 ? `<label class="campo">Contando<select name="carteira">${opc}</select></label>` : ""}
+        <label class="campo">Rentabilidade esperada (% ao ano)<input type="number" name="taxa" step="0.1" value="${m.taxa ?? 10}"></label>
+        <label class="campo">Aporte por mês (R$)<input type="number" name="aporte" min="0" step="any" value="${m.aporte ?? ""}" id="meta-aporte"></label>
+        <div class="acoes"><button type="button" class="btn" id="meta-cancelar">Cancelar</button><button class="btn primario">${editando ? "Salvar meta" : "Criar meta"}</button></div>
+      </form>
+      <p class="fraco" style="margin:12px 0 0">Deixe o aporte em branco para usar a sua média dos últimos 12 meses (compras menos vendas), que se atualiza sozinha conforme você lança.</p></div>`;
+    const f = $("#f-meta");
+    const dica = () => { const media = aporteMedio(f.carteira?.value || "todas"); $("#meta-aporte").placeholder = `Média: ${brl(media, 0)}`; };
+    f.tipo.onchange = () => { $("#rot-valor").textContent = f.tipo.value === "renda" ? "Renda por mês (R$)" : "Patrimônio (R$)"; };
+    if (f.carteira) f.carteira.onchange = dica;
+    dica();
+    $("#meta-cancelar").onclick = () => { $("#meta-form").innerHTML = ""; };
+    f.onsubmit = (e) => {
+      e.preventDefault();
+      const valor = numeroBR(f.valor.value), taxa = numeroBR(f.taxa.value), aporte = f.aporte.value.trim() === "" ? null : numeroBR(f.aporte.value);
+      if (!(valor > 0)) { aviso("Coloque um valor maior que zero para a meta"); return; }
+      const nova = { id: m.id || novoId(), nome: f.nome.value.trim() || "Minha meta", tipo: f.tipo.value, valor,
+        prazo: /^\d{4}-\d{2}$/.test(f.prazo.value) ? f.prazo.value : null, carteira: f.carteira?.value || "todas",
+        taxa: Number.isFinite(taxa) ? taxa : 10, aporte: Number.isFinite(aporte) && aporte >= 0 ? aporte : null };
+      const k = lista.findIndex((x) => x.id === nova.id);
+      if (k >= 0) lista[k] = nova; else lista.push(nova);
+      salvar(); aviso(editando ? "Meta salva" : "Meta criada"); render();
+    };
+    $("#meta-form").scrollIntoView({ behavior: "smooth", block: "start" });
+    f.nome.focus({ preventScroll: true });
+  };
+  $("#nova-meta").onclick = () => abrirForm();
+  $$("[data-sugestao]").forEach((b) => b.onclick = () => { const s = SUGESTOES_META[+b.dataset.sugestao]; abrirForm({ nome: s.nome, tipo: s.tipo, valor: s.valor, prazo: prazoEm(s.anos) }); });
+  if (S.metaRascunho) { const r = S.metaRascunho; S.metaRascunho = null; abrirForm(r); }
+  if (!lista.length) return;
+  const av = await Promise.all(lista.map(avaliarMeta));
+  if (location.hash !== "#metas") return;
+  $("#metas-lista").innerHTML = `<div class="metas-grade">${lista.map((m, i) => cardMeta(m, av[i])).join("")}</div>`;
+  $$("[data-editar-meta]").forEach((b) => b.onclick = () => abrirForm(lista.find((m) => m.id === b.dataset.editarMeta)));
+  $$("[data-excluir-meta]").forEach((b) => b.onclick = async () => {
+    const m = lista.find((x) => x.id === b.dataset.excluirMeta);
+    if (!(await perguntar({ titulo: "Excluir a meta?", texto: `"${m.nome}" sai da lista. Seus lançamentos não mudam.`, botao: "Excluir", perigo: true }))) return;
+    lista.splice(lista.indexOf(m), 1); salvar(); render();
+  });
+};
+// faixa da tela inicial: o caminho até o milhão (ou até a primeira meta de patrimônio)
+function blocoRumo() {
+  if (!(patrimonioDe("todas") > 0)) return "";
+  const meta = metas().find((m) => m.tipo !== "renda"), escopo = meta?.carteira || "todas", alvo = meta?.valor || 1e6;
+  const p = patrimonioDe(escopo), aporte = meta?.aporte ?? aporteMedio(escopo), taxa = (meta?.taxa ?? 10) / 100;
+  const meses = mesesAte(p, aporte, taxa, alvo), prog = Math.min(1, p / alvo);
+  const frase = prog >= 1 ? "Você já chegou lá." : meses == null ? "No ritmo atual, leva mais de 80 anos. Veja quanto aportar por mês para chegar antes."
+    : `No ritmo atual (${brl(aporte, 0)} por mês e ${pctTaxa(taxa)} ao ano), você chega lá por volta de ${mesAno(mesDaqui(meses))}.`;
+  return `<a class="painel rumo" href="#metas">
+    <div class="rumo-texto"><span>${meta ? esc(meta.nome) : "Rumo ao primeiro milhão"}</span><strong>${brl(p, 0)} <small>de ${brl(alvo, 0)}</small></strong><p>${frase}</p></div>
+    <div class="rumo-barra"><div class="meta-barra"><span style="width:${Math.max(prog * 100, 0.6).toFixed(2)}%"></span></div><em>${pct(prog, prog < 0.1 ? 2 : 1)}</em></div>
+    <span class="rumo-link">${meta ? "Ver metas" : "Criar uma meta"}</span></a>`;
+}
 
 /* ---------- favoritos (ficam na conta, valem em qualquer aparelho) ---------- */
 const favoritos = () => (S.estado.favoritos ??= []);
