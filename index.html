@@ -4577,20 +4577,20 @@ function planoHTML() {
       : p.status === "pix" ? `Pago no Pix. O Ouro vale até ${ate} e não renova sozinho: para continuar, pague mais 30 dias antes de acabar.` : `Vale até ${ate}.`;
     return `<div class="plano-topo"><span class="selo-ouro">Milhão Ouro</span><strong>${p.status === "criador" ? "Vitalício" : p.status === "pix" ? `${brl(PLANO_OURO.preco)} por 30 dias` : `${brl(PLANO_OURO.preco)} por mês`}</strong></div>
       <p>${linha}</p>
-      <ul class="plano-lista">${["Carteiras sem limite", "Análise avançada: médias, Bollinger, IFR, Medir e Marcar preço", "Filtrão sem limite de perguntas", "Logo dourada"].map((t) => `<li>${t}</li>`).join("")}</ul>
+      <ul class="plano-lista">${["Carteiras sem limite", "Consolidador: renda fixa, Tesouro, fundos e cripto junto com a bolsa", "Imposto de Renda: DARF do mês, bens e direitos e proventos", "Análise avançada: médias, Bollinger, IFR, Medir e Marcar preço", "Filtrão sem limite de perguntas", "Logo dourada"].map((t) => `<li>${t}</li>`).join("")}</ul>
       ${p.status === "ativa" ? `<button class="btn" id="cancelar-ouro">Cancelar assinatura</button>` : p.status === "pix" ? botoesCompra(true) : ""}`;
   }
   if (emTeste()) {
     const fim = fimDoTeste(), dias = Math.max(1, Math.ceil((fim - new Date()) / 864e5));
     return `<div class="plano-topo"><span class="selo-ouro">Teste grátis do Ouro</span><strong>${dias === 1 ? "Último dia" : `Faltam ${dias} dias`}</strong></div>
       <p>Você está usando o <b>Milhão Ouro</b> de graça até ${dataBR(fim.toISOString().slice(0, 10))}. Depois a conta volta sozinha para o plano Grátis, <b>sem nenhuma cobrança</b>.</p>
-      <ul class="plano-lista">${["Carteiras sem limite", "Análise avançada: médias, Bollinger, IFR, Medir e Marcar preço", "Filtrão sem limite de perguntas", "Logo dourada"].map((t) => `<li>${t}</li>`).join("")}</ul>
+      <ul class="plano-lista">${["Carteiras sem limite", "Consolidador: renda fixa, Tesouro, fundos e cripto junto com a bolsa", "Imposto de Renda: DARF do mês, bens e direitos e proventos", "Análise avançada: médias, Bollinger, IFR, Medir e Marcar preço", "Filtrão sem limite de perguntas", "Logo dourada"].map((t) => `<li>${t}</li>`).join("")}</ul>
       <p class="plano-preco">Para continuar com o Ouro depois do teste: <strong>${brl(PLANO_OURO.preco)}</strong> por mês, no cartão ou no Pix.</p>
       ${botoesCompra()}`;
   }
   const pendente = p.plano === "ouro" && p.status === "pendente";
   const linhas = [["Carteiras", "1", "Sem limite"], ["Gráfico de candles, volume e suas operações", true, true], ["Preço justo e preço teto", true, true],
-    ["Médias, Bollinger, IFR, Medir e Marcar preço", false, true], ["Perguntas ao Filtrão", `${LIMITES_GRATIS.filtrao} por dia`, "Sem limite"], ["Logo dourada", false, true]];
+    ["Médias, Bollinger, IFR, Medir e Marcar preço", false, true], ["Consolidador de carteira", false, true], ["Imposto de Renda", false, true], ["Perguntas ao Filtrão", `${LIMITES_GRATIS.filtrao} por dia`, "Sem limite"], ["Logo dourada", false, true]];
   const cel = (v) => v === true ? '<span class="sim" aria-label="Sim">✓</span>' : v === false ? '<span class="nao" aria-label="Não">–</span>' : esc(v);
   return `<div class="plano-topo"><span class="selo-gratis">Plano Grátis</span></div>
     <p>${fimDoTeste() ? "Seu teste grátis de 7 dias do Ouro acabou e a conta voltou para o Grátis, sem cobrança." : "Você usa o Milhão de graça."} Com o <b>Milhão Ouro</b> a logo fica dourada e você libera tudo:</p>
@@ -4752,7 +4752,7 @@ function telaDocumento(qual) {
     <h2>1. O que é o Milhão</h2><p>O Milhão é uma ferramenta para organizar carteiras de ações e FIIs da B3, ver cotações, proventos, números das empresas e gráficos. Os dados vêm de fontes públicas da B3 e da CVM, com cotações de fechamento, e podem ter atrasos ou erros. O site foi desenvolvido pela ${DESENVOLVEDORA}, empresa de propriedade de ${esc(VENDEDOR.nome || "Luiz Henrique Santos Barboza")}.</p>
     <h2>2. Não é recomendação de investimento</h2><p>Nada no Milhão é recomendação de compra ou venda nem consultoria. Preço justo, preço teto e indicadores são cálculos automáticos feitos com dados públicos e premissas que você pode mudar. As respostas do Filtrão são geradas por inteligência artificial e podem conter erros. As decisões de investimento são suas.</p>
     <h2>3. Sua conta</h2><p>Você é responsável pelo seu e-mail e pela sua senha. Você pode excluir a conta a qualquer momento no Perfil.</p>
-    <h2>4. Planos</h2><p>O plano <b>Grátis</b> não tem custo. O <b>Milhão Ouro</b> custa ${brl(PLANO_OURO.preco)} por mês e libera: carteiras sem limite, Análise avançada (médias móveis, Bollinger, IFR, Medir e Marcar preço), perguntas sem limite ao Filtrão e a logo dourada.</p>
+    <h2>4. Planos</h2><p>O plano <b>Grátis</b> não tem custo. O <b>Milhão Ouro</b> custa ${brl(PLANO_OURO.preco)} por mês e libera: carteiras sem limite, o Consolidador de carteira (renda fixa, Tesouro Direto, fundos, criptomoedas e outros bens), o cálculo do Imposto de Renda, Análise avançada (médias móveis, Bollinger, IFR, Medir e Marcar preço), perguntas sem limite ao Filtrão e a logo dourada.</p>
     <h2>5. Teste grátis</h2><p>Toda conta ganha <b>7 dias de Milhão Ouro de graça</b>, sem cartão. Quando o teste acaba, a conta volta sozinha para o plano Grátis, sem nenhuma cobrança. Só é cobrado quem assinar.</p>
     <h2>6. Formas de pagamento e renovação</h2><p>Os pagamentos são feitos pelo Mercado Pago, de duas formas:</p><ul><li><b>Cartão:</b> a assinatura <b>renova automaticamente todo mês</b> até você cancelar.</li><li><b>Pix:</b> cada pagamento libera <b>30 dias</b> de Milhão Ouro, sem renovação automática. Se pagar de novo antes de acabar, os dias se somam. Quando os dias acabam, a conta volta sozinha para o plano Grátis.</li></ul><p>O Milhão não recebe nem guarda os dados do seu cartão ou da sua conta bancária. Se o preço mudar, você é avisado com pelo menos 30 dias de antecedência.</p>
     <h2>7. Cancelamento</h2><p>No cartão, você cancela quando quiser no Perfil, em "Cancelar assinatura", ou no app do Mercado Pago. A renovação para na hora e você continua com o Ouro até o fim do período já pago. No Pix não há o que cancelar: basta não pagar de novo. Não há multa.</p>
