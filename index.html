@@ -4371,7 +4371,7 @@ rotas.indicadores = async (el) => {
   el.innerHTML = `<p class="fraco">Carregando…</p>`;
   const ind = await carregarIndicadores();
   const etf = (k) => S.porTicker[ETF_REFERENCIA[k][0]];
-  const cartao = (nome, valor, detalhe, dica = "") => `<div><span>${nome}</span><strong>${valor}</strong>${detalhe ? `<small class="sutil">${detalhe}</small>` : ""}${dica ? `<small class="fraco">${dica}</small>` : ""}</div>`;
+  const cartao = (nome, valor, detalhe, dica = "") => `<div><span>${nome}</span><strong>${valor}</strong>${detalhe ? `<small class="sutil">${detalhe}</small>` : ""}${dica ? `<small class="fraco" style="display:block">${dica}</small>` : ""}</div>`;
   el.innerHTML = `<div class="cabeca"><div><h1>Indicadores</h1><p class="sutil" style="margin:6px 0 0">Juros, inflação, dólar e bolsa, para comparar com os seus investimentos.</p></div></div>
     ${ind ? `<div class="numeros">
       ${ind.selic ? cartao("Selic (meta)", pct(ind.selic.meta, 2) + " ao ano", `em ${dataBR(ind.selic.data)}`) : ""}
