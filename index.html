@@ -130,6 +130,7 @@ nav.menu a[href="#analise"]:hover svg,.servicos a[href="#analise"]:hover svg{ani
 nav.menu a[href="#indicadores"]:hover svg,.servicos a[href="#indicadores"]:hover svg{animation:ico-rise .5s ease}
 nav.menu a[href="#agenda"]:hover svg,.servicos a[href="#agenda"]:hover svg{animation:ico-wobble .5s ease}
 nav.menu a[href="#comparar"]:hover svg,.servicos a[href="#comparar"]:hover svg{animation:ico-swap .45s ease}
+nav.menu a[href="#consolidador"]:hover svg,.servicos a[href="#consolidador"]:hover svg{animation:ico-rise .5s ease}
 @keyframes ico-pop{0%{transform:scale(1)}45%{transform:scale(1.28) rotate(-7deg)}100%{transform:scale(1.1)}}
 @keyframes ico-spin{to{transform:rotate(360deg)}}
 @keyframes ico-bars{0%,100%{transform:scaleY(1)}30%{transform:scaleY(.65)}65%{transform:scaleY(1.18)}}
@@ -472,6 +473,57 @@ html.tema-suave,html.tema-suave *,html.tema-suave *::before,html.tema-suave *::a
 .meta-barra{height:10px;border-radius:99px;background:var(--linha-2);overflow:hidden}
 .meta-barra span{display:block;height:100%;border-radius:99px;background:var(--verde);transition:width .6s ease}
 .meta-acoes{margin-top:auto;justify-content:flex-start}.meta-acoes .perigo{margin-left:0}
+.cons-grade{display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;align-items:start;margin-top:18px}
+.cons-grade > .painel{margin:0}
+.cons-tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.cons-tipo{border-left:4px solid var(--cor)}
+.cons-tipo:hover{border-color:var(--cor)}
+.cons-form-painel{border-top:4px solid var(--cor)}
+.cons-form-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.cons-form-topo h2{margin:0}
+#cons-form .painel{margin-bottom:18px}
+.meta-form .largo{grid-column:1/-1}
+.cons-check{flex-direction:row!important;align-items:center;gap:8px!important;padding-bottom:9px}
+.cons-check input{width:17px;height:17px;margin:0;accent-color:var(--verde)}
+.cons-busca-fundo{position:relative;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--tinta-2);font-weight:550}
+.cons-sug{max-height:330px;overflow:auto}
+.cons-sug button{flex-direction:column;align-items:flex-start;gap:2px}
+.cons-sug b{width:auto;color:var(--tinta);font-size:14px}
+.cons-sug small{color:var(--tinta-3);font-size:12px}
+.cons-alerta{margin-top:14px}
+.cons-sec{margin-top:26px;scroll-margin-top:16px}
+.cons-sec h3{display:flex;align-items:center;gap:8px;font-size:16px;margin:0 0 10px}
+.cons-sec h3 i{width:11px;height:11px;border-radius:3px;flex:none}
+.cons-sec h3 .fraco{margin-left:auto;font-size:14px;font-weight:600;color:var(--tinta-2)}
+.cons-tabela td small{display:block;font-size:12px;color:var(--tinta-3);margin-top:2px;white-space:normal}
+.cons-tabela td small em{font-style:normal;color:#8A6416}
+.cons-tabela{table-layout:fixed;min-width:860px}
+.cons-tabela th:nth-child(1){width:28%}.cons-tabela th:nth-child(2){width:12%}.cons-tabela th:nth-child(7){width:104px}
+.cons-tabela td{overflow:hidden;text-overflow:ellipsis}
+.cons-tabela td:first-child{white-space:normal}
+.cons-tabela td.cons-acoes{text-align:right;overflow:visible;padding-left:4px}.cons-acoes .btn-ferr{margin-left:4px}
+.cons-inst td{padding:8px 6px}
+.cons-inst td small{display:block;font-size:12px}
+.cons-inst-barra{width:28%}
+.cons-inst-barra span{display:block;height:6px;border-radius:3px;background:var(--verde);opacity:.75}
+.cons-vencs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.cons-vencs li{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--linha-2);font-size:14px}
+.cons-vencs li:last-child{border-bottom:none}
+.cons-vencs small{grid-column:2/4;font-size:12px;color:var(--tinta-3)}
+.cons-venc-data{font-variant-numeric:tabular-nums;font-weight:600;color:var(--tinta-2)}
+.cons-venc-data.alerta{color:#8A6416}
+@media (max-width:900px){.cons-grade{grid-template-columns:minmax(0,1fr)}}
+.cons-inst td:nth-child(2){white-space:nowrap}
+@media (max-width:600px){.cons-sec .rolagem{overflow:visible;max-height:none}
+  .cons-tabela{min-width:0;table-layout:auto}.cons-tabela thead,.cons-tabela td.cons-sem-mob{display:none}
+  .cons-tabela,.cons-tabela tbody{display:block}
+  .cons-tabela tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border-bottom:1px solid var(--linha-2)}
+  .cons-tabela tr:last-child{border-bottom:none}
+  .cons-tabela td{display:block;padding:0;border:0;text-align:left;white-space:normal}
+  .cons-tabela td:first-child{grid-column:1/-1}
+  .cons-tabela td[data-r]::before{content:attr(data-r);display:block;font-size:11.5px;color:var(--tinta-3);font-weight:550}
+  .cons-tabela td.cons-acoes{grid-column:1/-1;text-align:left;padding:0}.cons-acoes .btn-ferr{margin:0 6px 0 0}
+  #cons-corpo .numeros strong{font-size:18px}.cons-inst-barra{display:none}.cons-inst td{white-space:normal}.cons-sec h3{flex-wrap:wrap}}
 .meta-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:end}
 .meta-form .acoes{grid-column:1/-1;justify-content:flex-end}
 .meta-sugestoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
@@ -1493,6 +1545,7 @@ function GraficoVelas(caixa) {
 
 /* ---------- ícones ---------- */
 const ICO = {
+  consolidador: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 4.5-9 4.5-9-4.5z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16.5 9 4.5 9-4.5"/></svg>',
   metas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
   imposto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
   perfil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>',
@@ -1779,6 +1832,41 @@ function blocoAlocacao() {
     : `<p class="fraco" style="margin:0">Quando você tiver ativos nas carteiras, mostramos aqui quanto do seu dinheiro está em cada ativo e em cada classe (ações, FIIs, ETFs e mais).</p>`}
   </aside>`;
 }
+// legenda clicável da rosca; "attr" diz o que cada item faz ao clicar
+function legendaRosca(itens, total, attr) {
+  return `<ul class="aloc-leg">${itens.map((it, i) => `<li><button class="aloc-item" data-i="${i}" ${attr(it)}>
+      <i style="background:${it.cor}"></i>
+      <span class="aloc-nome"><b>${esc(it.rotulo)}</b>${it.sub ? `<small>${esc(it.sub)}</small>` : ""}</span>
+      <span class="aloc-val"><b>${pct(it.v / total, 1)}</b><em>${esc(valorAloc(it.v, total))}</em></span>
+      <span class="aloc-barra"><span style="width:${(it.v / itens[0].v * 100).toFixed(1)}%;background:${it.cor}"></span></span></button></li>`).join("")}</ul>`;
+}
+// passar o mouse numa fatia ou num item realça os dois e mostra o item no centro
+function ligarRosca(el, itens, total) {
+  const caixa = $(".aloc-grafico", el), c1 = $("#aloc-c1", el), c2 = $("#aloc-c2", el), c3 = $("#aloc-c3", el);
+  // o texto do centro nunca passa da largura do furo da rosca
+  const caber = () => [[c1, 10.5, 70], [c2, 20, 88], [c3, 11, 80]].forEach(([t, base, max]) => {
+    t.style.fontSize = base + "px";
+    const w = t.getComputedTextLength();
+    if (w > max) t.style.fontSize = (base * max / w).toFixed(1) + "px";
+  });
+  const realcar = (i) => {
+    caixa.classList.toggle("aloc-foco", i != null);
+    $$(".aloc-fatia", el).forEach((f) => f.classList.toggle("on", f.dataset.i === String(i)));
+    $$(".aloc-item", el).forEach((b) => b.classList.toggle("on", b.dataset.i === String(i)));
+    const it = itens[i];
+    c1.textContent = it ? (it.rotulo.length > 14 ? it.rotulo.slice(0, 13) + "…" : it.rotulo) : "Total";
+    c2.textContent = it ? pct(it.v / total, 1) : centroAloc(total);
+    c3.textContent = it ? centroAloc(it.v) : "investido";
+    caber();
+  };
+  caber();
+  $$(".aloc-fatia, .aloc-item", el).forEach((n) => {
+    n.addEventListener("mouseenter", () => realcar(+n.dataset.i));
+    n.addEventListener("mouseleave", () => realcar(null));
+    n.addEventListener("focus", () => realcar(+n.dataset.i));
+    n.addEventListener("blur", () => realcar(null));
+  });
+}
 function pintarAlocacao() {
   const el = $("#aloc-corpo"); if (!el) return;
   const { arr, total } = dadosAlocacao(alocModo);
@@ -1790,38 +1878,8 @@ function pintarAlocacao() {
     t: !x.outros && alocModo !== "classe" ? x.k : null,
     classe: alocModo === "classe" && !x.outros ? x.k : null,
   }));
-  el.innerHTML = `${donutSVG(itens, total)}
-    <ul class="aloc-leg">${itens.map((it, i) => `<li><button class="aloc-item" data-i="${i}" ${it.t ? `data-aloc-t="${it.t}"` : it.classe ? `data-aloc-classe="${it.classe}"` : "disabled"}
-        title="${it.t ? `Abrir ${esc(it.t)}` : it.classe ? `Ver ${esc(it.rotulo)} nos rankings` : ""}">
-      <i style="background:${it.cor}"></i>
-      <span class="aloc-nome"><b>${esc(it.rotulo)}</b>${it.sub ? `<small>${esc(it.sub)}</small>` : ""}</span>
-      <span class="aloc-val"><b>${pct(it.v / total, 1)}</b><em>${esc(valorAloc(it.v, total))}</em></span>
-      <span class="aloc-barra"><span style="width:${(it.v / itens[0].v * 100).toFixed(1)}%;background:${it.cor}"></span></span></button></li>`).join("")}</ul>`;
-  // passar o mouse numa fatia ou num item realça os dois e mostra o item no centro
-  const caixa = $(".aloc-grafico", el), c1 = $("#aloc-c1", el), c2 = $("#aloc-c2", el), c3 = $("#aloc-c3", el);
-  const realcar = (i) => {
-    caixa.classList.toggle("aloc-foco", i != null);
-    $$(".aloc-fatia", el).forEach((f) => f.classList.toggle("on", f.dataset.i === String(i)));
-    $$(".aloc-item", el).forEach((b) => b.classList.toggle("on", b.dataset.i === String(i)));
-    const it = itens[i];
-    c1.textContent = it ? (it.rotulo.length > 14 ? it.rotulo.slice(0, 13) + "…" : it.rotulo) : "Total";
-    c2.textContent = it ? pct(it.v / total, 1) : centroAloc(total);
-    c3.textContent = it ? centroAloc(it.v) : "investido";
-    caber();
-  };
-  // o texto do centro nunca passa da largura do furo da rosca
-  const caber = () => [[c1, 10.5, 70], [c2, 20, 88], [c3, 11, 80]].forEach(([t, base, max]) => {
-    t.style.fontSize = base + "px";
-    const w = t.getComputedTextLength();
-    if (w > max) t.style.fontSize = (base * max / w).toFixed(1) + "px";
-  });
-  caber();
-  $$(".aloc-fatia, .aloc-item", el).forEach((n) => {
-    n.addEventListener("mouseenter", () => realcar(+n.dataset.i));
-    n.addEventListener("mouseleave", () => realcar(null));
-    n.addEventListener("focus", () => realcar(+n.dataset.i));
-    n.addEventListener("blur", () => realcar(null));
-  });
+  el.innerHTML = `${donutSVG(itens, total)}${legendaRosca(itens, total, (it) => it.t ? `data-aloc-t="${it.t}" title="Abrir ${esc(it.t)}"` : it.classe ? `data-aloc-classe="${it.classe}" title="Ver ${esc(it.rotulo)} nos rankings"` : "disabled")}`;
+  ligarRosca(el, itens, total);
   $$("[data-aloc-t]", el).forEach((b) => b.onclick = () => ir("#ativo-" + b.dataset.alocT));
   $$("[data-aloc-classe]", el).forEach((b) => b.onclick = () => { UI.tipo = b.dataset.alocClasse; UI.preset = 0; UI.ordem = null; ir("#explorar"); });
 }
@@ -1833,7 +1891,7 @@ function telaCarteiras() {
   $("#raiz").innerHTML = `<header class="barra-topo"><div class="barra-dentro">
       <a href="#carteiras" class="marca-link" aria-label="Milhão, tela inicial">${logoHTML("pequena")}</a>
       <nav class="servicos" aria-label="Serviços do Milhão">
-        ${servico("carteira", "Carteira")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ativos da bolsa")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("imposto", "Imposto de Renda")}${servico("importar", "Importar da B3")}
+        ${servico("carteira", "Carteira")}${servico("consolidador", "Consolidador")}${servico("analise", "Análise")}${servico("proventos", "Proventos")}${servico("agenda", "Agenda")}${servico("explorar", "Ativos da bolsa")}${servico("comparar", "Comparar")}${servico("indicadores", "Indicadores")}${servico("ferramentas", "Ferramentas")}${servico("imposto", "Imposto de Renda")}${servico("importar", "Importar da B3")}
       </nav>
       <div class="busca">${ICO.busca}
         <input type="search" id="busca" placeholder="Buscar ativo" aria-label="Buscar ativo" autocomplete="off">
@@ -1915,7 +1973,7 @@ function moldura(rota) {
       <a href="#carteiras" class="marca-link" aria-label="Milhão, voltar para a tela inicial">${logoHTML("pequena")}</a>
       <button class="carteira-atual" id="trocar-carteira"><small>Carteira</small><strong>${esc(c?.nome || "Escolher")}</strong></button>
       <nav class="menu" aria-label="Principal">
-        ${item("carteira", "Carteira")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("metas", "Metas")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("imposto", "Imposto de Renda")}${item("perfil", "Perfil")}
+        ${item("carteira", "Carteira")}${item("consolidador", "Consolidador")}${item("analise", "Análise")}${item("proventos", "Proventos")}${item("metas", "Metas")}${item("agenda", "Agenda de dividendos")}${item("explorar", "Ativos da bolsa")}${item("comparar", "Comparar")}${item("indicadores", "Indicadores")}${item("ferramentas", "Ferramentas")}${item("imposto", "Imposto de Renda")}${item("perfil", "Perfil")}
       </nav>
       <div class="rodape">
         <span>Cotações de fechamento de ${dataBR(S.meta?.ultimo_pregao)}</span>
@@ -2157,7 +2215,7 @@ function linhasCsv(texto) {
   const sep = (prim.match(/;/g) || []).length >= (prim.match(/,/g) || []).length ? ";" : ",";
   return texto.split(/\r?\n/).filter((l) => l.trim()).map((l) => l.split(sep).map((x) => x.replace(/^"|"$/g, "").trim()));
 }
-const semAcento = (s) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const semAcento = (s) => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 function numeroBR(v) {
   if (typeof v === "number") return v;
   const s = String(v ?? "").replace(/R\$|\s/g, "");
@@ -3514,6 +3572,399 @@ function blocoRumo() {
     <span class="rumo-link">${meta ? "Ver metas" : "Criar uma meta"}</span></a>`;
 }
 
+/* ---------- Consolidador de carteira (Milhão Ouro): tudo o que a pessoa tem, num lugar só ---------- */
+const CONS = {
+  rf: { nome: "Renda fixa", texto: "CDB, LCI, LCA, debêntures, CRI, CRA e poupança. Corrigido pelo CDI, IPCA ou taxa prefixada.", cor: "#2F6FB3" },
+  tesouro: { nome: "Tesouro Direto", texto: "Selic, Prefixado, IPCA+ e RendA+, com o preço de resgate do dia.", cor: "#C9971C" },
+  fundo: { nome: "Fundos de investimento", curto: "Fundos", texto: "Busque pelo nome ou CNPJ. A cota vem todo dia da CVM.", cor: "#7B57B8" },
+  cripto: { nome: "Criptomoedas", texto: "Bitcoin, Ethereum e outras, cotadas em reais.", cor: "#D97A2B" },
+  outro: { nome: "Outros bens", texto: "Previdência, saldo em conta, imóvel, exterior. Você informa o valor.", cor: "#8A7A2E" },
+};
+const COR_BOLSA = { acao: "#0F8A62", fii: "#1CA39A", fiagro: "#5B8C2A", etf: "#B3458F", bdr: "#C2453D" };
+const TIPOS_RF = ["CDB", "LCI", "LCA", "LC", "RDB", "LIG", "CRI", "CRA", "Debênture", "Poupança", "Outro"];
+const FGC_RF = new Set(["CDB", "LCI", "LCA", "LC", "RDB", "LIG", "Poupança"]);   // garantidos pelo FGC
+const ISENTO_RF = new Set(["LCI", "LCA", "LIG", "CRI", "CRA", "Poupança"]);
+const INDEXADORES = { cdi: "% do CDI", cdimais: "CDI + taxa", pre: "Prefixado", ipca: "IPCA + taxa", poup: "Poupança" };
+const ROT_TAXA = { cdi: "Quanto do CDI (%)", cdimais: "Taxa acima do CDI (% ao ano)", pre: "Taxa (% ao ano)", ipca: "Taxa acima do IPCA (% ao ano)" };
+const TIPOS_OUTRO = { previdencia: "Previdência privada", conta: "Saldo em conta", imovel: "Imóvel", exterior: "Investimento no exterior", veiculo: "Veículo", outro: "Outro bem" };
+const FGC_TETO = 250000;
+const numTxt = (v) => v == null ? "" : v.toLocaleString("pt-BR", { maximumFractionDigits: 8, useGrouping: false });
+const consItens = () => ((S.estado.consolidador ??= { itens: [] }).itens);
+S.cons = {};
+const consArquivo = (k) => (k in S.cons ? S.cons[k] : (S.cons[k] = j(`data/${k}.json`).catch(() => null)));
+const consFundo = async (cnpj) => (await consArquivo("fundo/" + cnpj.slice(0, 2)))?.[cnpj] || null;
+
+/* contas de data */
+const somaDias = (iso, n) => new Date(Date.parse(iso + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+const diasEntre = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+function semanaEntre(a, b) {   // dias de segunda a sexta em [a, b)
+  let n = 0;
+  for (let d = new Date(a + "T12:00:00Z"), fim = Date.parse(b + "T12:00:00Z"); d < fim; d.setUTCDate(d.getUTCDate() + 1)) { const w = d.getUTCDay(); if (w && w < 6) n++; }
+  return n;
+}
+function primeiroIdx(arr, d) { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m][0] < d) lo = m + 1; else hi = m; } return lo; }
+function ultimoAte(arr, d) { const i = primeiroIdx(arr, d); return arr[i]?.[0] === d ? arr[i] : arr[i - 1] || arr[0] || null; }
+const aliquotaIR = (dias) => dias <= 180 ? 0.225 : dias <= 360 ? 0.2 : dias <= 720 ? 0.175 : 0.15;
+
+/* quanto um título de renda fixa rendeu entre a aplicação e "ate", com o CDI e o IPCA do Banco Central */
+function fatorRF(it, rf, ate) {
+  const ini = it.aplicacao, t = +it.taxa || 0;
+  if (!ini || ate <= ini) return 1;
+  const cdi = rf?.cdi || [];
+  if (it.indexador === "poup") {   // a poupança paga a cada aniversário mensal
+    const mapa = new Map(rf?.poupanca || []), ult = rf?.poupanca?.at(-1)?.[1] ?? 0.6;
+    let f = 1, k = 1;
+    for (;;) {
+      const d = new Date(ini + "T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + k);
+      const aniv = d.toISOString().slice(0, 10);
+      if (aniv > ate) break;
+      f *= 1 + (mapa.get(somaDias(aniv, -1).slice(0, 7)) ?? ult) / 100; k++;
+    }
+    return f;
+  }
+  // dias úteis e CDI do período; fora da série publicada, repete a taxa da ponta
+  let f = 1, du = 0;
+  const umDia = (d) => it.indexador === "cdi" ? 1 + d * t / 100 : it.indexador === "cdimais" ? (1 + d) * Math.pow(1 + t / 100, 1 / 252) : 1;
+  if (cdi.length) {
+    if (ini < cdi[0][0]) { const n = semanaEntre(ini, cdi[0][0] < ate ? cdi[0][0] : ate); du += n; f *= Math.pow(umDia(cdi[0][1] / 100), n); }
+    for (let i = primeiroIdx(cdi, ini); i < cdi.length && cdi[i][0] < ate; i++) { du++; f *= umDia(cdi[i][1] / 100); }
+    const depois = somaDias(cdi.at(-1)[0], 1);
+    if (depois < ate) { const n = semanaEntre(depois > ini ? depois : ini, ate); du += n; f *= Math.pow(umDia(cdi.at(-1)[1] / 100), n); }
+  } else du = semanaEntre(ini, ate);
+  if (it.indexador === "cdi" || it.indexador === "cdimais") return f;
+  const juros = Math.pow(1 + t / 100, du / 252);
+  if (it.indexador === "pre") return juros;
+  // IPCA: cada mês entra proporcional aos dias corridos; mês ainda sem IPCA usa o último divulgado
+  const ipca = new Map(rf?.ipca || []), ultIpca = rf?.ipca?.at(-1)?.[1] ?? 0.4;
+  let fi = 1, d = ini;
+  while (d < ate) {
+    const [y, m] = d.split("-").map(Number), nd = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const prox = new Date(Date.UTC(y, m, 1, 12)).toISOString().slice(0, 10), ate2 = prox < ate ? prox : ate;
+    fi *= Math.pow(1 + (ipca.get(d.slice(0, 7)) ?? ultIpca) / 100, diasEntre(d, ate2) / nd);
+    d = ate2;
+  }
+  return fi * juros;
+}
+
+/* valor de hoje de cada item: {atual, aplicado, liquido, data, nota} */
+async function valorCons(it, D) {
+  const hoje = hojeISO(), r = { atual: null, aplicado: it.aplicado ?? null, liquido: null, data: null, nota: "" };
+  const comIR = (desde) => { if (r.atual != null && r.aplicado != null) { const ganho = r.atual - r.aplicado; r.liquido = r.atual - Math.max(ganho, 0) * aliquotaIR(diasEntre(desde, hoje)); } };
+  if (it.classe === "rf") {
+    const ate = it.vencimento && it.vencimento < hoje ? it.vencimento : hoje;
+    if (!D.rf && it.indexador !== "pre") { r.atual = r.aplicado; r.nota = "sem o CDI e o IPCA de hoje"; return r; }
+    r.atual = (it.aplicado || 0) * fatorRF(it, D.rf, ate);
+    r.data = it.indexador === "pre" ? hoje : D.rf?.data;
+    if (it.vencimento && it.vencimento < hoje) r.nota = `venceu em ${dataBR(it.vencimento)}`;
+    if (it.isento) r.liquido = r.atual; else comIR(it.aplicacao);
+  } else if (it.classe === "tesouro") {
+    const t = D.td?.titulos?.find((x) => x.id === it.titulo);
+    if (t?.pu_venda) { r.atual = it.qtd * t.pu_venda; r.data = t.data; comIR(it.data); }
+    else { r.atual = r.aplicado; r.nota = it.venc && it.venc < hoje ? `venceu em ${dataBR(it.venc)}` : "sem preço do Tesouro hoje"; }
+  } else if (it.classe === "fundo") {
+    const f = await consFundo(it.cnpj), u = f?.d?.at(-1) || f?.m?.at(-1);
+    if (u) { r.atual = it.cotas * u[1]; r.data = u[0].length === 7 ? u[0] + "-28" : u[0]; r.nota = "antes do come-cotas e do IR"; }
+    else { r.atual = r.aplicado; r.nota = "fundo sem cota recente na CVM"; }
+  } else if (it.classe === "cripto") {
+    const m = D.cr?.moedas?.find((x) => x[0] === it.moeda);
+    if (m) { r.atual = it.qtd * m[3]; r.data = D.cr.data?.slice(0, 10); } else { r.atual = r.aplicado; r.nota = "sem cotação agora"; }
+  } else {
+    r.atual = it.valor; r.data = it.atualizado; r.aplicado = null;
+    if (it.atualizado && diasEntre(it.atualizado, hoje) > 90) r.nota = `valor de ${dataBR(it.atualizado)}: vale atualizar`;
+  }
+  return r;
+}
+
+/* nome e detalhe de cada item na lista */
+function descCons(it) {
+  if (it.classe === "rf") {
+    const idx = it.indexador === "cdi" ? `${nf(it.taxa % 1 ? 1 : 0).format(it.taxa)}% do CDI` : it.indexador === "cdimais" ? `CDI + ${nf(2).format(it.taxa)}%`
+      : it.indexador === "pre" ? `${nf(2).format(it.taxa)}% ao ano` : it.indexador === "ipca" ? `IPCA + ${nf(2).format(it.taxa)}%` : "Rende como a poupança";
+    return { nome: it.nome || `${it.tipo} ${it.emissor || ""}`.trim(), det: `${idx}${it.vencimento ? ` · vence em ${dataBR(it.vencimento)}` : ""}${it.isento ? " · isento de IR" : ""}` };
+  }
+  if (it.classe === "tesouro") return { nome: it.nome, det: `${nf(2).format(it.qtd)} títulos · comprado em ${dataBR(it.data)}` };
+  if (it.classe === "fundo") return { nome: it.nome, det: `${nf(2).format(it.cotas)} cotas · CNPJ ${cnpjBR(it.cnpj)}` };
+  if (it.classe === "cripto") return { nome: it.nome, det: `${nf(it.qtd < 1 ? 6 : 4).format(it.qtd)} ${it.simbolo}` };
+  return { nome: it.nome || TIPOS_OUTRO[it.tipo], det: `${TIPOS_OUTRO[it.tipo] || "Outro"}${it.atualizado ? ` · valor de ${dataBR(it.atualizado)}` : ""}` };
+}
+const cnpjBR = (c) => c ? `${c.slice(0, 2)}.${c.slice(2, 5)}.${c.slice(5, 8)}/${c.slice(8, 12)}-${c.slice(12)}` : "";
+const instCons = (it) => (it.inst || (it.classe === "rf" ? it.emissor : "") || "").trim();
+
+/* bolsa: o que está nas carteiras do Milhão, por classe */
+function bolsaPorClasse() {
+  const soma = {};
+  for (const c of S.estado.carteiras) for (const p of posicoes(c)) {
+    if (!(p.qtd > 0) || !p.valor) continue;
+    const k = S.porTicker[p.ticker]?.tipo || "acao";
+    (soma[k] ??= { v: 0, custo: 0 }).v += p.valor; soma[k].custo += p.custo || 0;
+  }
+  return soma;
+}
+
+/* formulário de cada tipo de investimento */
+function formCons(classeK, it = {}, D = {}) {
+  const editando = !!it.id;
+  const campo = (rot, html, cls = "") => `<label class="campo ${cls}">${rot}${html}</label>`;
+  const inst = campo("Onde está (banco ou corretora)", `<input type="text" name="inst" maxlength="50" value="${esc(it.inst || "")}" placeholder="Ex.: XP, Nubank, Inter" list="cons-insts">`);
+  const insts = [...new Set(consItens().map(instCons).filter(Boolean))];
+  let corpo = "";
+  if (classeK === "rf") {
+    const tipo = it.tipo || "CDB", idx = it.indexador || "cdi";
+    corpo = campo("Tipo", `<select name="tipo">${TIPOS_RF.map((t) => `<option ${t === tipo ? "selected" : ""}>${t}</option>`).join("")}</select>`)
+      + campo("Emissor", `<input type="text" name="emissor" maxlength="60" value="${esc(it.emissor || "")}" placeholder="Banco ou empresa que emitiu">`)
+      + inst
+      + campo("Rentabilidade", `<select name="indexador">${Object.entries(INDEXADORES).map(([k, n]) => `<option value="${k}" ${k === idx ? "selected" : ""}>${n}</option>`).join("")}</select>`, "rf-idx")
+      + campo(`<span id="rot-taxa">${ROT_TAXA[idx] || "Taxa"}</span>`, `<input name="taxa" type="number" step="any" min="0" value="${it.taxa ?? (idx === "cdi" ? 100 : "")}">`, "rf-taxa")
+      + campo("Data da aplicação", `<input name="aplicacao" type="date" required max="${hojeISO()}" value="${it.aplicacao || ""}">`)
+      + campo("Vencimento", `<input name="vencimento" type="date" value="${it.vencimento || ""}">`, "rf-venc")
+      + campo("Valor aplicado (R$)", `<input type="text" name="aplicado" required inputmode="decimal" value="${numTxt(it.aplicado)}" placeholder="Ex.: 5.000">`)
+      + campo("Nome (opcional)", `<input type="text" name="nome" maxlength="60" value="${esc(it.nome || "")}" placeholder="Ex.: CDB Inter 2027">`)
+      + `<label class="campo cons-check"><input type="checkbox" name="isento" ${it.isento ?? ISENTO_RF.has(tipo) ? "checked" : ""}> Isento de Imposto de Renda</label>`;
+  } else if (classeK === "tesouro") {
+    const ts = D.td?.titulos || [];
+    corpo = ts.length ? campo("Título", `<select name="titulo" required>${ts.map((t) => `<option value="${t.id}" ${t.id === it.titulo ? "selected" : ""}>${esc(t.tipo)} ${t.venc.slice(0, 4)} · taxa hoje ${t.taxa_compra != null ? nf(2).format(t.taxa_compra) + "%" : "–"}</option>`).join("")}</select>`, "largo")
+      : `<p class="imp-nota largo">Os preços do Tesouro Direto ainda não chegaram. Tente de novo mais tarde.</p>`;
+    corpo += inst + campo("Data da compra", `<input name="data" type="date" required max="${hojeISO()}" value="${it.data || ""}">`)
+      + campo("Valor investido (R$)", `<input type="text" name="aplicado" inputmode="decimal" value="${it.aplicado != null ? nf(2).format(it.aplicado) : ""}" placeholder="Ex.: 1.000">`)
+      + campo("Quantidade de títulos (se souber)", `<input type="text" name="qtd" inputmode="decimal" value="${editando ? numTxt(it.qtd) : ""}" placeholder="Ex.: 0,35">`);
+  } else if (classeK === "fundo") {
+    corpo = `<div class="campo largo cons-busca-fundo"><span>Fundo</span>
+        <input id="cons-fundo-q" type="search" autocomplete="off" placeholder="Digite o nome ou o CNPJ" value="${esc(it.nome || "")}">
+        <input type="hidden" name="cnpj" value="${esc(it.cnpj || "")}"><input type="hidden" name="nome" value="${esc(it.nome || "")}">
+        <div class="sugestoes cons-sug oculto" id="cons-fundo-sug" role="listbox"></div></div>`
+      + inst + campo("Data da aplicação", `<input name="data" type="date" required max="${hojeISO()}" value="${it.data || ""}">`)
+      + campo("Valor aplicado (R$)", `<input type="text" name="aplicado" inputmode="decimal" value="${it.aplicado != null ? nf(2).format(it.aplicado) : ""}" placeholder="Ex.: 10.000">`)
+      + campo("Quantidade de cotas (se souber)", `<input type="text" name="cotas" inputmode="decimal" value="${editando ? numTxt(it.cotas) : ""}">`);
+  } else if (classeK === "cripto") {
+    const ms = D.cr?.moedas || [];
+    corpo = campo("Moeda", `<input type="text" name="moeda" required list="cons-moedas" autocomplete="off" value="${esc(it.simbolo ? `${it.simbolo} · ${it.nome}` : "")}" placeholder="Ex.: BTC">
+        <datalist id="cons-moedas">${ms.map((m) => `<option value="${esc(m[1])} · ${esc(m[2])}">`).join("")}</datalist>`)
+      + campo("Quantidade", `<input type="text" name="qtd" required inputmode="decimal" value="${numTxt(it.qtd)}" placeholder="Ex.: 0,015">`)
+      + campo("Quanto você pagou no total (R$, opcional)", `<input type="text" name="aplicado" inputmode="decimal" value="${it.aplicado != null ? nf(2).format(it.aplicado) : ""}">`)
+      + campo("Onde está (corretora ou carteira)", `<input type="text" name="inst" maxlength="50" value="${esc(it.inst || "")}" placeholder="Ex.: Binance, Mercado Bitcoin" list="cons-insts">`);
+  } else {
+    corpo = campo("Tipo", `<select name="tipo">${Object.entries(TIPOS_OUTRO).map(([k, n]) => `<option value="${k}" ${k === it.tipo ? "selected" : ""}>${n}</option>`).join("")}</select>`)
+      + campo("Nome", `<input type="text" name="nome" maxlength="60" value="${esc(it.nome || "")}" placeholder="Ex.: PGBL Icatu, Apartamento">`)
+      + campo("Valor de hoje (R$)", `<input type="text" name="valor" required inputmode="decimal" value="${it.valor != null ? nf(2).format(it.valor) : ""}">`) + inst;
+  }
+  return `<div class="painel cons-form-painel" style="--cor:${CONS[classeK].cor}"><div class="cons-form-topo"><h2>${editando ? "Editar" : "Adicionar"}: ${CONS[classeK].nome}</h2>
+      ${editando ? "" : `<button class="btn texto" id="cons-voltar">Trocar o tipo</button>`}</div>
+    <form id="f-cons" class="meta-form" novalidate>${corpo}
+      <datalist id="cons-insts">${insts.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+      <div class="acoes"><button type="button" class="btn" id="cons-cancelar">Cancelar</button><button class="btn primario">${editando ? "Salvar" : "Adicionar"}</button></div>
+    </form></div>`;
+}
+
+function escolhaCons() {
+  return `<div class="cons-tipos">${Object.entries(CONS).map(([k, c]) => `<button class="meta-sugestao cons-tipo" data-cons-tipo="${k}" style="--cor:${c.cor}"><b>${c.nome}</b><span>${c.texto}</span></button>`).join("")}</div>`;
+}
+
+async function abrirFormCons(classeK = null, it = {}) {
+  const box = $("#cons-form");
+  if (!classeK) {
+    box.innerHTML = `<div class="painel"><div class="cons-form-topo"><h2>O que você quer adicionar?</h2><button class="btn texto" id="cons-cancelar">Cancelar</button></div>${escolhaCons()}</div>`;
+    $("#cons-cancelar").onclick = () => { box.innerHTML = ""; };
+    $$("[data-cons-tipo]", box).forEach((b) => b.onclick = () => abrirFormCons(b.dataset.consTipo));
+    box.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  const D = { td: classeK === "tesouro" ? await consArquivo("tesouro") : null, cr: classeK === "cripto" ? await consArquivo("cripto") : null };
+  box.innerHTML = formCons(classeK, it, D);
+  const f = $("#f-cons");
+  $("#cons-cancelar").onclick = () => { box.innerHTML = ""; };
+  if ($("#cons-voltar")) $("#cons-voltar").onclick = () => abrirFormCons();
+  if (classeK === "rf") {
+    const ajustar = () => {
+      const poup = f.tipo.value === "Poupança";
+      if (poup) f.indexador.value = "poup";
+      const idx = f.indexador.value;
+      $(".rf-taxa", f).classList.toggle("oculto", idx === "poup");
+      $(".rf-venc", f).classList.toggle("oculto", poup);
+      $("#rot-taxa").textContent = ROT_TAXA[idx] || "Taxa";
+    };
+    f.tipo.onchange = () => { f.isento.checked = ISENTO_RF.has(f.tipo.value); ajustar(); };
+    f.indexador.onchange = () => { if (f.indexador.value === "cdi" && !f.taxa.value) f.taxa.value = 100; ajustar(); };
+    ajustar();
+  }
+  if (classeK === "fundo") ligarBuscaFundo(f);
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const erro = (msg) => { aviso(msg); return null; };
+    const n = (campo) => { const v = numeroBR(f[campo]?.value ?? ""); return Number.isFinite(v) ? v : null; };
+    const novo = { id: it.id || novoId(), classe: classeK, inst: f.inst?.value.trim() || "" };
+    if (classeK === "rf") {
+      Object.assign(novo, { tipo: f.tipo.value, emissor: f.emissor.value.trim(), indexador: f.indexador.value, taxa: n("taxa") ?? 0,
+        aplicacao: f.aplicacao.value, vencimento: f.tipo.value === "Poupança" ? null : f.vencimento.value || null, aplicado: n("aplicado"),
+        isento: f.isento.checked, nome: f.nome.value.trim() });
+      if (!novo.aplicacao) return erro("Coloque a data da aplicação");
+      if (!(novo.aplicado > 0)) return erro("Coloque quanto você aplicou");
+      if (novo.indexador !== "poup" && !(novo.taxa > 0)) return erro("Coloque a taxa do título");
+      if (novo.vencimento && novo.vencimento <= novo.aplicacao) return erro("O vencimento precisa ser depois da aplicação");
+    } else if (classeK === "tesouro") {
+      const t = f.titulo && D.td.titulos.find((x) => x.id === f.titulo.value);
+      if (!t) return erro("Escolha o título");
+      if (!f.data.value) return erro("Coloque a data da compra");
+      const h = await consArquivo("tesouro/" + t.id), dia = ultimoAte(h?.p || [], f.data.value), pu = dia?.[1] || t.pu_compra;
+      let qtd = n("qtd"), aplicado = n("aplicado");
+      if (!(qtd > 0) && !(aplicado > 0)) return erro("Coloque o valor investido ou a quantidade de títulos");
+      if (!(qtd > 0)) qtd = aplicado / pu;
+      if (!(aplicado > 0)) aplicado = qtd * pu;
+      Object.assign(novo, { titulo: t.id, nome: `${t.tipo} ${t.venc.slice(0, 4)}`, venc: t.venc, data: f.data.value, qtd, aplicado });
+    } else if (classeK === "fundo") {
+      if (!f.cnpj.value) return erro("Escolha o fundo na lista");
+      if (!f.data.value) return erro("Coloque a data da aplicação");
+      const fu = await consFundo(f.cnpj.value);
+      let cotas = n("cotas"), aplicado = n("aplicado");
+      if (!(cotas > 0) && !(aplicado > 0)) return erro("Coloque o valor aplicado ou a quantidade de cotas");
+      const d = f.data.value, diaria = ultimoAte(fu?.d || [], d), mensal = ultimoAte(fu?.m || [], somaDias(d.slice(0, 7) + "-01", -1).slice(0, 7));
+      const cota = (diaria && diaria[0] <= d && fu.d[0][0] <= d ? diaria[1] : null) ?? mensal?.[1] ?? fu?.d?.at(-1)?.[1];
+      if (!(cotas > 0)) { if (!cota) return erro("Não achei a cota desse fundo. Coloque a quantidade de cotas"); cotas = aplicado / cota; }
+      if (!(aplicado > 0) && cota) aplicado = cotas * cota;
+      Object.assign(novo, { cnpj: f.cnpj.value, nome: f.nome.value, data: d, cotas, aplicado: aplicado || null });
+    } else if (classeK === "cripto") {
+      const txt = f.moeda.value.trim(), sim = txt.split(/[\s·]/)[0].toUpperCase();
+      const m = D.cr?.moedas?.find((x) => `${x[1]} · ${x[2]}` === txt) || D.cr?.moedas?.find((x) => x[1] === sim || x[2].toLowerCase() === txt.toLowerCase());
+      if (!m) return erro("Escolha a moeda na lista");
+      const qtd = n("qtd");
+      if (!(qtd > 0)) return erro("Coloque a quantidade");
+      Object.assign(novo, { moeda: m[0], simbolo: m[1], nome: m[2], qtd, aplicado: n("aplicado") });
+    } else {
+      const valor = n("valor");
+      if (!(valor >= 0)) return erro("Coloque o valor de hoje");
+      Object.assign(novo, { tipo: f.tipo.value, nome: f.nome.value.trim(), valor, atualizado: hojeISO() });
+    }
+    const lista = consItens(), k = lista.findIndex((x) => x.id === novo.id);
+    if (k >= 0) lista[k] = novo; else lista.push(novo);
+    salvar(); aviso(k >= 0 ? "Investimento salvo" : "Investimento adicionado"); render();
+  };
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+  $("input, select", f)?.focus({ preventScroll: true });
+}
+
+function ligarBuscaFundo(f) {
+  const q = $("#cons-fundo-q"), sug = $("#cons-fundo-sug");
+  let res = [], sel = 0;
+  const pintar = () => {
+    sug.classList.toggle("oculto", !res.length);
+    sug.innerHTML = res.map((x, i) => `<button type="button" class="${i === sel ? "sel" : ""}" data-i="${i}"><b>${esc(x[1])}</b><small>${cnpjBR(x[0])}${x[2] ? " · " + esc(x[2]) : ""} · patrimônio ${compacto(x[3])}</small></button>`).join("");
+    $$("[data-i]", sug).forEach((b) => b.onmousedown = (e) => { e.preventDefault(); escolher(res[+b.dataset.i]); });
+  };
+  const escolher = (x) => { f.cnpj.value = x[0]; f.nome.value = x[1]; q.value = x[1]; res = []; pintar(); };
+  q.oninput = async () => {
+    f.cnpj.value = "";
+    const txt = _semAcento(q.value.trim()), dig = q.value.replace(/\D/g, "");
+    if (txt.length < 3 && dig.length < 4) { res = []; pintar(); return; }
+    const base = await consArquivo("fundos_busca");
+    if (!base?.fundos) { sug.classList.remove("oculto"); sug.innerHTML = `<p class="fraco" style="padding:10px;margin:0">A lista de fundos ainda não chegou. Tente de novo mais tarde.</p>`; return; }
+    const palavras = txt.split(/\s+/);
+    res = base.fundos.filter((x) => dig.length >= 4 && x[0].includes(dig) || palavras.every((p) => (x._n ??= _semAcento(x[1])).includes(p))).slice(0, 8);
+    sel = 0; pintar();
+  };
+  q.onkeydown = (e) => {
+    if (!res.length) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : res.length - 1)) % res.length; pintar(); }
+    if (e.key === "Enter") { e.preventDefault(); escolher(res[sel]); }
+  };
+  q.onblur = () => setTimeout(() => { res = []; pintar(); }, 150);
+}
+const _semAcento = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+rotas.consolidador = async (el) => {
+  const cab = `<div class="cabeca"><div><h1>Consolidador de carteira</h1><p class="sutil" style="margin:6px 0 0">Bolsa, renda fixa, Tesouro, fundos, cripto e o que mais você tiver, somados num patrimônio só.</p></div>
+    ${ehOuro() ? `<div class="acoes"><button class="btn primario" id="cons-novo">Adicionar investimento</button></div>` : ""}</div>`;
+  if (!ehOuro()) {
+    el.innerHTML = cab + `<div class="painel ir-trava"><h2>${ICO_CADEADO} Recurso do Milhão Ouro</h2>
+      <ul class="ir-lista"><li>CDB, LCI, LCA e debêntures corrigidos todo dia pelo CDI e pelo IPCA do Banco Central</li><li>Tesouro Direto com o preço de resgate do dia, fundos com a cota da CVM e criptomoedas em reais</li><li>Patrimônio total por classe e por instituição, com alerta do limite do FGC e dos próximos vencimentos</li></ul>
+      <div class="acoes"><button class="btn primario" id="cons-ouro">Conhecer o Milhão Ouro</button></div></div>`;
+    $("#cons-ouro").onclick = () => pedirOuro("consolidador");
+    return;
+  }
+  const itens = consItens();
+  el.innerHTML = cab + `<div id="cons-form"></div><div id="cons-corpo"><p class="fraco">Calculando…</p></div>
+    <p class="fraco" style="margin-top:16px">Renda fixa corrigida pelo CDI e IPCA do Banco Central, sem feriados e sem IOF. O valor líquido desconta o IR pela tabela regressiva (22,5% a 15%) e é uma estimativa. Fundos mostram o valor bruto pela cota da CVM. Não é recomendação de investimento.</p>`;
+  $("#cons-novo").onclick = () => abrirFormCons();
+  const [rf, td, cr] = await Promise.all([consArquivo("renda_fixa"), consArquivo("tesouro"), consArquivo("cripto")]);
+  const D = { rf, td, cr };
+  const vals = await Promise.all(itens.map((it) => valorCons(it, D)));
+  if (location.hash !== "#consolidador") return;
+  const corpo = $("#cons-corpo"), hoje = hojeISO();
+  const bolsa = bolsaPorClasse(), totBolsa = Object.values(bolsa).reduce((s, x) => s + x.v, 0);
+  const linhas = itens.map((it, i) => ({ it, ...vals[i], ...descCons(it) }));
+  const fora = linhas.reduce((s, x) => s + (x.atual || 0), 0), total = totBolsa + fora;
+  const comCusto = linhas.filter((x) => x.aplicado != null && x.atual != null && x.it.classe !== "outro");
+  const ganho = comCusto.reduce((s, x) => s + x.atual - x.aplicado, 0), base = comCusto.reduce((s, x) => s + x.aplicado, 0);
+  if (!itens.length && !totBolsa) {
+    corpo.innerHTML = `<div class="painel"><h2>Comece pelo que você tem fora da bolsa</h2><p class="sutil" style="margin:0 0 14px">As ações, FIIs e ETFs das suas carteiras já entram sozinhos. Escolha o que adicionar:</p>${escolhaCons()}</div>`;
+    $$("[data-cons-tipo]", corpo).forEach((b) => b.onclick = () => abrirFormCons(b.dataset.consTipo));
+    return;
+  }
+  // fatias: bolsa por classe + cada classe de fora da bolsa
+  const fatias = [
+    ...Object.entries(bolsa).sort((a, b) => b[1].v - a[1].v).map(([k, x]) => ({ k: "bolsa", v: x.v, cor: COR_BOLSA[k] || "#0F8A62", rotulo: classe(k).aba, sub: "Bolsa" })),
+    ...Object.keys(CONS).map((k) => ({ k, v: linhas.filter((x) => x.it.classe === k).reduce((s, x) => s + (x.atual || 0), 0), cor: CONS[k].cor, rotulo: CONS[k].curto || CONS[k].nome, sub: "" })),
+  ].filter((x) => x.v > 0).sort((a, b) => b.v - a.v);
+  // por instituição e FGC (o FGC conta por emissor)
+  const porInst = {};
+  for (const x of linhas) { const k = instCons(x.it) || "Sem instituição"; porInst[k] = (porInst[k] || 0) + (x.atual || 0); }
+  if (totBolsa) porInst["Bolsa (suas carteiras)"] = totBolsa;
+  const instArr = Object.entries(porInst).sort((a, b) => b[1] - a[1]);
+  const fgc = {};
+  for (const x of linhas) if (x.it.classe === "rf" && FGC_RF.has(x.it.tipo) && !(x.it.vencimento && x.it.vencimento < hoje)) {
+    const k = (x.it.emissor || x.it.inst || "").trim(); if (!k) continue;
+    const g = fgc[k.toLowerCase()] ??= { nome: k, v: 0 }; g.v += x.atual || 0;
+  }
+  const acimaFGC = Object.values(fgc).filter((g) => g.v > FGC_TETO);
+  const vencs = linhas.map((x) => ({ x, v: x.it.classe === "rf" ? x.it.vencimento : x.it.classe === "tesouro" ? x.it.venc : null }))
+    .filter((o) => o.v && diasEntre(hoje, o.v) <= 365).sort((a, b) => a.v.localeCompare(b.v));
+  const secao = (k) => {
+    const ls = linhas.filter((x) => x.it.classe === k).sort((a, b) => (b.atual || 0) - (a.atual || 0));
+    if (!ls.length) return "";
+    const soma = ls.reduce((s, x) => s + (x.atual || 0), 0);
+    return `<section class="cons-sec" id="cons-sec-${k}"><h3><i style="background:${CONS[k].cor}"></i>${CONS[k].nome}<span class="fraco">${brl(soma)}</span></h3>
+      <div class="rolagem"><table class="cons-tabela"><thead><tr><th>Investimento</th><th class="esq">Onde está</th><th>Aplicado</th><th>Valor de hoje</th><th>Resultado</th><th>Líquido de IR</th><th></th></tr></thead>
+      <tbody>${ls.map((x) => { const res = x.aplicado != null && x.atual != null && k !== "outro" ? x.atual - x.aplicado : null;
+        return `<tr><td class="esq"><b>${esc(x.nome)}</b><small>${esc(x.det)}${x.nota ? ` · <em>${esc(x.nota)}</em>` : ""}</small></td>
+        <td class="esq" data-r="Onde está">${esc(instCons(x.it)) || "–"}</td><td data-r="Aplicado">${x.aplicado != null ? brl(x.aplicado) : "–"}</td><td data-r="Valor de hoje"><b>${brl(x.atual)}</b>${x.data ? `<small>${dataBR(x.data)}</small>` : ""}</td>
+        <td class="${cls(res)}" data-r="Resultado">${res != null ? `${brl(res)}<small>${pct(res / x.aplicado, 2, true)}</small>` : "–"}</td>
+        <td data-r="Líquido de IR">${x.liquido != null ? brl(x.liquido) : "–"}</td>
+        <td class="cons-acoes"><button class="btn-ferr icone" data-cons-editar="${x.it.id}" title="Editar" aria-label="Editar ${esc(x.nome)}">${ICO.lapis}</button><button class="btn-ferr icone" data-cons-excluir="${x.it.id}" title="Excluir" aria-label="Excluir ${esc(x.nome)}">${ICO.lixo}</button></td></tr>`; }).join("")}</tbody></table></div></section>`;
+  };
+  corpo.innerHTML = `<div class="numeros">
+      <div><span>Patrimônio total</span><strong>${brl(total)}</strong><small class="fraco">bolsa e fora dela</small></div>
+      <div><span>Na bolsa</span><strong>${brl(totBolsa)}</strong><small class="fraco">${total ? pct(totBolsa / total, 1) + " do total" : "suas carteiras"}</small></div>
+      <div><span>Fora da bolsa</span><strong>${brl(fora)}</strong><small class="fraco">${plural(itens.length, "investimento", "investimentos")}</small></div>
+      <div><span>Rendimento fora da bolsa</span><strong class="${cls(ganho)}">${base ? brl(ganho) : "–"}</strong><small class="fraco">${base ? pct(ganho / base, 2, true) + " sobre o aplicado" : "adicione o valor aplicado"}</small></div></div>
+    ${acimaFGC.map((g) => `<p class="imp-nota cons-alerta">Você tem ${brl(g.v)} em ${esc(g.nome)}. O FGC garante até ${brl(FGC_TETO, 0)} por instituição (e até R$ 1 milhão no total a cada 4 anos). O que passar disso fica sem garantia se o banco quebrar.</p>`).join("")}
+    <div class="cons-grade">
+      <section class="painel aloc"><h2 style="margin:0 0 4px;font-size:17px">Por classe</h2><p class="sutil" style="margin:0 0 14px">Clique para ver os itens.</p><div id="cons-rosca"></div></section>
+      <section class="painel"><h2 style="font-size:17px">Por instituição</h2>
+        <table class="cons-inst"><tbody>${instArr.map(([k, v]) => `<tr><td class="esq"><b>${esc(k)}</b>${fgc[k.toLowerCase()]?.v > FGC_TETO ? `<small class="baixa">acima do limite do FGC</small>` : ""}</td><td>${brl(v)}</td><td class="fraco">${pct(v / total, 1)}</td>
+          <td class="cons-inst-barra"><span style="width:${(v / instArr[0][1] * 100).toFixed(1)}%"></span></td></tr>`).join("")}</tbody></table>
+        ${vencs.length ? `<h2 style="font-size:17px;margin:22px 0 10px">Vencimentos nos próximos 12 meses</h2><ul class="cons-vencs">${vencs.map((o) => `<li><span class="cons-venc-data ${o.v < hoje ? "baixa" : diasEntre(hoje, o.v) <= 30 ? "alerta" : ""}">${dataBR(o.v)}</span><b>${esc(o.x.nome)}</b><span>${brl(o.x.atual)}</span>${o.v < hoje ? `<small>Já venceu: o dinheiro deve estar na sua conta. Exclua ou registre o novo investimento.</small>` : ""}</li>`).join("")}</ul>` : ""}
+      </section>
+    </div>
+    ${totBolsa ? `<section class="cons-sec" id="cons-sec-bolsa"><h3><i style="background:${COR_BOLSA.acao}"></i>Bolsa<span class="fraco">${brl(totBolsa)}</span></h3>
+      <div class="rolagem"><table class="cons-tabela"><thead><tr><th>Classe</th><th class="esq">Onde está</th><th>Custo</th><th>Valor de hoje</th><th>Resultado</th><th>Líquido de IR</th><th></th></tr></thead><tbody>
+      ${Object.entries(bolsa).sort((a, b) => b[1].v - a[1].v).map(([k, x]) => `<tr><td class="esq"><b>${classe(k).aba}</b><small>${S.estado.carteiras.length > 1 ? `somando as ${S.estado.carteiras.length} carteiras` : "da sua carteira"}</small></td><td class="esq" data-r="Onde está">Suas carteiras</td><td data-r="Custo">${brl(x.custo)}</td><td data-r="Valor de hoje"><b>${brl(x.v)}</b><small>${dataBR(S.meta?.ultimo_pregao)}</small></td><td class="${cls(x.v - x.custo)}" data-r="Resultado">${brl(x.v - x.custo)}<small>${x.custo ? pct(x.v / x.custo - 1, 2, true) : ""}</small></td><td class="cons-sem-mob">–</td><td class="cons-acoes"><a class="btn texto" href="#carteiras">Abrir</a></td></tr>`).join("")}
+      </tbody></table></div></section>` : ""}
+    ${Object.keys(CONS).map(secao).join("")}
+    ${itens.length ? "" : `<div class="painel" style="margin-top:18px"><h2>Adicione o que você tem fora da bolsa</h2>${escolhaCons()}</div>`}`;
+  // rosca
+  const total2 = fatias.reduce((s, x) => s + x.v, 0);
+  const rosca = $("#cons-rosca");
+  rosca.innerHTML = `${donutSVG(fatias, total2)}${legendaRosca(fatias, total2, (it) => `data-cons-ir="${it.k}"`)}`;
+  ligarRosca(rosca, fatias, total2);
+  $$("[data-cons-ir]", rosca).forEach((b) => b.onclick = () => $(`#cons-sec-${b.dataset.consIr}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  $$("[data-cons-tipo]", corpo).forEach((b) => b.onclick = () => abrirFormCons(b.dataset.consTipo));
+  $$("[data-cons-editar]", corpo).forEach((b) => b.onclick = () => { const it = itens.find((x) => x.id === b.dataset.consEditar); abrirFormCons(it.classe, it); });
+  $$("[data-cons-excluir]", corpo).forEach((b) => b.onclick = async () => {
+    const i = itens.findIndex((x) => x.id === b.dataset.consExcluir), it = itens[i], nome = descCons(it).nome;
+    if (!(await perguntar({ titulo: "Excluir este investimento?", texto: `"${nome}" sai do Consolidador.`, botao: "Excluir", perigo: true }))) return;
+    itens.splice(i, 1); salvar(); render();
+    aviso(`"${nome}" excluído`, { rotulo: "Desfazer", fn: () => { consItens().splice(i, 0, it); salvar(); render(); } });
+  });
+};
+
 /* ---------- favoritos (ficam na conta, valem em qualquer aparelho) ---------- */
 const favoritos = () => (S.estado.favoritos ??= []);
 const ehFavorito = (t) => favoritos().includes(t);
@@ -4071,6 +4522,7 @@ async function carregarPlano() {
 const MOTIVOS_OURO = {
   carteiras: "No plano Grátis dá para ter 1 carteira. Com o Milhão Ouro você cria quantas quiser.",
   analise: "Médias móveis, Bollinger, IFR, Medir e Marcar preço fazem parte da Análise avançada do Milhão Ouro.",
+  consolidador: "O Consolidador, que junta renda fixa, Tesouro, fundos, cripto e outros bens com a bolsa, faz parte do Milhão Ouro.",
   imposto: "O cálculo do Imposto de Renda (DARF de cada mês, bens e direitos e proventos para a declaração) faz parte do Milhão Ouro.",
 };
 async function pedirOuro(motivo) {
