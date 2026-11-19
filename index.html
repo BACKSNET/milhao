@@ -153,14 +153,16 @@ nav.menu a[href="#consolidador"]:hover svg,.servicos a[href="#consolidador"]:hov
 .barra-dentro{max-width:1280px;margin:0 auto;padding:10px 36px;display:flex;flex-wrap:wrap;align-items:center;gap:20px;row-gap:6px}
 .barra-topo .marca-link{padding:0}
 .barra-topo .logo.pequena{font-size:24px}
-.servicos{display:flex;flex-wrap:wrap;gap:2px;scrollbar-width:none;order:5;width:100%;margin:2px -10px 0}
+.servicos{display:flex;flex-wrap:nowrap;gap:4px;scrollbar-width:none;order:5;width:100%;margin:4px 0 0}
 .servicos::-webkit-scrollbar{display:none}
-.servicos a{display:flex;align-items:center;gap:6px;padding:8px 8px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;color:var(--tinta-2);white-space:nowrap}
+/* cada serviço em pé: ícone em cima, nome embaixo, todos na mesma linha */
+.servicos a{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:9px 4px 8px;border-radius:10px;text-decoration:none;font-weight:600;font-size:12.5px;line-height:1.2;text-align:center;color:var(--tinta-2)}
 .servicos a:hover{background:var(--verde-claro);color:var(--verde)}
-.servicos svg{width:17px;height:17px;flex:none}
+.servicos svg{width:21px;height:21px;flex:none}
+@media (max-width:900px){.servicos{overflow-x:auto}.servicos a{flex:0 0 auto;min-width:84px;max-width:100px}}
 .barra-topo .busca{margin-left:auto;max-width:280px;min-width:214px}
 .barra-topo .usuario{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--tinta-2);white-space:nowrap}
-@media (max-width:700px){.barra-topo{position:static}.barra-dentro{padding:10px 18px;gap:12px}.servicos{flex-wrap:nowrap;overflow-x:auto}.barra-topo .busca{order:6;max-width:none;width:100%;margin-left:0}.barra-topo .usuario{margin-left:auto}.barra-topo .usuario .nome{display:none}}
+@media (max-width:700px){.barra-topo{position:static}.barra-dentro{padding:10px 18px;gap:12px}.servicos{overflow-x:auto;margin:0 -18px;padding:0 12px;width:calc(100% + 36px)}.servicos a{flex:0 0 auto;min-width:76px;max-width:96px}.barra-topo .busca{order:6;max-width:none;width:100%;margin-left:0}.barra-topo .usuario{margin-left:auto}.barra-topo .usuario .nome{display:none}}
 .demo{background:var(--ouro-claro);color:#6B4D10;padding:9px 36px;font-size:13px;border-bottom:1px solid #E8D8B0}
 .conteudo{padding:28px 36px 64px;max-width:1280px}
 
